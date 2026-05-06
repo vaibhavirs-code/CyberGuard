@@ -1,0 +1,385 @@
+{
+  "entities": {
+    "CustomerTracker": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CustomerTracker",
+      "type": "object",
+      "description": "Represents a detected and tracked customer within the system, including their AI-assigned tracker ID, current location, and payment status.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CustomerTracker entity."
+        },
+        "stableTrackerId": {
+          "type": "string",
+          "description": "The unique and stable ID assigned to the customer by the multi-object tracking system (e.g., ByteTrack, DeepSORT)."
+        },
+        "currentZoneId": {
+          "type": "string",
+          "description": "Reference to the current Zone where the customer is located. (Relationship: Zone 1:N CustomerTracker)"
+        },
+        "paymentSessionId": {
+          "type": "string",
+          "description": "Reference to the active PaymentSession associated with this customer. Null if no session is active or payment is completed. (Relationship: PaymentSession 1:N CustomerTracker)"
+        },
+        "paymentStatus": {
+          "type": "string",
+          "description": "The current payment status of the customer.",
+          "format": "enum",
+          "items": {
+            "type": "string"
+          }
+        },
+        "confidenceScore": {
+          "type": "number",
+          "description": "The confidence score from the AI detection model for this customer tracker, indicating detection accuracy."
+        },
+        "entryTimestamp": {
+          "type": "string",
+          "description": "Timestamp when the customer was first detected and assigned a tracker ID.",
+          "format": "date-time"
+        },
+        "lastActivityTimestamp": {
+          "type": "string",
+          "description": "Timestamp of the last recorded activity or update for this customer tracker.",
+          "format": "date-time"
+        },
+        "zoneHistory": {
+          "type": "array",
+          "description": "An ordered list of Zone IDs representing the history of zones the customer has entered. (Relationship: Zone N:N CustomerTracker through history)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "stableTrackerId",
+        "currentZoneId",
+        "paymentStatus",
+        "confidenceScore",
+        "entryTimestamp",
+        "lastActivityTimestamp",
+        "zoneHistory"
+      ]
+    },
+    "Zone": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Zone",
+      "type": "object",
+      "description": "Defines a configurable smart zone for monitoring, such as entry, billing, exit, or shopping areas within the retail space.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Zone entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for the zone (e.g., 'Main Entry', 'Checkout A')."
+        },
+        "type": {
+          "type": "string",
+          "description": "Categorization of the zone's purpose.",
+          "format": "enum",
+          "items": {
+            "type": "string"
+          }
+        },
+        "coordinates": {
+          "type": "array",
+          "description": "An array of coordinate pairs (e.g., [[x1, y1], [x2, y2], ...]) defining the vertices of the polygonal or rectangular zone.",
+          "items": {
+            "type": "number"
+          }
+        },
+        "zoneLayoutId": {
+          "type": "string",
+          "description": "Reference to the ZoneLayout this zone belongs to. (Relationship: ZoneLayout 1:N Zone)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "coordinates",
+        "zoneLayoutId"
+      ]
+    },
+    "ZoneLayout": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ZoneLayout",
+      "type": "object",
+      "description": "A collection of saved zone configurations, allowing users to load and manage different layouts for various store setups or monitoring scenarios.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ZoneLayout entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "A descriptive name for the zone layout (e.g., 'Morning Shift Layout', 'Holiday Sale Setup')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when this zone layout was first created.",
+          "format": "date-time"
+        },
+        "lastModifiedAt": {
+          "type": "string",
+          "description": "Timestamp when this zone layout was last modified.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "createdAt",
+        "lastModifiedAt"
+      ]
+    },
+    "PaymentSession": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PaymentSession",
+      "type": "object",
+      "description": "Tracks a simulated payment transaction or session for a specific customer, including its status, method, and association details.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PaymentSession entity."
+        },
+        "customerTrackerId": {
+          "type": "string",
+          "description": "Reference to the CustomerTracker associated with this payment session. (Relationship: CustomerTracker 1:N PaymentSession)"
+        },
+        "token": {
+          "type": "string",
+          "description": "A unique token or session ID generated for this payment attempt."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the payment session.",
+          "format": "enum",
+          "items": {
+            "type": "string"
+          }
+        },
+        "method": {
+          "type": "string",
+          "description": "The simulated payment method used for this session.",
+          "format": "enum",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "An identifier for the transaction from the simulated POS/payment gateway."
+        },
+        "initiatedAt": {
+          "type": "string",
+          "description": "Timestamp when the payment session was initiated or a customer entered the billing zone.",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "Timestamp when the payment session was completed (either successfully or failed).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerTrackerId",
+        "token",
+        "status",
+        "method",
+        "transactionId",
+        "initiatedAt"
+      ]
+    },
+    "EventLog": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "EventLog",
+      "type": "object",
+      "description": "Records all significant events within the system, providing a chronological timeline for monitoring, debugging, and audit purposes.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the EventLog entry."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "The exact date and time when the event occurred.",
+          "format": "date-time"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type or category of the event.",
+          "format": "enum",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed, human-readable description of the event."
+        },
+        "customerTrackerId": {
+          "type": "string",
+          "description": "Optional reference to the CustomerTracker involved in this event. (Relationship: CustomerTracker 1:N EventLog)"
+        },
+        "zoneId": {
+          "type": "string",
+          "description": "Optional reference to the Zone involved in this event. (Relationship: Zone 1:N EventLog)"
+        },
+        "paymentSessionId": {
+          "type": "string",
+          "description": "Optional reference to the PaymentSession involved in this event. (Relationship: PaymentSession 1:N EventLog)"
+        },
+        "sourceId": {
+          "type": "string",
+          "description": "Optional reference to the VideoSource associated with this event. (Relationship: VideoSource 1:N EventLog)"
+        },
+        "metadata": {
+          "type": "string",
+          "description": "Additional structured or unstructured metadata related to the event, stored as a JSON string to allow flexible content without defining a specific schema for every possible event type."
+        }
+      },
+      "required": [
+        "id",
+        "timestamp",
+        "type",
+        "description"
+      ]
+    },
+    "VideoSource": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VideoSource",
+      "type": "object",
+      "description": "Manages different video input feeds for the surveillance system, including webcams, CCTV streams, RTSP feeds, and uploaded video files.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the VideoSource entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "A descriptive name for the video source (e.g., 'Front Door Camera', 'Warehouse RTSP Feed')."
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of video source.",
+          "format": "enum",
+          "items": {
+            "type": "string"
+          }
+        },
+        "connectionString": {
+          "type": "string",
+          "description": "The connection string for the video source (e.g., device index for webcam, URL for RTSP, file path for uploaded video)."
+        },
+        "isActive": {
+          "type": "boolean",
+          "description": "Indicates whether this video source is currently active and being processed by the system."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "type",
+        "connectionString",
+        "isActive"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/zoneLayouts/{zoneLayoutId}",
+        "definition": {
+          "entityName": "ZoneLayout",
+          "schema": {
+            "$ref": "#/backend/entities/ZoneLayout"
+          },
+          "description": "Top-level collection for storing predefined zone layouts. Assumed to be managed by system administrators."
+        }
+      },
+      {
+        "path": "/zoneLayouts/{zoneLayoutId}/zones/{zoneId}",
+        "definition": {
+          "entityName": "Zone",
+          "schema": {
+            "$ref": "#/backend/entities/Zone"
+          },
+          "description": "Subcollection for Zone documents, nested under their parent ZoneLayout. This path ensures structural ownership. Rules for Zone can use 'request.path[2]' for authorization checks related to its parent ZoneLayout. Assumed to be managed by system administrators.",
+          "params": [
+            {
+              "name": "zoneLayoutId",
+              "description": "The unique identifier for the parent ZoneLayout."
+            },
+            {
+              "name": "zoneId",
+              "description": "The unique identifier for the Zone."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videoSources/{videoSourceId}",
+        "definition": {
+          "entityName": "VideoSource",
+          "schema": {
+            "$ref": "#/backend/entities/VideoSource"
+          },
+          "description": "Top-level collection for managing different video input feeds. Assumed to be managed by system administrators."
+        }
+      },
+      {
+        "path": "/customerTrackers/{customerTrackerId}",
+        "definition": {
+          "entityName": "CustomerTracker",
+          "schema": {
+            "$ref": "#/backend/entities/CustomerTracker"
+          },
+          "description": "Top-level collection for real-time tracking of detected customers. This data is generated by the AI system. Read access for monitoring, write access by backend services."
+        }
+      },
+      {
+        "path": "/customerTrackers/{customerTrackerId}/paymentSessions/{paymentSessionId}",
+        "definition": {
+          "entityName": "PaymentSession",
+          "schema": {
+            "$ref": "#/backend/entities/PaymentSession"
+          },
+          "description": "Subcollection for PaymentSession documents, nested under their associated CustomerTracker. The 'customerTrackerId' in the path ensures authorization independence; rules can use 'request.path[2]' to link to the parent.",
+          "params": [
+            {
+              "name": "customerTrackerId",
+              "description": "The unique identifier for the parent CustomerTracker."
+            },
+            {
+              "name": "paymentSessionId",
+              "description": "The unique identifier for the PaymentSession."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/eventLogs/{eventLogId}",
+        "definition": {
+          "entityName": "EventLog",
+          "schema": {
+            "$ref": "#/backend/entities/EventLog"
+          },
+          "description": "Top-level collection for all system events. Primarily for auditing, debugging, and real-time display. Read access for monitoring, write access by backend services."
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to be secure, scalable, and debuggable, strictly adhering to the core design principles and strategy mandates. It leverages hierarchical collection paths for clear ownership and authorization, and top-level collections for independent entities or system-wide configurations.\n\n**Authorization Independence via Denormalization:**\n- For entities with a clear parent-child relationship, such as `Zone` under `ZoneLayout` (`/zoneLayouts/{zoneLayoutId}/zones/{zoneId}`) and `PaymentSession` under `CustomerTracker` (`/customerTrackers/{customerTrackerId}/paymentSessions/{paymentSessionId}`), the parent's identifier (`zoneLayoutId`, `customerTrackerId`) is embedded directly in the path. This crucial design choice eliminates the need for `get()` calls in Firestore security rules to check parent document attributes for authorization. Rules can directly evaluate `request.path[2]` (or similar path segments) against the authenticated user's ID or known roles, ensuring atomic operations and simplifying rule logic. For instance, a rule for `PaymentSession` can check `allow read: if request.path[2] == request.auth.uid` if `CustomerTrackers` were user-owned, without fetching the `CustomerTracker` document itself.\n- For top-level collections like `ZoneLayouts`, `VideoSources`, `CustomerTrackers`, and `EventLogs`, which are currently assumed to be system-managed (accessible by authorized system operators/admins), any future user-specific ownership or collaborative access requirements would involve denormalizing an `ownerId` field or a `members` map directly into each document. This would ensure authorization decisions are made solely based on the document's own data and `request.auth.uid`, preserving independence.\n\n**QAPs (Rules are not Filters):**\n- The structural segregation ensures that `list` operations can be secured effectively without relying on rules as filters. For example, to list all `Zones` for a specific `ZoneLayout`, a query would target `/zoneLayouts/{zoneLayoutId}/zones`. Security rules would then verify that `request.auth.uid` has permissions to access *that specific* `zoneLayoutId` (e.g., `allow list: if exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))`). This structure inherently supports queryable authorization patterns (QAPs) because the access predicates are directly evaluable from the request path and the requesting user's identity, preventing broad `list` operations on data for which the user lacks permissions.\n- Similarly, for `PaymentSessions` nested under `CustomerTrackers`, QAPs are supported by querying a specific `customerTrackerId`'s subcollection. If `CustomerTrackers` were user-owned, `list` operations on `/customerTrackers` could be secured with an `ownerId` field, allowing users to only list their own trackers. Since they are system-managed, `list` operations would be restricted to system administrators, aligning with the principle that rules are not filters.\n\n**Structural Segregation and Access Modeling:**\n- Each collection (`zoneLayouts`, `videoSources`, `customerTrackers`, `eventLogs`) and subcollection (`zones`, `paymentSessions`) maintains a homogeneous security posture. For instance, all `ZoneLayout` documents have similar access requirements (admin/system configuration), as do all `PaymentSession` documents (transaction data specific to a customer tracker). This simplifies rule writing by avoiding complex conditional logic within rules.\n- The use of hierarchical paths (`/zoneLayouts/{zoneLayoutId}/zones/{zoneId}` and `/customerTrackers/{customerTrackerId}/paymentSessions/{paymentSessionId}`) is specifically for user-owned or clearly parent-scoped data, making ownership explicit. Top-level collections are used for entities that are either independent (`VideoSource`, `EventLog`) or represent a global pool (`CustomerTracker`) for system-level monitoring/management.\n- Roles, if implemented, would follow the DBAC principle (e.g., `/roles_admin/{uid}`), ensuring that all authorization data resides in the database and is checked using `request.auth.uid`."
+  }
+}
