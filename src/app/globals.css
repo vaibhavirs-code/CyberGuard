@@ -4,48 +4,48 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 230 40% 10%;
+    --background: 210 50% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 230 40% 10%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 230 40% 10%;
+    --popover-foreground: 222 47% 11%;
     --primary: 210 100% 50%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 20% 90%;
-    --secondary-foreground: 230 40% 10%;
-    --muted: 210 20% 90%;
-    --muted-foreground: 210 20% 40%;
-    --accent: 180 100% 40%;
-    --accent-foreground: 210 20% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222 47% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 180 100% 45%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 210 20% 85%;
-    --input: 210 20% 85%;
-    --ring: 210 100% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
   }
 
   .dark {
     --background: 230 40% 4%;
-    --foreground: 0 0% 100%;
+    --foreground: 210 40% 98%;
     --card: 230 40% 6%;
-    --card-foreground: 0 0% 100%;
+    --card-foreground: 210 40% 98%;
     --popover: 230 40% 6%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 210 100% 50%;
-    --primary-foreground: 210 40% 6%;
-    --secondary: 230 40% 10%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 230 40% 10%;
-    --muted-foreground: 210 20% 65%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.1% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
     --accent: 180 100% 50%;
-    --accent-foreground: 230 40% 4%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 210 40% 12%;
-    --input: 210 40% 12%;
-    --ring: 210 100% 50%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -54,27 +54,34 @@
     @apply border-border transition-colors duration-500;
   }
   body {
-    @apply bg-background text-foreground selection:bg-accent selection:text-accent-foreground font-body;
+    @apply bg-background text-foreground selection:bg-accent/30 selection:text-foreground font-body antialiased overflow-hidden;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-background/60 backdrop-blur-xl border border-foreground/5 shadow-2xl;
+    @apply bg-background/40 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
   }
   .neon-text {
     text-shadow: 0 0 10px hsl(var(--accent) / 0.8), 0 0 20px hsl(var(--accent) / 0.4);
   }
-  .neon-border {
-    box-shadow: 0 0 15px hsl(var(--accent) / 0.3), inset 0 0 10px hsl(var(--accent) / 0.1);
+  .aura-border {
+    @apply relative overflow-hidden;
+    box-shadow: 0 0 20px -5px hsl(var(--accent) / 0.2);
   }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
+  .aura-border::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none opacity-20 border-2 border-accent rounded-[inherit];
+    mask-image: linear-gradient(to bottom, black, transparent, black);
   }
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  .glow-pulse {
+    animation: glow-pulse 3s infinite;
   }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 5px hsl(var(--accent) / 0.2); }
+  50% { box-shadow: 0 0 20px hsl(var(--accent) / 0.4); }
 }
 
 @keyframes scanline {
@@ -82,16 +89,14 @@
   100% { transform: translateY(100%); }
 }
 
-@keyframes pulse-ring {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(15, 252, 235, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(15, 252, 235, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(15, 252, 235, 0); }
-}
-
 .animate-scanline {
-  animation: scanline 4s linear infinite;
+  animation: scanline 6s linear infinite;
 }
 
-.animate-pulse-ring {
-  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
