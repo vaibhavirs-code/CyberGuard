@@ -1,9 +1,8 @@
-
 "use client"
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { TrackedCustomer, Zone } from '@/lib/types';
-import { ShieldCheck, Loader2, Scan, Activity, Target, Move, Maximize2 } from 'lucide-react';
+import { ShieldCheck, Loader2, Scan, Activity, Target, Move, Maximize2, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VideoFeedProps {
@@ -64,46 +63,54 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
-      className="relative w-full h-full bg-black group rounded-3xl overflow-hidden shadow-2xl aura-border"
+      className="relative w-full h-full bg-black group rounded-[2.5rem] overflow-hidden shadow-2xl aura-border"
     >
-      {/* Visual Source */}
       {videoUrl ? (
         <video ref={videoRef} src={videoUrl} autoPlay loop muted crossOrigin="anonymous" className="w-full h-full object-cover" />
       ) : (
         <video ref={videoRef} src="https://storage.googleapis.com/tfjs-models/demos/cvat/beach.mp4" autoPlay loop muted crossOrigin="anonymous" className="w-full h-full object-cover opacity-80" />
       )}
       
-      {/* HUD Layers */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(15,252,235,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(15,252,235,0.1)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        <div className="absolute inset-0 overflow-hidden opacity-30">
-          <div className="w-full h-0.5 bg-accent/40 absolute top-0 left-0 animate-scanline shadow-[0_0_15px_hsl(var(--accent))]" />
+        <div className="absolute inset-0 opacity-15 bg-[linear-gradient(rgba(15,252,235,0.1)_2px,transparent_2px),linear-gradient(90deg,rgba(15,252,235,0.1)_2px,transparent_2px)] bg-[size:60px_60px]" />
+        <div className="absolute inset-0 overflow-hidden opacity-40">
+          <div className="w-full h-1 bg-accent/50 absolute top-0 left-0 animate-scanline shadow-[0_0_20px_hsl(var(--accent))]" />
+        </div>
+      </div>
+
+      <div className="absolute top-8 right-8 flex items-center gap-4 pointer-events-none animate-in fade-in duration-1000">
+        <div className="glass px-5 py-2 rounded-full flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white">Live Stream: Encrypted</span>
+        </div>
+        <div className="glass px-5 py-2 rounded-full flex items-center gap-3">
+          <Zap className="w-3 h-3 text-accent" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-white">Quantum Link</span>
         </div>
       </div>
 
       {isModelLoading && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-2xl">
-          <Loader2 className="w-20 h-20 text-accent animate-spin mb-8" />
-          <p className="text-accent font-code text-[12px] tracking-[1.5em] uppercase neon-text animate-pulse">Neural Synchronization</p>
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/98 backdrop-blur-3xl">
+          <Loader2 className="w-24 h-24 text-accent animate-spin mb-10" />
+          <p className="text-accent font-code text-[14px] tracking-[1.8em] uppercase neon-text animate-pulse">Neural Synchronization v4.0</p>
         </div>
       )}
 
-      {/* Zones Layer */}
       <div className={cn("absolute inset-0", isEditingZones ? "cursor-crosshair" : "pointer-events-none")}>
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           {zones.map((zone) => (
             <g key={zone.id}>
               <rect 
                 x={zone.x} y={zone.y} width={zone.width} height={zone.height} 
-                fill={zone.color} fillOpacity={isEditingZones ? "0.15" : "0.05"} 
-                stroke={zone.color} strokeWidth="0.5" 
+                fill={zone.color} fillOpacity={isEditingZones ? "0.2" : "0.08"} 
+                stroke={zone.color} strokeWidth="0.8" 
                 className={cn("transition-all", isEditingZones && "cursor-move")}
                 onMouseDown={(e) => handleZoneMouseDown(e, zone.id, 'move')}
               />
-              <text x={zone.x + 0.5} y={zone.y + 2.5} fill={zone.color} style={{ fontSize: '1.5px', fontWeight: 'bold' }} className="uppercase tracking-widest">{zone.label}</text>
+              <text x={zone.x + 0.8} y={zone.y + 3.2} fill={zone.color} style={{ fontSize: '1.8px', fontWeight: 'bold' }} className="uppercase tracking-[0.2em] font-headline">{zone.label}</text>
               {isEditingZones && (
                 <rect 
-                  x={zone.x + zone.width - 2} y={zone.y + zone.height - 2} width="2" height="2" 
+                  x={zone.x + zone.width - 2.5} y={zone.y + zone.height - 2.5} width="2.5" height="2.5" 
                   fill={zone.color} className="cursor-nwse-resize"
                   onMouseDown={(e) => handleZoneMouseDown(e, zone.id, 'resize')}
                 />
@@ -113,21 +120,19 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         </svg>
       </div>
 
-      {/* Tracker Visuals */}
       <div className="absolute inset-0 pointer-events-none">
         {customers.map((c) => (
-          <div key={c.trackerId} className={cn("absolute border-2 transition-all duration-150 ease-linear", c.status === 'flagged' ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.6)]' : 'border-accent shadow-[0_0_20px_rgba(25,136,245,0.4)]')} style={{ left: `${c.bbox.x}%`, top: `${c.bbox.y}%`, width: `${c.bbox.w}%`, height: `${c.bbox.h}%` }}>
-            <div className={cn("absolute -top-8 left-0 px-2 py-0.5 text-[10px] font-bold text-white rounded-t-lg flex items-center gap-2 backdrop-blur-md border-t border-x border-white/20 shadow-xl", c.status === 'paid' ? 'bg-emerald-500/90' : (c.status === 'flagged' ? 'bg-red-500/90' : 'bg-primary/90'))}>
-              <Target className="w-3 h-3 animate-pulse" />
-              <span className="tracking-widest uppercase">{c.trackerId}</span>
-              <div className="w-px h-3 bg-white/20" />
-              <span className="font-code text-[8px]">{Math.round(c.confidence * 100)}% REL</span>
+          <div key={c.trackerId} className={cn("absolute border-2 transition-all duration-150 ease-linear", c.status === 'flagged' ? 'border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.7)]' : 'border-accent shadow-[0_0_25px_rgba(25,136,245,0.5)]')} style={{ left: `${c.bbox.x}%`, top: `${c.bbox.y}%`, width: `${c.bbox.w}%`, height: `${c.bbox.h}%` }}>
+            <div className={cn("absolute -top-10 left-0 px-3 py-1 text-[11px] font-bold text-white rounded-t-xl flex items-center gap-3 backdrop-blur-xl border-t border-x border-white/30 shadow-2xl", c.status === 'paid' ? 'bg-emerald-500/90' : (c.status === 'flagged' ? 'bg-red-500/90' : 'bg-primary/90'))}>
+              <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+              <span className="tracking-[0.2em] uppercase">{c.trackerId}</span>
+              <div className="w-px h-4 bg-white/20" />
+              <span className="font-code text-[9px] uppercase">{c.status}</span>
             </div>
-            {/* Brackets */}
-            <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-white/50" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-white/50" />
-            <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-white/50" />
-            <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-white/50" />
+            <div className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-white/60" />
+            <div className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 border-white/60" />
+            <div className="absolute -bottom-1.5 -left-1.5 w-4 h-4 border-b-2 border-l-2 border-white/60" />
+            <div className="absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 border-white/60" />
           </div>
         ))}
       </div>

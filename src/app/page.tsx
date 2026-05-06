@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -17,10 +16,14 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
 import { Activity, Target, Cpu, ShieldCheck } from 'lucide-react';
 
+// Corrected Zone Positions: 
+// LEFT: Payment Counter (Red)
+// CENTER: Sales Floor (Amber)
+// RIGHT: Entry/Exit (Green)
 const INITIAL_ZONES: Zone[] = [
-  { id: 'z1', type: 'entry-exit', label: 'Entry/Exit Path', x: 5, y: 10, width: 25, height: 80, color: '#10b981' }, // Green/Emerald
-  { id: 'z2', type: 'billing', label: 'Payment Counter', x: 45, y: 40, width: 30, height: 35, color: '#ef4444' }, // Red
-  { id: 'z3', type: 'shopping', label: 'Sales Floor', x: 30, y: 10, width: 65, height: 80, color: '#f59e0b' }, // Amber
+  { id: 'z1', type: 'billing', label: 'Payment Counter', x: 5, y: 35, width: 22, height: 30, color: '#ef4444' }, // Red (Horizontal-ish)
+  { id: 'z2', type: 'shopping', label: 'Sales Floor', x: 30, y: 10, width: 38, height: 80, color: '#f59e0b' }, // Amber
+  { id: 'z3', type: 'entry-exit', label: 'Entry/Exit Path', x: 72, y: 10, width: 23, height: 80, color: '#10b981' }, // Green
 ];
 
 export default function Dashboard() {
@@ -81,7 +84,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     customers.forEach(c => {
-      // Improved logic: If exiting through entry-exit zone without billing visit
       const hasVisitedBilling = c.history.some(h => h.zone === 'billing');
       const isExiting = c.currentZone === 'entry-exit' && c.history.length > 2 && c.history[c.history.length - 2].zone !== 'entry-exit';
       
@@ -126,7 +128,6 @@ export default function Dashboard() {
       <div className="flex flex-col flex-1 overflow-hidden relative z-10">
         <Header />
         <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
-          {/* Workspace Area: Left/Center */}
           <div className="flex-[3] flex flex-col gap-6 overflow-hidden min-h-0">
             <div className="flex-[2] relative aura-border rounded-3xl glass overflow-hidden shadow-2xl transition-all duration-700">
               <VideoFeed 
@@ -136,42 +137,46 @@ export default function Dashboard() {
               />
             </div>
             
-            {/* Telemetry HUD - Now below the video feed */}
             <div className="flex gap-4 animate-in slide-in-from-bottom-4 duration-700">
-              <div className="flex-1 glass px-6 py-4 rounded-2xl border-white/10 flex items-center justify-between aura-border group hover:bg-white/5 transition-all">
-                <div className="flex items-center gap-4">
-                  <Cpu className="w-5 h-5 text-accent animate-pulse" />
+              <div className="flex-1 glass px-8 py-5 rounded-2xl border-white/10 flex items-center justify-between aura-border group hover:bg-white/5 transition-all shadow-xl">
+                <div className="flex items-center gap-5">
+                  <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 group-hover:scale-110 transition-transform">
+                    <Cpu className="w-6 h-6 text-accent animate-pulse" />
+                  </div>
                   <div>
-                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Neural FPS</span>
-                    <span className="text-xl font-code text-accent font-bold leading-none">{fps}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Neural Engine</span>
+                    <span className="text-2xl font-code text-accent font-bold leading-none glow-text">{fps} FPS</span>
                   </div>
                 </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div className="flex items-center gap-4">
-                  <Target className="w-5 h-5 text-primary" />
+                <div className="w-px h-10 bg-white/10" />
+                <div className="flex items-center gap-5">
+                  <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 group-hover:scale-110 transition-transform">
+                    <Target className="w-6 h-6 text-primary" />
+                  </div>
                   <div>
-                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Tracked Units</span>
-                    <span className="text-xl font-code text-foreground font-bold leading-none">{customers.length.toString().padStart(2, '0')}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Tracked Units</span>
+                    <span className="text-2xl font-code text-foreground font-bold leading-none">{customers.length.toString().padStart(2, '0')}</span>
                   </div>
                 </div>
-                <div className="w-px h-8 bg-white/10" />
-                <div className="flex items-center gap-4">
-                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                <div className="w-px h-10 bg-white/10" />
+                <div className="flex items-center gap-5">
+                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 group-hover:scale-110 transition-transform">
+                    <ShieldCheck className="w-6 h-6 text-emerald-500" />
+                  </div>
                   <div>
-                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Security Level</span>
-                    <span className="text-xl font-code text-emerald-400 font-bold leading-none">V3.5</span>
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Security Integrity</span>
+                    <span className="text-2xl font-code text-emerald-400 font-bold leading-none">MAXIMUM</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex-1 transition-all duration-700">
+            <div className="flex-1 transition-all duration-700 min-h-0">
               <EventTimeline logs={logs} />
             </div>
           </div>
 
-          {/* Controls Area: Right Column */}
-          <div className="w-full lg:w-[380px] flex flex-col gap-6 overflow-y-auto pr-2 hide-scrollbar scroll-smooth">
+          <div className="w-full lg:w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 hide-scrollbar scroll-smooth">
             <SidebarPanels 
               customers={customers} isEditingZones={isEditingZones}
               onToggleEditing={() => setIsEditingZones(!isEditingZones)}

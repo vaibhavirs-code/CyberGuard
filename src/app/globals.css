@@ -23,15 +23,15 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 1.5rem;
+    --radius: 2rem;
   }
 
   .dark {
-    --background: 230 40% 4%;
+    --background: 230 45% 3%;
     --foreground: 210 40% 98%;
-    --card: 230 40% 6%;
+    --card: 230 45% 5%;
     --card-foreground: 210 40% 98%;
-    --popover: 230 40% 6%;
+    --popover: 230 45% 5%;
     --popover-foreground: 210 40% 98%;
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.1% 11.2%;
@@ -50,9 +50,7 @@
 }
 
 @layer base {
-  * {
-    @apply border-border transition-colors duration-500;
-  }
+  * { @apply border-border transition-colors duration-500; }
   body {
     @apply bg-background text-foreground selection:bg-accent/30 selection:text-foreground font-body antialiased overflow-hidden;
   }
@@ -60,70 +58,73 @@
 
 @layer utilities {
   .glass {
-    @apply backdrop-blur-3xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply backdrop-blur-3xl border border-white/15 shadow-2xl;
   }
   .dark .glass {
-    @apply bg-black/40 border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+    @apply bg-black/45 border-white/10;
   }
   .light .glass {
-    @apply bg-white/60 border-white/40 shadow-[0_8px_32px_0_rgba(25,136,245,0.05)];
+    @apply bg-white/65 border-white/45 shadow-[0_15px_45px_-10px_rgba(25,136,245,0.1)];
   }
   
   .neon-text {
-    text-shadow: 0 0 10px hsl(var(--accent) / 0.8), 0 0 20px hsl(var(--accent) / 0.4);
+    text-shadow: 0 0 12px hsl(var(--accent) / 0.9), 0 0 24px hsl(var(--accent) / 0.5);
   }
   
   .aura-border {
     @apply relative overflow-hidden;
-    box-shadow: 0 0 35px -10px hsl(var(--accent) / 0.2);
+    box-shadow: 0 0 45px -15px hsl(var(--accent) / 0.25);
   }
   
   .aura-border::after {
     content: '';
-    @apply absolute inset-0 pointer-events-none opacity-30 border-2 border-accent rounded-[inherit];
+    @apply absolute inset-0 pointer-events-none opacity-40 border-2 border-accent/60 rounded-[inherit];
     mask-image: linear-gradient(to bottom, black, transparent, black);
-    animation: border-glow 4s infinite alternate;
+    animation: border-glow 5s infinite alternate ease-in-out;
   }
 
   @keyframes border-glow {
-    from { opacity: 0.15; }
-    to { opacity: 0.45; }
+    from { opacity: 0.2; transform: scale(0.99); }
+    to { opacity: 0.6; transform: scale(1.01); }
   }
 
-  .glow-pulse {
-    animation: glow-pulse 3s infinite;
-  }
+  .glow-pulse { animation: glow-pulse 3.5s infinite; }
 
   @keyframes glow-pulse {
-    0%, 100% { box-shadow: 0 0 10px hsl(var(--accent) / 0.2); opacity: 0.8; }
-    50% { box-shadow: 0 0 30px hsl(var(--accent) / 0.5); opacity: 1; }
+    0%, 100% { box-shadow: 0 0 15px hsl(var(--accent) / 0.25); opacity: 0.85; }
+    50% { box-shadow: 0 0 40px hsl(var(--accent) / 0.6); opacity: 1; }
   }
 
-  .animate-scanline {
-    animation: scanline 4s linear infinite;
-  }
+  .animate-scanline { animation: scanline 5s linear infinite; }
 
   @keyframes scanline {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(200%); }
+    0% { transform: translateY(-110%); }
+    100% { transform: translateY(220%); }
   }
 
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
   .shimmer {
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
     background-size: 200% 100%;
-    animation: shimmer 5s infinite;
+    animation: shimmer 6s infinite;
   }
 
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
+  }
+
+  .floating { animation: floating 6s infinite ease-in-out; }
+  @keyframes floating {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-15px) rotate(2deg); }
+  }
+
+  .breathing { animation: breathing 4s infinite ease-in-out; }
+  @keyframes breathing {
+    0%, 100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.02); opacity: 1; }
   }
 }
