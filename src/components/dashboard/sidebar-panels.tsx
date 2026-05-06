@@ -1,9 +1,10 @@
+
 "use client"
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { TrackedCustomer } from '@/lib/types';
 import { PaymentConsole } from './payment-console';
-import { Users, Layout, Save, Trash2, Cpu, ArrowUpRight } from 'lucide-react';
+import { Users, Layout, Save, Trash2, Cpu, ArrowUpRight, Upload, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,7 @@ interface SidebarPanelsProps {
   onToggleEditing: () => void;
   onSimulatePayment: (method: 'QR' | 'POS' | 'Card' | 'UPI') => void;
   isProcessing: boolean;
+  onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const SidebarPanels: React.FC<SidebarPanelsProps> = ({ 
@@ -22,8 +24,11 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
   isEditingZones, 
   onToggleEditing,
   onSimulatePayment,
-  isProcessing
+  isProcessing,
+  onVideoUpload
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <div className="flex flex-col gap-6 h-full">
       {/* Live Trackers Panel */}
@@ -78,6 +83,29 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
             ))}
           </div>
         </ScrollArea>
+      </div>
+
+      {/* Video Source Control */}
+      <div className="glass rounded-xl p-4 border-white/5 space-y-3">
+        <div className="flex items-center gap-2">
+          <Video className="w-4 h-4 text-accent" />
+          <h3 className="text-xs font-bold uppercase tracking-widest text-white">Video Source</h3>
+        </div>
+        <input 
+          type="file" 
+          accept="video/*" 
+          className="hidden" 
+          ref={fileInputRef} 
+          onChange={onVideoUpload}
+        />
+        <Button 
+          variant="outline" 
+          className="w-full h-10 border-dashed border-white/10 hover:border-accent group text-[10px] font-bold uppercase"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className="w-4 h-4 mr-2 group-hover:animate-bounce" />
+          Inject Custom Footage
+        </Button>
       </div>
 
       {/* Payment Simulation Console */}

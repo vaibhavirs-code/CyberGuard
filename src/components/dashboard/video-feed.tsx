@@ -1,6 +1,7 @@
+
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { TrackedCustomer, Zone } from '@/lib/types';
 import { Maximize2, Camera, Settings, RefreshCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -10,10 +11,16 @@ interface VideoFeedProps {
   zones: Zone[];
   onZoneChange: (zones: Zone[]) => void;
   isEditingZones: boolean;
+  videoUrl: string | null;
 }
 
-export const VideoFeed: React.FC<VideoFeedProps> = ({ customers, zones, onZoneChange, isEditingZones }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+export const VideoFeed: React.FC<VideoFeedProps> = ({ 
+  customers, 
+  zones, 
+  onZoneChange, 
+  isEditingZones,
+  videoUrl 
+}) => {
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
   const handleZoneMouseDown = (id: string) => {
@@ -22,14 +29,24 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ customers, zones, onZoneCh
   };
 
   return (
-    <div className="relative flex-1 rounded-xl overflow-hidden border border-white/10 group bg-black/40">
-      {/* Background Sim Image/Placeholder */}
-      <img
-        src="https://picsum.photos/seed/cyber-retail/1280/720"
-        alt="Live CCTV Feed"
-        className="w-full h-full object-cover opacity-60 grayscale-[30%] blur-[1px]"
-        data-ai-hint="retail store cctv"
-      />
+    <div className="relative flex-1 h-full rounded-xl overflow-hidden border border-white/10 group bg-black">
+      {/* Background Sim Image/Video */}
+      {videoUrl ? (
+        <video
+          src={videoUrl}
+          autoPlay
+          loop
+          muted
+          className="w-full h-full object-cover opacity-80"
+        />
+      ) : (
+        <img
+          src="https://picsum.photos/seed/cyber-retail/1280/720"
+          alt="Live CCTV Feed"
+          className="w-full h-full object-cover opacity-60 grayscale-[30%] blur-[1px]"
+          data-ai-hint="retail store cctv"
+        />
+      )}
       
       {/* Scanline Effect */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -39,19 +56,19 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ customers, zones, onZoneCh
 
       {/* Zone Overlays */}
       <div className="absolute inset-0 pointer-events-none">
-        <svg className="w-full h-full">
+        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           {zones.map((zone) => (
             <g key={zone.id}>
               <rect
-                x={`${zone.x}%`}
-                y={`${zone.y}%`}
-                width={`${zone.width}%`}
-                height={`${zone.height}%`}
+                x={zone.x}
+                y={zone.y}
+                width={zone.width}
+                height={zone.height}
                 fill={zone.color}
                 fillOpacity="0.1"
                 stroke={zone.color}
-                strokeWidth="2"
-                strokeDasharray="4 2"
+                strokeWidth="0.5"
+                strokeDasharray="1 0.5"
                 className={cn(
                   "pointer-events-auto cursor-move transition-all duration-300",
                   selectedZoneId === zone.id && "stroke-white fill-white/20"
@@ -59,10 +76,11 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ customers, zones, onZoneCh
                 onMouseDown={() => handleZoneMouseDown(zone.id)}
               />
               <text
-                x={`${zone.x + 1}%`}
-                y={`${zone.y + 4}%`}
+                x={zone.x + 0.5}
+                y={zone.y + 3}
                 fill="white"
-                className="text-[10px] font-bold uppercase tracking-widest pointer-events-none"
+                style={{ fontSize: '2px' }}
+                className="font-bold uppercase tracking-widest pointer-events-none"
               >
                 {zone.label}
               </text>
@@ -124,11 +142,11 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({ customers, zones, onZoneCh
       <div className="absolute top-4 right-4 flex items-center gap-3">
         <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg border-accent/20">
           <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-accent">YOLOv8 Real-time</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-accent">AI Scan Active</span>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg border-primary/20">
           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">ByteTrack Active</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-primary">Neural Tracker</span>
         </div>
       </div>
     </div>

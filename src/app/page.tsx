@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState<SystemLog[]>([]);
   const [isEditingZones, setIsEditingZones] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const addLog = useCallback((message: string, type: SystemLog['type'] = 'info') => {
@@ -40,7 +42,7 @@ export default function Dashboard() {
   useEffect(() => {
     setCustomers(createInitialCustomers());
     addLog('AI Surveillance Engine Initialized', 'success');
-    addLog('Arduino Nano connection: SERIAL_PORT_SIMULATED', 'info');
+    addLog('System Mode: Prototype Tracking Simulation', 'info');
   }, [addLog]);
 
   // Movement Engine
@@ -55,11 +57,8 @@ export default function Dashboard() {
   useEffect(() => {
     customers.forEach(c => {
       if (c.currentZone === 'exit' && c.status === 'unpaid') {
-        // Trigger simulation of Arduino Alert
         addLog(`ALERT: UNPAID EXIT ATTEMPT [ID: ${c.trackerId}]`, 'alert');
-        addLog(`Serial Command Sent: ALERT\\n to Arduino Nano`, 'warning');
-        
-        // Visual indicator in logs
+        addLog(`Serial Command Sent: ALERT\n to Arduino Nano`, 'warning');
         setCustomers(prev => prev.map(p => p.trackerId === c.trackerId ? { ...p, status: 'flagged' } : p));
       }
     });
@@ -71,7 +70,6 @@ export default function Dashboard() {
     addLog(`Incoming ${method} payment detected. Matching...`, 'info');
 
     try {
-      // Use the GenAI flow to match payment with customer in billing zone
       const result = await automatedPaymentMatcher({
         customers: customers.map(c => ({
           trackerId: c.trackerId,
@@ -102,6 +100,16 @@ export default function Dashboard() {
     }
   };
 
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      setVideoUrl(url);
+      addLog(`New Video Source Uploaded: ${file.name}`, 'success');
+      addLog(`AI Model Re-tuning to Video Resolution...`, 'info');
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <AnimatedBackground />
@@ -116,6 +124,7 @@ export default function Dashboard() {
               zones={zones} 
               onZoneChange={setZones}
               isEditingZones={isEditingZones}
+              videoUrl={videoUrl}
             />
           </div>
           <div className="h-1/3 min-h-[200px]">
@@ -131,11 +140,11 @@ export default function Dashboard() {
             onToggleEditing={() => setIsEditingZones(!isEditingZones)}
             onSimulatePayment={handleSimulatePayment}
             isProcessing={isProcessingPayment}
+            onVideoUpload={handleVideoUpload}
           />
         </div>
       </main>
 
-      {/* Footer Branding Overlay */}
       <div className="fixed bottom-2 right-6 pointer-events-none opacity-30 select-none">
         <span className="text-[10px] font-code tracking-[0.5em] text-white">
           SECURITY LEVEL: CLASSIFIED // CYBERGUARD_OS_V2.0
