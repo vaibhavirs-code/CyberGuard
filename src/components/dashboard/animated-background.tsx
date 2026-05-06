@@ -1,9 +1,19 @@
 "use client"
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export const AnimatedBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    setIsDark(document.documentElement.classList.contains('dark'));
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -23,9 +33,9 @@ export const AnimatedBackground: React.FC = () => {
       vx: number;
       vy: number;
       size: number;
-      color: string;
       alpha: number;
       targetAlpha: number;
+      baseColor: string;
 
       constructor() {
         this.x = Math.random() * width;
@@ -33,9 +43,9 @@ export const AnimatedBackground: React.FC = () => {
         this.vx = (Math.random() - 0.5) * 0.4;
         this.vy = (Math.random() - 0.5) * 0.4;
         this.size = Math.random() * 2 + 0.5;
-        this.color = Math.random() > 0.5 ? '#0FFCEB' : '#1988F5';
         this.alpha = Math.random() * 0.5;
         this.targetAlpha = Math.random() * 0.5 + 0.1;
+        this.baseColor = Math.random() > 0.5 ? '15, 252, 235' : '25, 136, 245';
       }
 
       update() {
@@ -47,37 +57,39 @@ export const AnimatedBackground: React.FC = () => {
 
         this.alpha += (this.targetAlpha - this.alpha) * 0.01;
         if (Math.abs(this.alpha - this.targetAlpha) < 0.01) {
-          this.targetAlpha = Math.random() * 0.5 + 0.1;
+          this.targetAlpha = Math.random() * (isDark ? 0.5 : 0.3) + 0.1;
         }
       }
 
       draw() {
         if (!ctx) return;
         ctx.save();
-        ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.alpha * (isDark ? 1 : 0.4);
+        ctx.fillStyle = `rgb(${this.baseColor})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
         
-        // Glow effect
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = this.color;
-        ctx.fill();
+        if (isDark) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = `rgb(${this.baseColor})`;
+          ctx.fill();
+        }
         ctx.restore();
       }
     }
 
     const init = () => {
       particles = [];
-      const count = Math.floor((width * height) / 10000);
+      const count = Math.floor((width * height) / 12000);
       for (let i = 0; i < count; i++) {
         particles.push(new Particle());
       }
     };
 
     const drawGrid = () => {
-      ctx.strokeStyle = 'rgba(25, 136, 245, 0.03)';
+      const gridColor = isDark ? '25, 136, 245, 0.03' : '25, 136, 245, 0.05';
+      ctx.strokeStyle = `rgba(${gridColor})`;
       ctx.lineWidth = 1;
       const step = 80;
       
@@ -97,16 +109,16 @@ export const AnimatedBackground: React.FC = () => {
 
     const drawConnections = () => {
       ctx.lineWidth = 0.5;
+      const maxDist = isDark ? 180 : 150;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 180) {
+          if (dist < maxDist) {
             ctx.beginPath();
-            ctx.strokeStyle = particles[i].color;
-            ctx.globalAlpha = (1 - dist / 180) * 0.08;
+            ctx.strokeStyle = `rgba(${particles[i].baseColor}, ${(1 - dist / maxDist) * (isDark ? 0.08 : 0.12)})`;
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
             ctx.stroke();
@@ -116,7 +128,7 @@ export const AnimatedBackground: React.FC = () => {
     };
 
     const render = () => {
-      ctx.fillStyle = '#05060f';
+      ctx.fillStyle = isDark ? '#05060f' : '#f8f9fc';
       ctx.fillRect(0, 0, width, height);
       
       drawGrid();
@@ -146,12 +158,12 @@ export const AnimatedBackground: React.FC = () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isDark]);
 
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[-1]"
+      className="fixed inset-0 pointer-events-none z-[-1] transition-opacity duration-1000"
     />
   );
 };

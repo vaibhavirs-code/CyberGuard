@@ -4,6 +4,29 @@
 
 @layer base {
   :root {
+    --background: 210 20% 98%;
+    --foreground: 230 40% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 230 40% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 40% 10%;
+    --primary: 210 100% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 20% 90%;
+    --secondary-foreground: 230 40% 10%;
+    --muted: 210 20% 90%;
+    --muted-foreground: 210 20% 40%;
+    --accent: 180 100% 40%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 210 20% 85%;
+    --input: 210 20% 85%;
+    --ring: 210 100% 50%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
     --background: 230 40% 4%;
     --foreground: 0 0% 100%;
     --card: 230 40% 6%;
@@ -23,13 +46,21 @@
     --border: 210 40% 12%;
     --input: 210 40% 12%;
     --ring: 210 100% 50%;
-    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border transition-colors duration-500;
+  }
+  body {
+    @apply bg-background text-foreground selection:bg-accent selection:text-accent-foreground font-body;
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-background/60 backdrop-blur-xl border border-white/10 shadow-2xl;
+    @apply bg-background/60 backdrop-blur-xl border border-foreground/5 shadow-2xl;
   }
   .neon-text {
     text-shadow: 0 0 10px hsl(var(--accent) / 0.8), 0 0 20px hsl(var(--accent) / 0.4);
@@ -44,21 +75,6 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  .cyber-gradient {
-    background: linear-gradient(135deg, rgba(15, 252, 235, 0.1) 0%, rgba(25, 136, 245, 0.1) 100%);
-  }
-}
-
-* {
-  @apply border-border;
-}
-
-body {
-  @apply bg-background text-foreground selection:bg-accent selection:text-accent-foreground font-body;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  @apply font-headline;
 }
 
 @keyframes scanline {
@@ -72,19 +88,10 @@ h1, h2, h3, h4, h5, h6 {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(15, 252, 235, 0); }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
-
 .animate-scanline {
   animation: scanline 4s linear infinite;
 }
 
 .animate-pulse-ring {
   animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
 }
