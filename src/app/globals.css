@@ -23,7 +23,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 1rem;
+    --radius: 1.5rem;
   }
 
   .dark {
@@ -60,60 +60,70 @@
 
 @layer utilities {
   .glass {
-    @apply bg-background/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply backdrop-blur-3xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
   }
   .dark .glass {
-    @apply bg-black/40 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+    @apply bg-black/40 border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
   }
   .light .glass {
-    @apply bg-white/60 backdrop-blur-3xl border border-white/40 shadow-[0_8px_32px_0_rgba(25,136,245,0.1)];
+    @apply bg-white/60 border-white/40 shadow-[0_8px_32px_0_rgba(25,136,245,0.05)];
   }
+  
   .neon-text {
     text-shadow: 0 0 10px hsl(var(--accent) / 0.8), 0 0 20px hsl(var(--accent) / 0.4);
   }
+  
   .aura-border {
     @apply relative overflow-hidden;
-    box-shadow: 0 0 25px -5px hsl(var(--accent) / 0.15);
+    box-shadow: 0 0 35px -10px hsl(var(--accent) / 0.2);
   }
+  
   .aura-border::after {
     content: '';
-    @apply absolute inset-0 pointer-events-none opacity-20 border-2 border-accent rounded-[inherit];
+    @apply absolute inset-0 pointer-events-none opacity-30 border-2 border-accent rounded-[inherit];
     mask-image: linear-gradient(to bottom, black, transparent, black);
+    animation: border-glow 4s infinite alternate;
   }
+
+  @keyframes border-glow {
+    from { opacity: 0.15; }
+    to { opacity: 0.45; }
+  }
+
   .glow-pulse {
     animation: glow-pulse 3s infinite;
   }
-}
 
-@keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 5px hsl(var(--accent) / 0.2); opacity: 0.8; }
-  50% { box-shadow: 0 0 25px hsl(var(--accent) / 0.5); opacity: 1; }
-}
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 10px hsl(var(--accent) / 0.2); opacity: 0.8; }
+    50% { box-shadow: 0 0 30px hsl(var(--accent) / 0.5); opacity: 1; }
+  }
 
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(200%); }
-}
+  .animate-scanline {
+    animation: scanline 4s linear infinite;
+  }
 
-.animate-scanline {
-  animation: scanline 8s linear infinite;
-}
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(200%); }
+  }
 
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 
-.shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 5s infinite;
-}
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 5s infinite;
+  }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
 }

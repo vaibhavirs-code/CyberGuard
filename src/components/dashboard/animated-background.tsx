@@ -24,8 +24,8 @@ export const AnimatedBackground: React.FC = () => {
 
     let animationFrameId: number;
     let particles: Particle[] = [];
-    let lines: Line[] = [];
     let waves: Wave[] = [];
+    let lines: EnergyLine[] = [];
     let width = window.innerWidth;
     let height = window.innerHeight;
 
@@ -40,28 +40,30 @@ export const AnimatedBackground: React.FC = () => {
       reset() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.vx = (Math.random() - 0.5) * 0.4;
-        this.vy = (Math.random() - 0.5) * 0.4;
+        this.vx = (Math.random() - 0.5) * 0.8;
+        this.vy = (Math.random() - 0.5) * 0.8;
         this.size = Math.random() * 3 + 1;
         this.alpha = 0;
-        this.targetAlpha = Math.random() * 0.5 + 0.1;
-        this.color = Math.random() > 0.5 ? '15, 252, 235' : '25, 136, 245';
-        this.pulse = 0;
-        this.pulseSpeed = Math.random() * 0.05 + 0.02;
+        this.targetAlpha = Math.random() * 0.4 + 0.1;
+        this.color = Math.random() > 0.6 ? '15, 252, 235' : '25, 136, 245';
+        this.pulse = Math.random() * Math.PI * 2;
+        this.pulseSpeed = Math.random() * 0.04 + 0.02;
       }
 
       update() {
         this.x += this.vx;
         this.y += this.vy;
-        if (this.x < 0 || this.x > width) this.vx *= -1;
-        if (this.y < 0 || this.y > height) this.vy *= -1;
+        if (this.x < 0) this.x = width;
+        if (this.x > width) this.x = 0;
+        if (this.y < 0) this.y = height;
+        if (this.y > height) this.y = 0;
         this.alpha += (this.targetAlpha - this.alpha) * 0.02;
         this.pulse += this.pulseSpeed;
       }
 
       draw() {
         if (!ctx) return;
-        const finalAlpha = this.alpha * (0.8 + Math.sin(this.pulse) * 0.2) * (isDark ? 0.8 : 0.4);
+        const finalAlpha = this.alpha * (0.7 + Math.sin(this.pulse) * 0.3) * (isDark ? 0.8 : 0.4);
         ctx.save();
         ctx.globalAlpha = finalAlpha;
         ctx.fillStyle = `rgb(${this.color})`;
@@ -77,38 +79,42 @@ export const AnimatedBackground: React.FC = () => {
       }
     }
 
-    class Line {
+    class EnergyLine {
       x: number; y: number; speed: number; length: number; opacity: number; color: string;
 
       constructor() {
+        this.reset();
+      }
+
+      reset() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.speed = Math.random() * 1.5 + 0.5;
-        this.length = Math.random() * 300 + 200;
-        this.opacity = Math.random() * 0.3;
-        this.color = Math.random() > 0.5 ? '15, 252, 235' : '150, 150, 255';
+        this.speed = Math.random() * 4 + 2;
+        this.length = Math.random() * 400 + 200;
+        this.opacity = Math.random() * 0.2;
+        this.color = Math.random() > 0.5 ? '15, 252, 235' : '100, 200, 255';
       }
 
       update() {
-        this.y -= this.speed;
-        if (this.y < -this.length) {
-          this.y = height + this.length;
-          this.x = Math.random() * width;
+        this.x += this.speed;
+        if (this.x > width + this.length) {
+          this.x = -this.length;
+          this.y = Math.random() * height;
         }
       }
 
       draw() {
         if (!ctx) return;
         ctx.save();
-        const grad = ctx.createLinearGradient(0, this.y, 0, this.y + this.length);
+        const grad = ctx.createLinearGradient(this.x, 0, this.x + this.length, 0);
         grad.addColorStop(0, `rgba(${this.color}, 0)`);
         grad.addColorStop(0.5, `rgba(${this.color}, ${this.opacity * (isDark ? 1 : 0.5)})`);
         grad.addColorStop(1, `rgba(${this.color}, 0)`);
         ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x, this.y + this.length);
+        ctx.lineTo(this.x + this.length, this.y);
         ctx.stroke();
         ctx.restore();
       }
@@ -119,24 +125,25 @@ export const AnimatedBackground: React.FC = () => {
 
       constructor() {
         this.y = Math.random() * height;
-        this.speed = Math.random() * 0.5 + 0.2;
-        this.amplitude = Math.random() * 50 + 20;
+        this.speed = Math.random() * 0.05 + 0.02;
+        this.amplitude = Math.random() * 100 + 50;
         this.length = Math.random() * 1000 + 500;
-        this.opacity = Math.random() * 0.05;
+        this.opacity = Math.random() * 0.06;
         this.phase = Math.random() * Math.PI * 2;
       }
 
       update() {
-        this.phase += this.speed * 0.1;
+        this.phase += this.speed;
       }
 
       draw() {
         if (!ctx) return;
         ctx.save();
         ctx.beginPath();
-        ctx.strokeStyle = isDark ? `rgba(15, 252, 235, ${this.opacity})` : `rgba(25, 136, 245, ${this.opacity * 2})`;
+        const color = isDark ? '15, 252, 235' : '25, 136, 245';
+        ctx.strokeStyle = `rgba(${color}, ${this.opacity * (isDark ? 1 : 2)})`;
         ctx.lineWidth = 2;
-        for (let x = 0; x <= width; x += 10) {
+        for (let x = 0; x <= width; x += 15) {
           const dy = Math.sin(x / this.length + this.phase) * this.amplitude;
           if (x === 0) ctx.moveTo(x, this.y + dy);
           else ctx.lineTo(x, this.y + dy);
@@ -147,50 +154,49 @@ export const AnimatedBackground: React.FC = () => {
     }
 
     const init = () => {
-      particles = Array.from({ length: 80 }, () => new Particle());
-      lines = Array.from({ length: 25 }, () => new Line());
-      waves = Array.from({ length: 10 }, () => new Wave());
+      particles = Array.from({ length: 100 }, () => new Particle());
+      waves = Array.from({ length: 12 }, () => new Wave());
+      lines = Array.from({ length: 30 }, () => new EnergyLine());
     };
 
     const drawGrid = () => {
-      const gridColor = isDark ? '25, 136, 245, 0.06' : '25, 136, 245, 0.12';
+      const gridColor = isDark ? '25, 136, 245, 0.08' : '25, 136, 245, 0.15';
       ctx.strokeStyle = `rgba(${gridColor})`;
       ctx.lineWidth = 0.5;
-      const step = 60;
+      const step = 80;
       const time = Date.now() / 1000;
-      const offset = (time * 20) % step;
+      const offsetX = (time * 40) % step;
+      const offsetY = (time * 30) % step;
       
-      // Perspective Grid
-      for (let x = 0; x < width; x += step) {
+      for (let x = -step; x < width + step; x += step) {
         ctx.beginPath();
-        ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+        ctx.moveTo(x + offsetX, 0); ctx.lineTo(x + offsetX, height); ctx.stroke();
       }
-      for (let y = 0; y < height; y += step) {
+      for (let y = -step; y < height + step; y += step) {
         ctx.beginPath();
-        ctx.moveTo(0, y + offset); ctx.lineTo(width, y + offset); ctx.stroke();
+        ctx.moveTo(0, y + offsetY); ctx.lineTo(width, y + offsetY); ctx.stroke();
       }
     };
 
     const render = () => {
-      ctx.fillStyle = isDark ? '#05060f' : '#f8fafd';
+      ctx.fillStyle = isDark ? '#020308' : '#f0f4f8';
       ctx.fillRect(0, 0, width, height);
 
-      // Radial gradient for atmospheric lighting
       const grad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width);
       if (isDark) {
-        grad.addColorStop(0, 'rgba(15, 252, 235, 0.03)');
-        grad.addColorStop(1, 'rgba(5, 6, 15, 0)');
+        grad.addColorStop(0, 'rgba(15, 252, 235, 0.05)');
+        grad.addColorStop(1, 'rgba(2, 3, 8, 0)');
       } else {
-        grad.addColorStop(0, 'rgba(25, 136, 245, 0.05)');
-        grad.addColorStop(1, 'rgba(248, 250, 253, 0)');
+        grad.addColorStop(0, 'rgba(25, 136, 245, 0.08)');
+        grad.addColorStop(1, 'rgba(240, 244, 248, 0)');
       }
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, width, height);
 
       drawGrid();
       waves.forEach(w => { w.update(); w.draw(); });
-      particles.forEach(p => { p.update(); p.draw(); });
       lines.forEach(l => { l.update(); l.draw(); });
+      particles.forEach(p => { p.update(); p.draw(); });
       
       animationFrameId = requestAnimationFrame(render);
     };

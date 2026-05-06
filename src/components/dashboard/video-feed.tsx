@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { TrackedCustomer, Zone } from '@/lib/types';
-import { Maximize2, Camera, Settings, RefreshCcw, Loader2, ShieldCheck, AlertCircle, Scan } from 'lucide-react';
+import { ShieldCheck, Loader2, Scan, Activity, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VideoFeedProps {
@@ -21,7 +21,6 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   videoUrl, onFrame, isModelLoading, fps
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
 
   useEffect(() => {
     let animationFrame: number;
@@ -34,45 +33,50 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   }, [onFrame]);
 
   return (
-    <div className="relative w-full h-full bg-black group rounded-2xl overflow-hidden shadow-2xl">
+    <div className="relative w-full h-full bg-black group rounded-3xl overflow-hidden shadow-2xl aura-border">
       {/* Visual Source */}
       {videoUrl ? (
         <video ref={videoRef} src={videoUrl} autoPlay loop muted crossOrigin="anonymous" className="w-full h-full object-cover" />
       ) : (
-        <video ref={videoRef} src="https://storage.googleapis.com/tfjs-models/demos/cvat/beach.mp4" autoPlay loop muted crossOrigin="anonymous" className="w-full h-full object-cover opacity-70 grayscale brightness-75" />
+        <video ref={videoRef} src="https://storage.googleapis.com/tfjs-models/demos/cvat/beach.mp4" autoPlay loop muted crossOrigin="anonymous" className="w-full h-full object-cover opacity-80" />
       )}
       
-      {/* Grid Overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-20 bg-[linear-gradient(rgba(15,252,235,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(15,252,235,0.08)_1px,transparent_1px)] bg-[size:30px_30px]" />
-      
-      {/* HUD Scanner */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-40">
-        <div className="w-full h-[20%] bg-gradient-to-b from-transparent via-accent/40 to-transparent animate-scanline absolute top-0 left-0" />
+      {/* HUD Layers */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(15,252,235,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(15,252,235,0.1)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        <div className="absolute inset-0 overflow-hidden opacity-30">
+          <div className="w-full h-1 bg-accent/40 absolute top-0 left-0 animate-scanline shadow-[0_0_15px_hsl(var(--accent))]" />
+        </div>
       </div>
 
       {isModelLoading && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl">
-          <Loader2 className="w-16 h-16 text-accent animate-spin mb-6" />
-          <p className="text-accent font-code text-[10px] tracking-[1em] uppercase neon-text animate-pulse">Neural Initialization...</p>
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-2xl">
+          <div className="relative">
+            <Loader2 className="w-20 h-20 text-accent animate-spin mb-8" />
+            <div className="absolute inset-0 text-accent blur-xl opacity-50 animate-pulse">
+               <Loader2 className="w-20 h-20" />
+            </div>
+          </div>
+          <p className="text-accent font-code text-[12px] tracking-[1.5em] uppercase neon-text animate-pulse">Neural Synchronization</p>
         </div>
       )}
 
-      {/* HUD Elements */}
-      <div className="absolute top-6 left-6 flex flex-col gap-3 pointer-events-none">
-        <div className="glass px-5 py-2.5 rounded-xl border-accent/30 flex items-center gap-3 backdrop-blur-md shadow-lg">
+      {/* Top HUD Indicators */}
+      <div className="absolute top-8 left-8 flex flex-col gap-4 pointer-events-none">
+        <div className="glass px-6 py-3 rounded-2xl border-accent/40 flex items-center gap-4 backdrop-blur-2xl shadow-2xl">
           <Scan className="w-4 h-4 text-accent animate-pulse" />
-          <span className="text-[10px] font-bold text-accent uppercase tracking-[0.3em]">AI Stream: Nominal</span>
+          <span className="text-[11px] font-bold text-accent uppercase tracking-[0.4em] neon-text">AI Stream ACTIVE</span>
         </div>
-        <div className="glass px-5 py-2.5 rounded-xl border-white/10 flex items-center gap-2 backdrop-blur-md">
-          <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
-          <span className="text-[9px] font-code text-white/70 uppercase tracking-widest">Protocol: CV-4589-X</span>
+        <div className="glass px-6 py-3 rounded-2xl border-white/10 flex items-center gap-3 backdrop-blur-2xl">
+          <Activity className="w-4 h-4 text-white/70 animate-bounce" />
+          <span className="text-[10px] font-code text-white/70 uppercase tracking-widest">Latency: 12ms</span>
         </div>
       </div>
 
-      <div className="absolute top-6 right-6 pointer-events-none">
-        <div className="glass px-5 py-2.5 rounded-xl border-emerald-500/30 flex items-center gap-3 backdrop-blur-md">
+      <div className="absolute top-8 right-8 pointer-events-none">
+        <div className="glass px-6 py-3 rounded-2xl border-emerald-500/40 flex items-center gap-4 backdrop-blur-2xl">
            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-           <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Vision Secure</span>
+           <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest">System Nominal</span>
         </div>
       </div>
 
@@ -81,9 +85,9 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           {zones.map((zone) => (
             <g key={zone.id}>
-              <rect x={zone.x} y={zone.y} width={zone.width} height={zone.height} fill={zone.color} fillOpacity="0.08" stroke={zone.color} strokeWidth="0.25" className="transition-all duration-700" />
-              <rect x={zone.x} y={zone.y} width={zone.width} height="4" fill={zone.color} fillOpacity="0.2" />
-              <text x={zone.x + 0.8} y={zone.y + 2.8} fill={zone.color} style={{ fontSize: '1.8px', fontWeight: 'bold' }} className="uppercase tracking-[0.3em] opacity-90 drop-shadow-md">{zone.label}</text>
+              <rect x={zone.x} y={zone.y} width={zone.width} height={zone.height} fill={zone.color} fillOpacity="0.06" stroke={zone.color} strokeWidth="0.3" className="transition-all duration-1000" />
+              <rect x={zone.x} y={zone.y} width={zone.width} height="4" fill={zone.color} fillOpacity="0.25" />
+              <text x={zone.x + 1} y={zone.y + 3} fill={zone.color} style={{ fontSize: '2px', fontWeight: 'bold' }} className="uppercase tracking-[0.4em] opacity-90 drop-shadow-lg">{zone.label}</text>
             </g>
           ))}
         </svg>
@@ -92,37 +96,43 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
       {/* Tracker Visuals */}
       <div className="absolute inset-0 pointer-events-none">
         {customers.map((c) => (
-          <div key={c.trackerId} className={cn("absolute border-2 transition-all duration-150 ease-linear", c.status === 'flagged' ? 'border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.5)]' : 'border-accent shadow-[0_0_25px_rgba(25,136,245,0.4)]')} style={{ left: `${c.bbox.x}%`, top: `${c.bbox.y}%`, width: `${c.bbox.w}%`, height: `${c.bbox.h}%` }}>
-            <div className={cn("absolute -top-9 left-0 px-3 py-1.5 text-[10px] font-bold text-white rounded-t-xl flex items-center gap-3 backdrop-blur-md", c.status === 'paid' ? 'bg-emerald-500/80' : (c.status === 'flagged' ? 'bg-red-500/80' : 'bg-primary/80'))}>
+          <div key={c.trackerId} className={cn("absolute border-2 transition-all duration-150 ease-linear", c.status === 'flagged' ? 'border-red-500 shadow-[0_0_30px_rgba(239,68,68,0.6)]' : 'border-accent shadow-[0_0_30px_rgba(25,136,245,0.5)]')} style={{ left: `${c.bbox.x}%`, top: `${c.bbox.y}%`, width: `${c.bbox.w}%`, height: `${c.bbox.h}%` }}>
+            <div className={cn("absolute -top-10 left-0 px-4 py-2 text-[11px] font-bold text-white rounded-t-2xl flex items-center gap-4 backdrop-blur-2xl border-t border-x border-white/20 shadow-xl", c.status === 'paid' ? 'bg-emerald-500/90' : (c.status === 'flagged' ? 'bg-red-500/90' : 'bg-primary/90'))}>
+              <Target className="w-3.5 h-3.5 animate-pulse" />
               <span className="tracking-widest uppercase">{c.trackerId}</span>
-              <div className="w-px h-3 bg-white/30" />
-              <span className="font-code text-[9px]">{Math.round(c.confidence * 100)}% DET</span>
+              <div className="w-px h-3.5 bg-white/40" />
+              <span className="font-code text-[10px] tracking-tighter">{Math.round(c.confidence * 100)}% RELIABILITY</span>
             </div>
             
-            {/* HUD Corner Accents */}
-            <div className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-white/90" />
-            <div className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 border-white/90" />
-            <div className="absolute -bottom-1.5 -left-1.5 w-4 h-4 border-b-2 border-l-2 border-white/90" />
-            <div className="absolute -bottom-1.5 -right-1.5 w-4 h-4 border-b-2 border-r-2 border-white/90" />
+            {/* HUD Corner Brackets */}
+            <div className="absolute -top-2 -left-2 w-5 h-5 border-t-2 border-l-2 border-white animate-pulse" />
+            <div className="absolute -top-2 -right-2 w-5 h-5 border-t-2 border-r-2 border-white animate-pulse" />
+            <div className="absolute -bottom-2 -left-2 w-5 h-5 border-b-2 border-l-2 border-white animate-pulse" />
+            <div className="absolute -bottom-2 -right-2 w-5 h-5 border-b-2 border-r-2 border-white animate-pulse" />
             
-            {/* Interior Mesh */}
-            <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(circle,hsl(var(--accent))_1px,transparent_1px)] bg-[size:4px_4px]" />
+            {/* Interior Energy Mesh */}
+            <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle,hsl(var(--accent))_1.5px,transparent_1.5px)] bg-[size:6px_6px] animate-pulse" />
           </div>
         ))}
       </div>
 
-      {/* Stats overlay */}
-      <div className="absolute bottom-6 left-6 pointer-events-none">
-        <div className="glass px-6 py-4 rounded-2xl border-white/10 flex gap-10 backdrop-blur-xl shadow-2xl">
+      {/* Bottom Telemetry HUD */}
+      <div className="absolute bottom-8 left-8 right-8 pointer-events-none flex justify-between items-end">
+        <div className="glass px-8 py-5 rounded-3xl border-white/20 flex gap-12 backdrop-blur-3xl shadow-2xl animate-in slide-in-from-bottom-4 duration-700">
           <div className="flex flex-col">
-            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-[0.2em] mb-1">Processing Velocity</span>
-            <span className="text-xl font-code text-accent font-bold leading-none tracking-tighter">{fps} <span className="text-[10px] opacity-50">FPS</span></span>
+            <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-[0.3em] mb-1 opacity-70">Detection FPS</span>
+            <span className="text-2xl font-code text-accent font-bold leading-none tracking-tighter neon-text">{fps} <span className="text-[12px] opacity-40">PROC</span></span>
           </div>
-          <div className="w-px bg-white/10" />
+          <div className="w-px bg-white/20" />
           <div className="flex flex-col">
-            <span className="text-[8px] text-muted-foreground uppercase font-bold tracking-[0.2em] mb-1">Active Entities</span>
-            <span className="text-xl font-code text-white font-bold leading-none tracking-tighter">{customers.length.toString().padStart(2, '0')} <span className="text-[10px] opacity-50">TGT</span></span>
+            <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-[0.3em] mb-1 opacity-70">Tracked Entities</span>
+            <span className="text-2xl font-code text-white font-bold leading-none tracking-tighter">{customers.length.toString().padStart(2, '0')} <span className="text-[12px] opacity-40">UNITS</span></span>
           </div>
+        </div>
+        
+        <div className="glass px-6 py-4 rounded-2xl border-accent/30 flex items-center gap-4 backdrop-blur-2xl">
+           <div className="w-2.5 h-2.5 rounded-full bg-accent glow-pulse" />
+           <span className="text-[10px] font-bold text-accent uppercase tracking-widest">Real-time Stream: ENCRYPTED</span>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { CreditCard, QrCode, Smartphone, Wifi, Terminal, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { CreditCard, QrCode, Smartphone, Wifi, Terminal, CheckCircle2, Loader2, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -23,11 +23,11 @@ export const PaymentConsole: React.FC<PaymentConsoleProps> = ({ onSimulatePaymen
     if (activeSimulation) {
       setProgress(0);
       const steps = [
-        'Initializing Request...',
+        'Syncing Neural Link...',
         'Handshaking Terminal...',
-        'Authorizing via AI Matcher...',
-        'Webhook Callback Received',
-        'Transaction Finalized'
+        'Authorizing Transaction...',
+        'Associating Tracker ID...',
+        'Finalizing Buffer...'
       ];
       let stepIdx = 0;
       setStatusText(steps[0]);
@@ -39,13 +39,13 @@ export const PaymentConsole: React.FC<PaymentConsoleProps> = ({ onSimulatePaymen
             return 100;
           }
           const next = prev + 5;
-          if (next % 25 === 0 && stepIdx < steps.length - 1) {
+          if (next % 20 === 0 && stepIdx < steps.length - 1) {
             stepIdx++;
             setStatusText(steps[stepIdx]);
           }
           return next;
         });
-      }, 100);
+      }, 120);
     }
     return () => clearInterval(interval);
   }, [activeSimulation]);
@@ -64,117 +64,104 @@ export const PaymentConsole: React.FC<PaymentConsoleProps> = ({ onSimulatePaymen
       setActiveSimulation(null);
       setProgress(0);
       setStatusText('');
-    }, 2500);
+    }, 2800);
   };
 
   return (
     <Card className="bg-transparent border-none shadow-none">
-      <CardContent className="p-0 space-y-4">
-        <div className="flex items-center gap-2 mb-2">
+      <CardContent className="p-0 space-y-5">
+        <div className="flex items-center gap-3 mb-2">
           <Terminal className="w-4 h-4 text-primary animate-pulse" />
-          <h3 className="text-xs font-bold uppercase tracking-widest text-white neon-text">Neural Payment Engine</h3>
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.3em] text-foreground neon-text">Neural Payment Interface</h3>
         </div>
 
         {activeSimulation ? (
-          <div className="p-4 glass rounded-lg border-accent/30 space-y-4 animate-in fade-in zoom-in-95">
+          <div className="p-5 glass rounded-2xl border-accent/40 bg-accent/5 space-y-5 animate-in zoom-in-95 duration-500 aura-border">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <Loader2 className="w-5 h-5 text-accent animate-spin" />
-                <span className="text-xs font-bold uppercase text-accent tracking-widest">{activeSimulation} INJECTION IN PROGRESS</span>
+                <span className="text-[10px] font-bold uppercase text-accent tracking-[0.2em]">{activeSimulation} INJECTION: ACTIVE</span>
               </div>
-              <span className="text-[10px] font-code text-muted-foreground">{progress}%</span>
+              <span className="text-[11px] font-code text-muted-foreground">{progress}%</span>
             </div>
-            <Progress value={progress} className="h-1 bg-white/5" />
-            <p className="text-[10px] font-code text-accent/80 animate-pulse">{statusText}</p>
+            <Progress value={progress} className="h-1.5 bg-white/5" />
+            <p className="text-[10px] font-code text-accent/80 animate-pulse tracking-widest">// {statusText}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <Button
               variant="outline"
               disabled={isProcessing}
               onClick={() => handleSimulate('QR')}
-              className="h-auto py-5 flex flex-col items-center gap-2 border-white/5 bg-white/5 hover:bg-accent/10 hover:border-accent group transition-all duration-300 relative overflow-hidden"
+              className="h-auto py-6 flex flex-col items-center gap-3 border-white/10 bg-white/5 hover:bg-accent/10 hover:border-accent group transition-all duration-500 rounded-2xl aura-border"
             >
-              <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <QrCode className="w-6 h-6 text-accent group-hover:scale-110 group-hover:neon-text transition-transform" />
-              <span className="text-[9px] font-bold uppercase tracking-widest">QR Scanner</span>
+              <QrCode className="w-7 h-7 text-accent group-hover:scale-125 group-hover:neon-text transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">QR Scan</span>
             </Button>
 
             <Button
               variant="outline"
               disabled={isProcessing}
               onClick={() => handleSimulate('POS')}
-              className="h-auto py-5 flex flex-col items-center gap-2 border-white/5 bg-white/5 hover:bg-primary/10 hover:border-primary group transition-all duration-300 relative overflow-hidden"
+              className="h-auto py-6 flex flex-col items-center gap-3 border-white/10 bg-white/5 hover:bg-primary/10 hover:border-primary group transition-all duration-500 rounded-2xl aura-border"
             >
-              <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Smartphone className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" />
-              <span className="text-[9px] font-bold uppercase tracking-widest">POS Inject</span>
+              <Smartphone className="w-7 h-7 text-primary group-hover:scale-125 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">POS Inject</span>
             </Button>
 
             <Button
               variant="outline"
               disabled={isProcessing}
               onClick={() => handleSimulate('Card')}
-              className="h-auto py-5 flex flex-col items-center gap-2 border-white/5 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500 group transition-all duration-300 relative overflow-hidden"
+              className="h-auto py-6 flex flex-col items-center gap-3 border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500 group transition-all duration-500 rounded-2xl aura-border"
             >
-              <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CreditCard className="w-6 h-6 text-emerald-500 group-hover:scale-110 transition-transform" />
-              <span className="text-[9px] font-bold uppercase tracking-widest">EMV Emulate</span>
+              <CreditCard className="w-7 h-7 text-emerald-500 group-hover:scale-125 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">Card EMV</span>
             </Button>
 
             <Button
               variant="outline"
               disabled={isProcessing}
               onClick={() => handleSimulate('UPI')}
-              className="h-auto py-5 flex flex-col items-center gap-2 border-white/5 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500 group transition-all duration-300 relative overflow-hidden"
+              className="h-auto py-6 flex flex-col items-center gap-3 border-white/10 bg-white/5 hover:bg-purple-500/10 hover:border-purple-500 group transition-all duration-500 rounded-2xl aura-border"
             >
-              <div className="absolute inset-0 bg-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <Wifi className="w-6 h-6 text-purple-500 group-hover:scale-110 transition-transform" />
-              <span className="text-[9px] font-bold uppercase tracking-widest">UPI Webhook</span>
+              <Wifi className="w-7 h-7 text-purple-500 group-hover:scale-125 transition-transform" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em]">UPI Link</span>
             </Button>
           </div>
         )}
 
         {recentTransactions.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-[9px] font-bold uppercase text-muted-foreground tracking-widest">Live Buffer</h4>
+          <div className="space-y-3 animate-in fade-in duration-700">
+            <h4 className="text-[10px] font-bold uppercase text-muted-foreground tracking-[0.3em] opacity-60">Verification Stream</h4>
             {recentTransactions.map(tx => (
-              <div key={tx.id} className="p-2 glass rounded border-white/5 flex items-center justify-between text-[10px] animate-in slide-in-from-right-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                  <span className="font-bold text-white">{tx.method}</span>
+              <div key={tx.id} className="p-3 glass rounded-xl border-white/10 flex items-center justify-between text-[11px] hover:bg-white/5 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                  <span className="font-bold text-foreground">{tx.method} AUTH</span>
                 </div>
-                <span className="font-code text-muted-foreground">{tx.id}</span>
+                <span className="font-code text-muted-foreground opacity-50">{tx.id}</span>
               </div>
             ))}
           </div>
         )}
 
-        <div className="p-3 glass rounded-lg border-white/5 text-[10px] font-code space-y-2">
-          <div className="flex items-center justify-between opacity-70">
-            <span className="text-accent/70 font-bold tracking-tighter">// INTEGRATION STREAM</span>
-            <div className="flex gap-1">
-              <div className="w-1 h-1 rounded-full bg-accent animate-pulse" />
-              <div className="w-1 h-1 rounded-full bg-accent animate-pulse delay-100" />
-              <div className="w-1 h-1 rounded-full bg-accent animate-pulse delay-200" />
+        <div className="p-4 glass rounded-2xl border-white/10 text-[10px] font-code space-y-3 aura-border">
+          <div className="flex items-center justify-between">
+            <span className="text-accent/80 font-bold tracking-tighter uppercase font-headline">Processor Status</span>
+            <div className="flex gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse delay-700" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-y-1">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Stripe: CONNECTED</span>
+          <div className="grid grid-cols-2 gap-y-2 opacity-80">
+            <div className="flex items-center gap-3 group">
+              <Zap className="w-3 h-3 text-emerald-500 group-hover:scale-125 transition-transform" />
+              <span>Stripe: OK</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Webhook: ACTIVE</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>POS-API: STREAMING</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Razopay: SYNCED</span>
+            <div className="flex items-center gap-3 group">
+              <Zap className="w-3 h-3 text-emerald-500 group-hover:scale-125 transition-transform" />
+              <span>Hooks: OK</span>
             </div>
           </div>
         </div>
