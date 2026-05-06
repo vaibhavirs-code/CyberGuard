@@ -23,7 +23,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    --radius: 1rem;
   }
 
   .dark {
@@ -60,14 +60,20 @@
 
 @layer utilities {
   .glass {
-    @apply bg-background/40 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+    @apply bg-background/40 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)];
+  }
+  .dark .glass {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/5 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)];
+  }
+  .light .glass {
+    @apply bg-white/60 backdrop-blur-3xl border border-white/40 shadow-[0_8px_32px_0_rgba(25,136,245,0.1)];
   }
   .neon-text {
     text-shadow: 0 0 10px hsl(var(--accent) / 0.8), 0 0 20px hsl(var(--accent) / 0.4);
   }
   .aura-border {
     @apply relative overflow-hidden;
-    box-shadow: 0 0 20px -5px hsl(var(--accent) / 0.2);
+    box-shadow: 0 0 25px -5px hsl(var(--accent) / 0.15);
   }
   .aura-border::after {
     content: '';
@@ -80,17 +86,17 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 5px hsl(var(--accent) / 0.2); }
-  50% { box-shadow: 0 0 20px hsl(var(--accent) / 0.4); }
+  0%, 100% { box-shadow: 0 0 5px hsl(var(--accent) / 0.2); opacity: 0.8; }
+  50% { box-shadow: 0 0 25px hsl(var(--accent) / 0.5); opacity: 1; }
 }
 
 @keyframes scanline {
   0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+  100% { transform: translateY(200%); }
 }
 
 .animate-scanline {
-  animation: scanline 6s linear infinite;
+  animation: scanline 8s linear infinite;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -99,4 +105,15 @@
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }

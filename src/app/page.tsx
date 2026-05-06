@@ -16,10 +16,10 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
 
 const INITIAL_ZONES: Zone[] = [
-  { id: 'z1', type: 'entry', label: 'Entry Gate', x: 5, y: 10, width: 20, height: 80, color: '#1988F5' },
-  { id: 'z2', type: 'billing', label: 'Billing Counter', x: 40, y: 40, width: 20, height: 25, color: '#0FFCEB' },
-  { id: 'z3', type: 'exit', label: 'Security Exit', x: 75, y: 10, width: 20, height: 80, color: '#ef4444' },
-  { id: 'z4', type: 'shopping', label: 'Floor Area', x: 25, y: 10, width: 50, height: 80, color: '#f59e0b' },
+  { id: 'z1', type: 'entry', label: 'Entry Perimeter', x: 5, y: 10, width: 20, height: 80, color: '#1988F5' },
+  { id: 'z2', type: 'billing', label: 'Billing Interface', x: 40, y: 40, width: 20, height: 25, color: '#0FFCEB' },
+  { id: 'z3', type: 'exit', label: 'Security Gate', x: 75, y: 10, width: 20, height: 80, color: '#ef4444' },
+  { id: 'z4', type: 'shopping', label: 'Floor Matrix', x: 25, y: 10, width: 50, height: 80, color: '#f59e0b' },
 ];
 
 export default function Dashboard() {
@@ -50,13 +50,13 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadModel() {
       setIsModelLoading(true);
-      addLog('Neural Vision Engine: INITIALIZING...', 'info');
+      addLog('Neural Engine: Core Synchronization...', 'info');
       try {
         modelRef.current = await cocoSsd.load();
         setIsModelLoading(false);
-        addLog('Neural Core ONLINE: Models Loaded', 'success');
+        addLog('Neural Core ONLINE: Detection Ready', 'success');
       } catch (err) {
-        addLog('Failed to load Vision Engine', 'error');
+        addLog('Neural Core CRITICAL: Initialization Failure', 'error');
       }
     }
     loadModel();
@@ -81,7 +81,7 @@ export default function Dashboard() {
   useEffect(() => {
     customers.forEach(c => {
       if (c.currentZone === 'exit' && c.status === 'unpaid') {
-        addLog(`CRITICAL: UNPAID EXIT DETECTED [ID: ${c.trackerId}]`, 'alert');
+        addLog(`CRITICAL: UNPAID EXIT VIOLATION [TARGET: ${c.trackerId}]`, 'alert');
         if (isArduinoConnected) sendAlert();
       }
     });
@@ -98,9 +98,9 @@ export default function Dashboard() {
       });
       if (result.success && result.associatedTrackerId) {
         setCustomers(prev => prev.map(c => c.trackerId === result.associatedTrackerId ? { ...c, status: 'paid' } : c));
-        addLog(`Payment Verified: ${result.reason}`, 'success');
+        addLog(`Payment Verified [${payId}]: ${result.reason}`, 'success');
       } else {
-        addLog(`Payment Mismatch: ${result.reason}`, 'warning');
+        addLog(`Validation Error [${payId}]: ${result.reason}`, 'warning');
       }
     } finally {
       setIsProcessingPayment(false);
@@ -108,27 +108,28 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background transition-colors duration-700">
+    <div className="flex h-screen w-full bg-background transition-colors duration-1000 relative">
       <AnimatedBackground />
       <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden relative z-10">
         <Header />
-        <main className="flex-1 flex gap-6 p-6 overflow-hidden">
-          {/* Workspace Area: Center + Bottom */}
-          <div className="flex-[3] flex flex-col gap-6 overflow-hidden">
-            <div className="flex-1 relative aura-border rounded-xl glass overflow-hidden">
+        <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
+          {/* Workspace Area: Left/Center */}
+          <div className="flex-[3] flex flex-col gap-6 overflow-hidden min-h-0">
+            <div className="flex-1 relative aura-border rounded-3xl glass overflow-hidden shadow-2xl transition-all duration-700">
+              <div className="absolute inset-0 shimmer opacity-5 pointer-events-none" />
               <VideoFeed 
                 customers={customers} zones={zones} onZoneChange={setZones}
                 isEditingZones={isEditingZones} videoUrl={videoUrl} onFrame={handleFrame}
                 isModelLoading={isModelLoading} fps={fps}
               />
             </div>
-            <div className="h-64 aura-border rounded-xl">
+            <div className="h-64 lg:h-72 transition-all duration-700">
               <EventTimeline logs={logs} />
             </div>
           </div>
           {/* Controls Area: Right Column */}
-          <div className="w-[400px] flex flex-col gap-6 overflow-y-auto pr-2 hide-scrollbar">
+          <div className="w-full lg:w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 lg:pr-4 hide-scrollbar scroll-smooth">
             <SidebarPanels 
               customers={customers} isEditingZones={isEditingZones}
               onToggleEditing={() => setIsEditingZones(!isEditingZones)}
