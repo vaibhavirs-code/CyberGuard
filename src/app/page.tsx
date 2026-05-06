@@ -67,8 +67,8 @@ export default function Dashboard() {
     if (!modelRef.current || isModelLoading) return;
 
     const now = performance.now();
-    // Throttle AI detection to ~15 FPS (every 66ms) to prevent lag
-    if (now - lastProcessTimeRef.current < 66) return;
+    // Throttle AI detection to ~10 FPS (every 100ms) to prevent UI blocking
+    if (now - lastProcessTimeRef.current < 100) return;
     lastProcessTimeRef.current = now;
 
     const start = performance.now();
