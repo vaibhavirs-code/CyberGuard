@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -29,7 +28,7 @@ export const AnimatedBackground: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false }); // Performance optimization
     if (!ctx) return;
 
     let animationFrameId: number;
@@ -52,35 +51,35 @@ export const AnimatedBackground: React.FC = () => {
         this.y = Math.random() * height;
         this.originX = this.x;
         this.originY = this.y;
-        this.vx = (Math.random() - 0.5) * 3; // Boosted speed
-        this.vy = (Math.random() - 0.5) * 3;
-        this.size = Math.random() * 4 + 1; // Slightly larger
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = (Math.random() - 0.5) * 2;
+        this.size = Math.random() * 3 + 1;
         this.alpha = 0;
-        this.targetAlpha = Math.random() * 0.6 + 0.3; // Brighter
+        this.targetAlpha = Math.random() * 0.4 + 0.2;
         this.color = Math.random() > 0.6 ? '15, 252, 235' : '25, 136, 245';
         this.pulse = Math.random() * Math.PI * 2;
-        this.pulseSpeed = Math.random() * 0.1 + 0.05;
+        this.pulseSpeed = Math.random() * 0.05 + 0.02;
       }
 
       update() {
         const dx = this.x - mouseRef.current.x;
         const dy = this.y - mouseRef.current.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+        const distSq = dx * dx + dy * dy; // Optimization: avoid Math.sqrt
         
-        if (dist < 400) {
+        if (distSq < 160000) { // 400 * 400
+          const dist = Math.sqrt(distSq);
           const force = (400 - dist) / 400;
-          this.vx += (dx / dist) * force * 1.5;
-          this.vy += (dy / dist) * force * 1.5;
+          this.vx += (dx / dist) * force * 1;
+          this.vy += (dy / dist) * force * 1;
         }
 
         this.x += this.vx;
         this.y += this.vy;
         
-        // Friction and return-to-origin force
-        this.vx *= 0.96;
-        this.vy *= 0.96;
-        this.vx += (this.originX - this.x) * 0.001;
-        this.vy += (this.originY - this.y) * 0.001;
+        this.vx *= 0.95;
+        this.vy *= 0.95;
+        this.vx += (this.originX - this.x) * 0.0005;
+        this.vy += (this.originY - this.y) * 0.0005;
 
         if (this.x < -100) this.x = width + 100;
         if (this.x > width + 100) this.x = -100;
@@ -93,12 +92,10 @@ export const AnimatedBackground: React.FC = () => {
 
       draw() {
         if (!ctx) return;
-        const finalAlpha = this.alpha * (0.4 + Math.sin(this.pulse) * 0.6) * (isDark ? 1 : 0.6);
+        const finalAlpha = this.alpha * (0.6 + Math.sin(this.pulse) * 0.4) * (isDark ? 1 : 0.6);
         ctx.save();
         ctx.globalAlpha = finalAlpha;
         ctx.fillStyle = `rgb(${this.color})`;
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = `rgb(${this.color})`;
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -114,9 +111,9 @@ export const AnimatedBackground: React.FC = () => {
       reset() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.speed = Math.random() * 15 + 8; // Very fast
-        this.length = Math.random() * 600 + 400;
-        this.opacity = Math.random() * 0.4;
+        this.speed = Math.random() * 10 + 5;
+        this.length = Math.random() * 400 + 200;
+        this.opacity = Math.random() * 0.3;
         this.color = Math.random() > 0.5 ? '15, 252, 235' : '100, 200, 255';
       }
 
@@ -136,7 +133,7 @@ export const AnimatedBackground: React.FC = () => {
         grad.addColorStop(0.5, `rgba(${this.color}, ${this.opacity * (isDark ? 1 : 0.5)})`);
         grad.addColorStop(1, `rgba(${this.color}, 0)`);
         ctx.strokeStyle = grad;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(this.x, this.y);
         ctx.lineTo(this.x + this.length, this.y);
@@ -154,21 +151,21 @@ export const AnimatedBackground: React.FC = () => {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
         this.rotation = Math.random() * Math.PI * 2;
-        this.rotSpeed = (Math.random() - 0.5) * 0.06;
-        this.size = Math.random() * 60 + 30;
-        this.vx = (Math.random() - 0.5) * 2;
-        this.vy = (Math.random() - 0.5) * 2;
-        this.alpha = Math.random() * 0.15 + 0.05;
+        this.rotSpeed = (Math.random() - 0.5) * 0.04;
+        this.size = Math.random() * 40 + 20;
+        this.vx = (Math.random() - 0.5) * 1;
+        this.vy = (Math.random() - 0.5) * 1;
+        this.alpha = Math.random() * 0.1 + 0.05;
       }
 
       update() {
         this.x += this.vx;
         this.y += this.vy;
         this.rotation += this.rotSpeed;
-        if (this.x < -300) this.x = width + 300;
-        if (this.x > width + 300) this.x = -300;
-        if (this.y < -300) this.y = height + 300;
-        if (this.y > height + 300) this.y = -300;
+        if (this.x < -200) this.x = width + 200;
+        if (this.x > width + 200) this.x = -200;
+        if (this.y < -200) this.y = height + 200;
+        if (this.y > height + 200) this.y = -200;
       }
 
       draw() {
@@ -178,7 +175,7 @@ export const AnimatedBackground: React.FC = () => {
         ctx.rotate(this.rotation);
         const shardColor = isDark ? '15, 252, 235' : '25, 136, 245';
         ctx.strokeStyle = `rgba(${shardColor}, ${this.alpha})`;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.moveTo(-this.size, 0);
         ctx.lineTo(0, -this.size * 0.8);
@@ -195,10 +192,10 @@ export const AnimatedBackground: React.FC = () => {
 
       constructor() {
         this.y = Math.random() * height;
-        this.speed = Math.random() * 0.2 + 0.1;
-        this.amplitude = Math.random() * 180 + 100;
-        this.length = Math.random() * 1200 + 600;
-        this.opacity = Math.random() * 0.15;
+        this.speed = Math.random() * 0.15 + 0.05;
+        this.amplitude = Math.random() * 100 + 50;
+        this.length = Math.random() * 1000 + 500;
+        this.opacity = Math.random() * 0.1;
         this.phase = Math.random() * Math.PI * 2;
       }
 
@@ -210,8 +207,8 @@ export const AnimatedBackground: React.FC = () => {
         ctx.beginPath();
         const color = isDark ? '15, 252, 235' : '25, 136, 245';
         ctx.strokeStyle = `rgba(${color}, ${this.opacity * (isDark ? 1 : 2)})`;
-        ctx.lineWidth = 4;
-        for (let x = 0; x <= width; x += 40) {
+        ctx.lineWidth = 3;
+        for (let x = 0; x <= width; x += 60) {
           const dy = Math.sin(x / this.length + this.phase) * this.amplitude;
           if (x === 0) ctx.moveTo(x, this.y + dy);
           else ctx.lineTo(x, this.y + dy);
@@ -222,46 +219,49 @@ export const AnimatedBackground: React.FC = () => {
     }
 
     const init = () => {
-      particles = Array.from({ length: 250 }, () => new Particle());
-      waves = Array.from({ length: 15 }, () => new Wave());
-      lines = Array.from({ length: 80 }, () => new EnergyLine());
-      shards = Array.from({ length: 25 }, () => new FloatingShard());
+      // Reduced counts for performance
+      particles = Array.from({ length: 150 }, () => new Particle());
+      waves = Array.from({ length: 8 }, () => new Wave());
+      lines = Array.from({ length: 40 }, () => new EnergyLine());
+      shards = Array.from({ length: 15 }, () => new FloatingShard());
     };
 
     const drawGrid = () => {
-      const gridColor = isDark ? '25, 136, 245, 0.2' : '25, 136, 245, 0.3';
+      const gridColor = isDark ? '25, 136, 245, 0.15' : '25, 136, 245, 0.2';
       ctx.strokeStyle = `rgba(${gridColor})`;
       ctx.lineWidth = 1;
-      const step = 100;
-      const time = Date.now() / 1000;
-      const offsetX = (time * 80) % step;
-      const offsetY = (time * 60) % step;
+      const step = 120; // Larger steps
+      const time = Date.now() / 1500;
+      const offsetX = (time * 60) % step;
+      const offsetY = (time * 40) % step;
       
+      ctx.beginPath();
       for (let x = -step; x < width + step; x += step) {
-        ctx.beginPath();
-        ctx.moveTo(x + offsetX, 0); ctx.lineTo(x + offsetX, height); ctx.stroke();
+        ctx.moveTo(x + offsetX, 0); ctx.lineTo(x + offsetX, height);
       }
       for (let y = -step; y < height + step; y += step) {
-        ctx.beginPath();
-        ctx.moveTo(0, y + offsetY); ctx.lineTo(width, y + offsetY); ctx.stroke();
+        ctx.moveTo(0, y + offsetY); ctx.lineTo(width, y + offsetY);
       }
+      ctx.stroke();
     };
 
     const drawConnectiveLines = () => {
-      const maxDist = 150;
+      const maxDistSq = 14400; // 120 * 120
       const lineColor = isDark ? '15, 252, 235' : '25, 136, 245';
       
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < particles.length; i += 2) { // Skip some for speed
+        for (let j = i + 1; j < particles.length; j += 2) {
           const p1 = particles[i];
           const p2 = particles[j];
-          const dist = Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2);
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
+          const distSq = dx * dx + dy * dy;
           
-          if (dist < maxDist) {
-            const alpha = (1 - dist / maxDist) * 0.25 * (isDark ? 1 : 0.7);
+          if (distSq < maxDistSq) {
+            const alpha = (1 - distSq / maxDistSq) * 0.15 * (isDark ? 1 : 0.7);
             ctx.beginPath();
             ctx.strokeStyle = `rgba(${lineColor}, ${alpha})`;
-            ctx.lineWidth = 1;
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
             ctx.stroke();

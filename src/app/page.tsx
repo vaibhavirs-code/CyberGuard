@@ -16,14 +16,10 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
 import { Activity, Target, Cpu, ShieldCheck } from 'lucide-react';
 
-// Corrected Zone Positions: 
-// LEFT: Payment Counter (Red)
-// CENTER: Sales Floor (Amber)
-// RIGHT: Entry/Exit (Green)
 const INITIAL_ZONES: Zone[] = [
-  { id: 'z1', type: 'billing', label: 'Payment Counter', x: 5, y: 35, width: 22, height: 30, color: '#ef4444' }, // Red (Horizontal-ish)
-  { id: 'z2', type: 'shopping', label: 'Sales Floor', x: 30, y: 10, width: 38, height: 80, color: '#f59e0b' }, // Amber
-  { id: 'z3', type: 'entry-exit', label: 'Entry/Exit Path', x: 72, y: 10, width: 23, height: 80, color: '#10b981' }, // Green
+  { id: 'z1', type: 'billing', label: 'Payment Counter', x: 5, y: 35, width: 22, height: 30, color: '#ef4444' },
+  { id: 'z2', type: 'shopping', label: 'Sales Floor', x: 30, y: 10, width: 38, height: 80, color: '#f59e0b' },
+  { id: 'z3', type: 'entry-exit', label: 'Entry/Exit Path', x: 72, y: 10, width: 23, height: 80, color: '#10b981' },
 ];
 
 export default function Dashboard() {
@@ -38,6 +34,7 @@ export default function Dashboard() {
 
   const modelRef = useRef<cocoSsd.ObjectDetection | null>(null);
   const trackerRef = useRef<ObjectTracker>(new ObjectTracker());
+  const lastProcessTimeRef = useRef<number>(0);
   const { toast } = useToast();
   const { connect: connectArduino, sendAlert, isConnected: isArduinoConnected } = useArduino();
 
@@ -68,16 +65,30 @@ export default function Dashboard() {
 
   const handleFrame = useCallback(async (videoElement: HTMLVideoElement) => {
     if (!modelRef.current || isModelLoading) return;
+
+    const now = performance.now();
+    // Throttle AI detection to ~15 FPS (every 66ms) to prevent lag
+    if (now - lastProcessTimeRef.current < 66) return;
+    lastProcessTimeRef.current = now;
+
     const start = performance.now();
     const predictions = await modelRef.current.detect(videoElement);
     const end = performance.now();
+    
     setFps(Math.round(1000 / (end - start)));
+
     const personDetections = predictions
       .filter(p => p.class === 'person')
       .map(p => ({
-        bbox: [(p.bbox[0]/videoElement.videoWidth)*100, (p.bbox[1]/videoElement.videoHeight)*100, (p.bbox[2]/videoElement.videoWidth)*100, (p.bbox[3]/videoElement.videoHeight)*100],
+        bbox: [
+          (p.bbox[0] / videoElement.videoWidth) * 100,
+          (p.bbox[1] / videoElement.videoHeight) * 100,
+          (p.bbox[2] / videoElement.videoWidth) * 100,
+          (p.bbox[3] / videoElement.videoHeight) * 100
+        ],
         score: p.score
       }));
+
     const updatedTrackers = trackerRef.current.update(personDetections, zones);
     setCustomers(updatedTrackers);
   }, [isModelLoading, zones]);
