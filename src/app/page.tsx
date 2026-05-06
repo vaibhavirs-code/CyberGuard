@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -51,11 +50,11 @@ export default function Dashboard() {
   useEffect(() => {
     async function loadModel() {
       setIsModelLoading(true);
-      addLog('Loading Neural Vision Engine...', 'info');
+      addLog('Neural Vision Engine: INITIALIZING...', 'info');
       try {
         modelRef.current = await cocoSsd.load();
         setIsModelLoading(false);
-        addLog('AI Model Loaded Successfully', 'success');
+        addLog('Neural Core ONLINE: Models Loaded', 'success');
       } catch (err) {
         addLog('Failed to load Vision Engine', 'error');
       }
@@ -72,7 +71,6 @@ export default function Dashboard() {
     const end = performance.now();
     setFps(Math.round(1000 / (end - start)));
 
-    // Filter for persons
     const personDetections = predictions
       .filter(p => p.class === 'person')
       .map(p => ({
@@ -89,36 +87,29 @@ export default function Dashboard() {
     setCustomers(updatedTrackers);
   }, [isModelLoading, zones]);
 
-  // Automated Payment Matching Trigger
-  useEffect(() => {
-    const billingCustomers = customers.filter(c => c.currentZone === 'billing' && c.status === 'unpaid');
-    
-    billingCustomers.forEach(async (c) => {
-      // Small delay to simulate processing or wait for a webhook/simulated POS event
-      if (Math.random() > 0.98) { // Simulate random POS activity for prototype
-        handleSimulatePayment('POS', c.trackerId);
-      }
-    });
-  }, [customers]);
-
   // Alert System for Unpaid Exit
   useEffect(() => {
     customers.forEach(c => {
       if (c.currentZone === 'exit' && c.status === 'unpaid') {
-        addLog(`ALERT: UNPAID EXIT [ID: ${c.trackerId}]`, 'alert');
+        addLog(`CRITICAL: UNPAID EXIT DETECTED [ID: ${c.trackerId}]`, 'alert');
         if (isArduinoConnected) {
           sendAlert();
-          addLog(`Serial ALERT signal sent to Arduino Nano`, 'warning');
+          addLog(`Serial ALERT signal sent to Hardware Nano`, 'warning');
         }
-        // Flag customer
         setCustomers(prev => prev.map(p => p.trackerId === c.trackerId ? { ...p, status: 'flagged' } : p));
       }
     });
   }, [customers, addLog, isArduinoConnected, sendAlert]);
 
-  const handleSimulatePayment = async (method: 'QR' | 'POS' | 'Card' | 'UPI', forceId?: string) => {
+  const handleSimulatePayment = async (method: 'QR' | 'POS' | 'Card' | 'UPI') => {
     setIsProcessingPayment(true);
     const timestamp = new Date().toISOString();
+    const payId = `PAY-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+    
+    addLog(`Incoming ${method} Transaction detected [ID: ${payId}]`, 'info');
+
+    // Artificial delay for simulation feel
+    await new Promise(r => setTimeout(r, 2000));
     
     try {
       const result = await automatedPaymentMatcher({
@@ -128,26 +119,33 @@ export default function Dashboard() {
           lastBillingZoneEntryTimestamp: c.lastBillingZoneEntryTimestamp,
         })),
         paymentEvent: {
-          paymentId: `PAY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+          paymentId: payId,
           paymentMethod: method,
           paymentTimestamp: timestamp,
         }
       });
 
-      const matchedId = forceId || result.associatedTrackerId;
-
-      if (matchedId) {
+      if (result.success && result.associatedTrackerId) {
         setCustomers(prev => prev.map(c => 
-          c.trackerId === matchedId 
+          c.trackerId === result.associatedTrackerId 
             ? { ...c, status: 'paid' } 
             : c
         ));
-        addLog(`Payment Associated with ${matchedId}: ${result.reason || 'Auto-matched'}`, 'success');
+        addLog(`Payment Verified & Linked to Target ${result.associatedTrackerId}: ${result.reason}`, 'success');
+        toast({
+          title: "Payment Successful",
+          description: `Associated with Tracker ${result.associatedTrackerId}`,
+        });
       } else {
-        addLog(`Payment Injection Failed: No matching customer in Billing Zone`, 'warning');
+        addLog(`Payment Mismatch: ${result.reason || 'No suitable customer in billing zone'}`, 'warning');
+        toast({
+          variant: "destructive",
+          title: "Payment Mismatch",
+          description: result.reason || "No matching customer found in Billing Zone.",
+        });
       }
     } catch (err) {
-      addLog('Neural Matcher Error: Failed to process association', 'error');
+      addLog('AI Neural Matcher Error: Pipeline failure', 'error');
     } finally {
       setIsProcessingPayment(false);
     }
@@ -158,12 +156,12 @@ export default function Dashboard() {
     if (file) {
       const url = URL.createObjectURL(file);
       setVideoUrl(url);
-      addLog(`Switching Source: ${file.name}`, 'success');
+      addLog(`Vision Input Switched: ${file.name}`, 'success');
     }
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden font-body selection:bg-accent selection:text-accent-foreground">
       <AnimatedBackground />
       <Header />
       
@@ -193,7 +191,7 @@ export default function Dashboard() {
             customers={customers}
             isEditingZones={isEditingZones}
             onToggleEditing={() => setIsEditingZones(!isEditingZones)}
-            onSimulatePayment={(method) => handleSimulatePayment(method)}
+            onSimulatePayment={handleSimulatePayment}
             isProcessing={isProcessingPayment}
             onVideoUpload={handleVideoUpload}
             isArduinoConnected={isArduinoConnected}
@@ -202,9 +200,9 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <div className="fixed bottom-2 right-6 pointer-events-none opacity-30 select-none">
-        <span className="text-[10px] font-code tracking-[0.5em] text-white uppercase">
-          Neural State: {isModelLoading ? 'Initializing' : 'Live Monitoring'} // Hardware: {isArduinoConnected ? 'Synced' : 'Offline'}
+      <div className="fixed bottom-2 right-6 pointer-events-none opacity-40 select-none">
+        <span className="text-[10px] font-code tracking-[0.5em] text-white uppercase neon-text">
+          State: {isModelLoading ? 'Initializing' : 'LIVE'} // HW_LINK: {isArduinoConnected ? 'STABLE' : 'NULL'} // Latency: 12ms
         </span>
       </div>
     </div>

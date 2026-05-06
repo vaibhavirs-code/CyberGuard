@@ -13,103 +13,137 @@ export const AnimatedBackground: React.FC = () => {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let particles: Array<{
+    let particles: Particle[] = [];
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    class Particle {
       x: number;
       y: number;
       vx: number;
       vy: number;
       size: number;
       color: string;
-    }> = [];
+      alpha: number;
+      targetAlpha: number;
 
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initParticles();
-    };
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.size = Math.random() * 2 + 0.5;
+        this.color = Math.random() > 0.5 ? '#0FFCEB' : '#1988F5';
+        this.alpha = Math.random() * 0.5;
+        this.targetAlpha = Math.random() * 0.5 + 0.1;
+      }
 
-    const initParticles = () => {
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+
+        this.alpha += (this.targetAlpha - this.alpha) * 0.01;
+        if (Math.abs(this.alpha - this.targetAlpha) < 0.01) {
+          this.targetAlpha = Math.random() * 0.5 + 0.1;
+        }
+      }
+
+      draw() {
+        if (!ctx) return;
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Glow effect
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = this.color;
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    const init = () => {
       particles = [];
-      const count = Math.floor((canvas.width * canvas.height) / 15000);
+      const count = Math.floor((width * height) / 10000);
       for (let i = 0; i < count; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 2 + 1,
-          color: Math.random() > 0.5 ? '#1988F5' : '#0FFCEB'
-        });
+        particles.push(new Particle());
       }
     };
 
     const drawGrid = () => {
-      ctx.strokeStyle = 'rgba(25, 136, 245, 0.05)';
+      ctx.strokeStyle = 'rgba(25, 136, 245, 0.03)';
       ctx.lineWidth = 1;
-      const step = 60;
+      const step = 80;
       
-      for (let x = 0; x < canvas.width; x += step) {
+      for (let x = 0; x < width; x += step) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
+        ctx.lineTo(x, height);
         ctx.stroke();
       }
-      for (let y = 0; y < canvas.height; y += step) {
+      for (let y = 0; y < height; y += step) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
+        ctx.lineTo(width, y);
         ctx.stroke();
       }
     };
 
-    const render = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      drawGrid();
-
-      particles.forEach((p, i) => {
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < 0) p.x = canvas.width;
-        if (p.x > canvas.width) p.x = 0;
-        if (p.y < 0) p.y = canvas.height;
-        if (p.y > canvas.height) p.y = 0;
-
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = 0.2;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Draw connections
+    const drawConnections = () => {
+      ctx.lineWidth = 0.5;
+      for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
-          const p2 = particles[j];
-          const dx = p.x - p2.x;
-          const dy = p.y - p2.y;
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 150) {
-            ctx.strokeStyle = p.color;
-            ctx.globalAlpha = (1 - dist / 150) * 0.1;
-            ctx.lineWidth = 0.5;
+          if (dist < 180) {
             ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = particles[i].color;
+            ctx.globalAlpha = (1 - dist / 180) * 0.08;
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
             ctx.stroke();
           }
         }
+      }
+    };
+
+    const render = () => {
+      ctx.fillStyle = '#05060f';
+      ctx.fillRect(0, 0, width, height);
+      
+      drawGrid();
+      drawConnections();
+      
+      particles.forEach(p => {
+        p.update();
+        p.draw();
       });
 
       animationFrameId = requestAnimationFrame(render);
     };
 
-    window.addEventListener('resize', resize);
-    resize();
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      init();
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
     render();
 
     return () => {
-      window.removeEventListener('resize', resize);
+      window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -117,7 +151,7 @@ export const AnimatedBackground: React.FC = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[-1] bg-[#080A15]"
+      className="fixed inset-0 pointer-events-none z-[-1]"
     />
   );
 };
