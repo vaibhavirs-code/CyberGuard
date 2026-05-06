@@ -39,7 +39,29 @@ const paymentMatcherPrompt = ai.definePrompt({
   name: 'automatedPaymentMatcherPrompt',
   input: { schema: AutomatedPaymentMatcherInputSchema },
   output: { schema: AutomatedPaymentMatcherOutputSchema },
-  prompt: `You are an intelligent payment association system for a retail security platform. Your task is to analyze customer tracking data and an incoming payment event to determine the most probable customer associated with the payment.\n\nCarefully evaluate the following rules for association:\n1.  **Primary Rule**: A customer *must* be currently in the 'Billing Zone' to be considered for payment association.\n2.  **Temporal Proximity**: The payment timestamp should be reasonably close to the customer's 'lastBillingZoneEntryTimestamp'. A customer should ideally have entered the billing zone *before* or very close to the payment timestamp. Allow for a processing time window of up to 5 minutes after entering the billing zone. If a customer entered the billing zone significantly earlier (e.g., more than 5 minutes before) than the payment timestamp, they are less likely to be the correct match. If they entered after the payment, they cannot be the match.\n3.  **Uniqueness**: If multiple customers are in the billing zone and fit the temporal proximity rule, prioritize the customer whose 'lastBillingZoneEntryTimestamp' is the *most recent* (closest to the payment timestamp, but not after it). Assume that a payment event should be associated with only one customer.\n4.  **No Match**: If no suitable customer is found based on *all* the above rules, no association should be made.\n\nCustomers currently tracked:\n\`\`\`json\n{{{JSON.stringify customers}}}\n\`\`\`\n\nIncoming Payment Event:\n\`\`\`json\n{{{JSON.stringify paymentEvent}}}\n\`\`\`\n\nBased on this information, determine the best possible association.\nIf an association is made, set 'associatedTrackerId' to the matched customer's tracker ID and 'success' to true, with a concise 'reason' explaining the match (e.g., "Customer in billing zone, entered recently").\nIf no association can be made, set 'associatedTrackerId' to null and 'success' to false, providing a clear 'reason' why no suitable customer was found (e.g., "No customer in billing zone" or "No customer within temporal proximity").`
+  prompt: `You are an intelligent payment association system for a retail security platform. Your task is to analyze customer tracking data and an incoming payment event to determine the most probable customer associated with the payment.
+
+Carefully evaluate the following rules for association:
+1.  **Primary Rule**: A customer *must* be currently in the 'Billing Zone' to be considered for payment association.
+2.  **Temporal Proximity**: The payment timestamp should be reasonably close to the customer's 'lastBillingZoneEntryTimestamp'. A customer should ideally have entered the billing zone *before* or very close to the payment timestamp. Allow for a processing time window of up to 5 minutes after entering the billing zone. If a customer entered the billing zone significantly earlier (e.g., more than 5 minutes before) than the payment timestamp, they are less likely to be the correct match. If they entered after the payment, they cannot be the match.
+3.  **Uniqueness**: If multiple customers are in the billing zone and fit the temporal proximity rule, prioritize the customer whose 'lastBillingZoneEntryTimestamp' is the *most recent* (closest to the payment timestamp, but not after it). Assume that a payment event should be associated with only one customer.
+4.  **No Match**: If no suitable customer is found based on *all* the above rules, no association should be made.
+
+Customers currently tracked:
+{{#each customers}}
+- ID: {{trackerId}}
+  Current Zone: {{currentZone}}
+  Last Billing Entry: {{#if lastBillingZoneEntryTimestamp}}{{lastBillingZoneEntryTimestamp}}{{else}}N/A{{/if}}
+{{/each}}
+
+Incoming Payment Event:
+- Payment ID: {{paymentEvent.paymentId}}
+- Method: {{paymentEvent.paymentMethod}}
+- Timestamp: {{paymentEvent.paymentTimestamp}}
+
+Based on this information, determine the best possible association.
+If an association is made, set 'associatedTrackerId' to the matched customer's tracker ID and 'success' to true, with a concise 'reason' explaining the match (e.g., "Customer in billing zone, entered recently").
+If no association can be made, set 'associatedTrackerId' to null and 'success' to false, providing a clear 'reason' why no suitable customer was found (e.g., "No customer in billing zone" or "No customer within temporal proximity").`
 });
 
 const automatedPaymentMatcherFlow = ai.defineFlow(
