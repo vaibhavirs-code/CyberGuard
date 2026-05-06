@@ -1,9 +1,11 @@
+
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react';
 
 export const AnimatedBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: -1000, y: -1000 });
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
@@ -13,6 +15,14 @@ export const AnimatedBackground: React.FC = () => {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     setIsDark(document.documentElement.classList.contains('dark'));
     return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   useEffect(() => {
@@ -42,17 +52,30 @@ export const AnimatedBackground: React.FC = () => {
         this.y = Math.random() * height;
         this.vx = (Math.random() - 0.5) * 0.8;
         this.vy = (Math.random() - 0.5) * 0.8;
-        this.size = Math.random() * 3 + 1;
+        this.size = Math.random() * 2 + 1;
         this.alpha = 0;
-        this.targetAlpha = Math.random() * 0.4 + 0.1;
+        this.targetAlpha = Math.random() * 0.3 + 0.1;
         this.color = Math.random() > 0.6 ? '15, 252, 235' : '25, 136, 245';
         this.pulse = Math.random() * Math.PI * 2;
         this.pulseSpeed = Math.random() * 0.04 + 0.02;
       }
 
       update() {
+        // Reactive mouse movement
+        const dx = this.x - mouseRef.current.x;
+        const dy = this.y - mouseRef.current.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 200) {
+          const force = (200 - dist) / 200;
+          this.vx += (dx / dist) * force * 0.5;
+          this.vy += (dy / dist) * force * 0.5;
+        }
+
         this.x += this.vx;
         this.y += this.vy;
+        this.vx *= 0.98;
+        this.vy *= 0.98;
+
         if (this.x < 0) this.x = width;
         if (this.x > width) this.x = 0;
         if (this.y < 0) this.y = height;
@@ -70,11 +93,6 @@ export const AnimatedBackground: React.FC = () => {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
-        if (isDark) {
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = `rgb(${this.color})`;
-          ctx.fill();
-        }
         ctx.restore();
       }
     }
@@ -143,7 +161,7 @@ export const AnimatedBackground: React.FC = () => {
         const color = isDark ? '15, 252, 235' : '25, 136, 245';
         ctx.strokeStyle = `rgba(${color}, ${this.opacity * (isDark ? 1 : 2)})`;
         ctx.lineWidth = 2;
-        for (let x = 0; x <= width; x += 15) {
+        for (let x = 0; x <= width; x += 30) {
           const dy = Math.sin(x / this.length + this.phase) * this.amplitude;
           if (x === 0) ctx.moveTo(x, this.y + dy);
           else ctx.lineTo(x, this.y + dy);
@@ -154,9 +172,9 @@ export const AnimatedBackground: React.FC = () => {
     }
 
     const init = () => {
-      particles = Array.from({ length: 100 }, () => new Particle());
-      waves = Array.from({ length: 12 }, () => new Wave());
-      lines = Array.from({ length: 30 }, () => new EnergyLine());
+      particles = Array.from({ length: 150 }, () => new Particle());
+      waves = Array.from({ length: 8 }, () => new Wave());
+      lines = Array.from({ length: 40 }, () => new EnergyLine());
     };
 
     const drawGrid = () => {
@@ -178,22 +196,27 @@ export const AnimatedBackground: React.FC = () => {
       }
     };
 
+    const drawMouseAura = () => {
+      if (!ctx) return;
+      ctx.save();
+      const auraGrad = ctx.createRadialGradient(
+        mouseRef.current.x, mouseRef.current.y, 0,
+        mouseRef.current.x, mouseRef.current.y, 150
+      );
+      const auraColor = isDark ? '15, 252, 235' : '25, 136, 245';
+      auraGrad.addColorStop(0, `rgba(${auraColor}, ${isDark ? 0.15 : 0.08})`);
+      auraGrad.addColorStop(1, `rgba(${auraColor}, 0)`);
+      ctx.fillStyle = auraGrad;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+    };
+
     const render = () => {
       ctx.fillStyle = isDark ? '#020308' : '#f0f4f8';
       ctx.fillRect(0, 0, width, height);
 
-      const grad = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width);
-      if (isDark) {
-        grad.addColorStop(0, 'rgba(15, 252, 235, 0.05)');
-        grad.addColorStop(1, 'rgba(2, 3, 8, 0)');
-      } else {
-        grad.addColorStop(0, 'rgba(25, 136, 245, 0.08)');
-        grad.addColorStop(1, 'rgba(240, 244, 248, 0)');
-      }
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, width, height);
-
       drawGrid();
+      drawMouseAura();
       waves.forEach(w => { w.update(); w.draw(); });
       lines.forEach(l => { l.update(); l.draw(); });
       particles.forEach(p => { p.update(); p.draw(); });

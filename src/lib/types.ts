@@ -1,5 +1,5 @@
 
-export type ZoneType = 'entry' | 'billing' | 'exit' | 'shopping';
+export type ZoneType = 'entry-exit' | 'billing' | 'shopping';
 
 export interface Zone {
   id: string;

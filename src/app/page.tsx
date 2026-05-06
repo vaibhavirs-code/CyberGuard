@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -14,12 +15,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useArduino } from '@/hooks/use-arduino';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
+import { Activity, Target, Cpu, ShieldCheck } from 'lucide-react';
 
 const INITIAL_ZONES: Zone[] = [
-  { id: 'z1', type: 'entry', label: 'Entry Perimeter', x: 5, y: 10, width: 20, height: 80, color: '#1988F5' },
-  { id: 'z2', type: 'billing', label: 'Billing Interface', x: 40, y: 40, width: 20, height: 25, color: '#0FFCEB' },
-  { id: 'z3', type: 'exit', label: 'Security Gate', x: 75, y: 10, width: 20, height: 80, color: '#ef4444' },
-  { id: 'z4', type: 'shopping', label: 'Floor Matrix', x: 25, y: 10, width: 50, height: 80, color: '#f59e0b' },
+  { id: 'z1', type: 'entry-exit', label: 'Entry/Exit Path', x: 5, y: 10, width: 25, height: 80, color: '#10b981' }, // Green/Emerald
+  { id: 'z2', type: 'billing', label: 'Payment Counter', x: 45, y: 40, width: 30, height: 35, color: '#ef4444' }, // Red
+  { id: 'z3', type: 'shopping', label: 'Sales Floor', x: 30, y: 10, width: 65, height: 80, color: '#f59e0b' }, // Amber
 ];
 
 export default function Dashboard() {
@@ -80,8 +81,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     customers.forEach(c => {
-      if (c.currentZone === 'exit' && c.status === 'unpaid') {
-        addLog(`CRITICAL: UNPAID EXIT VIOLATION [TARGET: ${c.trackerId}]`, 'alert');
+      // Improved logic: If exiting through entry-exit zone without billing visit
+      const hasVisitedBilling = c.history.some(h => h.zone === 'billing');
+      const isExiting = c.currentZone === 'entry-exit' && c.history.length > 2 && c.history[c.history.length - 2].zone !== 'entry-exit';
+      
+      if (isExiting && !hasVisitedBilling && c.status === 'unpaid') {
+        addLog(`CRITICAL: UNPAID EXIT VIOLATION [ID: ${c.trackerId}]`, 'alert');
         if (isArduinoConnected) sendAlert();
       }
     });
@@ -92,13 +97,20 @@ export default function Dashboard() {
     const payId = `PAY-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     await new Promise(r => setTimeout(r, 2000));
     try {
+      const customersInBilling = customers.map(c => ({
+        trackerId: c.trackerId,
+        currentZone: c.currentZone,
+        lastBillingZoneEntryTimestamp: c.lastBillingZoneEntryTimestamp
+      }));
+
       const result = await automatedPaymentMatcher({
-        customers: customers.map(c => ({ trackerId: c.trackerId, currentZone: c.currentZone, lastBillingZoneEntryTimestamp: c.lastBillingZoneEntryTimestamp })),
+        customers: customersInBilling,
         paymentEvent: { paymentId: payId, paymentMethod: method, paymentTimestamp: new Date().toISOString() }
       });
+
       if (result.success && result.associatedTrackerId) {
         setCustomers(prev => prev.map(c => c.trackerId === result.associatedTrackerId ? { ...c, status: 'paid' } : c));
-        addLog(`Payment Verified [${payId}]: ${result.reason}`, 'success');
+        addLog(`Payment Associated [${payId}] -> TARGET: ${result.associatedTrackerId}`, 'success');
       } else {
         addLog(`Validation Error [${payId}]: ${result.reason}`, 'warning');
       }
@@ -108,7 +120,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background transition-colors duration-1000 relative">
+    <div className="flex h-screen w-full bg-background transition-colors duration-1000 relative overflow-hidden">
       <AnimatedBackground />
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden relative z-10">
@@ -116,20 +128,50 @@ export default function Dashboard() {
         <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
           {/* Workspace Area: Left/Center */}
           <div className="flex-[3] flex flex-col gap-6 overflow-hidden min-h-0">
-            <div className="flex-1 relative aura-border rounded-3xl glass overflow-hidden shadow-2xl transition-all duration-700">
-              <div className="absolute inset-0 shimmer opacity-5 pointer-events-none" />
+            <div className="flex-[2] relative aura-border rounded-3xl glass overflow-hidden shadow-2xl transition-all duration-700">
               <VideoFeed 
                 customers={customers} zones={zones} onZoneChange={setZones}
                 isEditingZones={isEditingZones} videoUrl={videoUrl} onFrame={handleFrame}
-                isModelLoading={isModelLoading} fps={fps}
+                isModelLoading={isModelLoading}
               />
             </div>
-            <div className="h-64 lg:h-72 transition-all duration-700">
+            
+            {/* Telemetry HUD - Now below the video feed */}
+            <div className="flex gap-4 animate-in slide-in-from-bottom-4 duration-700">
+              <div className="flex-1 glass px-6 py-4 rounded-2xl border-white/10 flex items-center justify-between aura-border group hover:bg-white/5 transition-all">
+                <div className="flex items-center gap-4">
+                  <Cpu className="w-5 h-5 text-accent animate-pulse" />
+                  <div>
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Neural FPS</span>
+                    <span className="text-xl font-code text-accent font-bold leading-none">{fps}</span>
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="flex items-center gap-4">
+                  <Target className="w-5 h-5 text-primary" />
+                  <div>
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Tracked Units</span>
+                    <span className="text-xl font-code text-foreground font-bold leading-none">{customers.length.toString().padStart(2, '0')}</span>
+                  </div>
+                </div>
+                <div className="w-px h-8 bg-white/10" />
+                <div className="flex items-center gap-4">
+                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
+                  <div>
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Security Level</span>
+                    <span className="text-xl font-code text-emerald-400 font-bold leading-none">V3.5</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 transition-all duration-700">
               <EventTimeline logs={logs} />
             </div>
           </div>
+
           {/* Controls Area: Right Column */}
-          <div className="w-full lg:w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 lg:pr-4 hide-scrollbar scroll-smooth">
+          <div className="w-full lg:w-[380px] flex flex-col gap-6 overflow-y-auto pr-2 hide-scrollbar scroll-smooth">
             <SidebarPanels 
               customers={customers} isEditingZones={isEditingZones}
               onToggleEditing={() => setIsEditingZones(!isEditingZones)}
