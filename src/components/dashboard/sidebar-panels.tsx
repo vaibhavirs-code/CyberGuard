@@ -4,7 +4,7 @@
 import React, { useRef } from 'react';
 import { TrackedCustomer } from '@/lib/types';
 import { PaymentConsole } from './payment-console';
-import { Users, Layout, Save, Trash2, Cpu, ArrowUpRight, Upload, Video } from 'lucide-react';
+import { Users, Layout, Save, Trash2, Cpu, ArrowUpRight, Upload, Video, Link, Link2Off, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,8 @@ interface SidebarPanelsProps {
   onSimulatePayment: (method: 'QR' | 'POS' | 'Card' | 'UPI') => void;
   isProcessing: boolean;
   onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isArduinoConnected: boolean;
+  onConnectArduino: () => void;
 }
 
 export const SidebarPanels: React.FC<SidebarPanelsProps> = ({ 
@@ -25,7 +27,9 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
   onToggleEditing,
   onSimulatePayment,
   isProcessing,
-  onVideoUpload
+  onVideoUpload,
+  isArduinoConnected,
+  onConnectArduino
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -36,7 +40,7 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
         <div className="p-4 border-b border-white/5 flex items-center justify-between bg-white/5">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-accent" />
-            <h3 className="text-sm font-bold uppercase tracking-wider">Active Trackers</h3>
+            <h3 className="text-sm font-bold uppercase tracking-wider">Neural Map</h3>
           </div>
           <Badge variant="outline" className="font-code text-[10px] border-accent/20 text-accent">
             {customers.length} TARGETS
@@ -56,7 +60,10 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full animate-pulse",
+                      c.status === 'paid' ? "bg-emerald-500" : "bg-accent"
+                    )} />
                     <span className="font-code text-xs font-bold">{c.trackerId}</span>
                   </div>
                   <Badge 
@@ -75,21 +82,54 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
                     <span>Zone: <span className="text-white uppercase">{c.currentZone}</span></span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <Cpu className="w-3 h-3" />
+                    <Activity className="w-3 h-3 text-accent" />
                     <span>Conf: <span className="text-white">{(c.confidence * 100).toFixed(0)}%</span></span>
                   </div>
                 </div>
               </div>
             ))}
+            {customers.length === 0 && (
+              <div className="py-10 text-center text-muted-foreground/30 font-code text-[10px] uppercase">
+                Awaiting Target Detection...
+              </div>
+            )}
           </div>
         </ScrollArea>
+      </div>
+
+      {/* Hardware Control */}
+      <div className="glass rounded-xl p-4 border-white/5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-accent" />
+            <h3 className="text-xs font-bold uppercase tracking-widest text-white">Arduino Link</h3>
+          </div>
+          <Badge variant="outline" className={cn(
+            "text-[9px] font-bold uppercase",
+            isArduinoConnected ? "border-emerald-500/50 text-emerald-400" : "border-red-500/50 text-red-400"
+          )}>
+            {isArduinoConnected ? 'Online' : 'Offline'}
+          </Badge>
+        </div>
+        <Button 
+          variant="outline" 
+          disabled={isArduinoConnected}
+          className="w-full h-10 border-white/10 hover:border-accent group text-[10px] font-bold uppercase transition-all"
+          onClick={onConnectArduino}
+        >
+          {isArduinoConnected ? (
+            <><Link className="w-4 h-4 mr-2 text-emerald-400" /> Nano V3 Synced</>
+          ) : (
+            <><Link2Off className="w-4 h-4 mr-2" /> Connect Hardware</>
+          )}
+        </Button>
       </div>
 
       {/* Video Source Control */}
       <div className="glass rounded-xl p-4 border-white/5 space-y-3">
         <div className="flex items-center gap-2">
           <Video className="w-4 h-4 text-accent" />
-          <h3 className="text-xs font-bold uppercase tracking-widest text-white">Video Source</h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-white">Vision Input</h3>
         </div>
         <input 
           type="file" 
@@ -104,11 +144,11 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
           onClick={() => fileInputRef.current?.click()}
         >
           <Upload className="w-4 h-4 mr-2 group-hover:animate-bounce" />
-          Inject Custom Footage
+          Inject Real Footage
         </Button>
       </div>
 
-      {/* Payment Simulation Console */}
+      {/* Payment simulation */}
       <div className="glass rounded-xl p-4 border-white/5">
         <PaymentConsole onSimulatePayment={onSimulatePayment} isProcessing={isProcessing} />
       </div>
@@ -117,7 +157,7 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
       <div className="glass rounded-xl p-4 border-white/5 space-y-4">
         <div className="flex items-center gap-2 mb-2">
           <ArrowUpRight className="w-4 h-4 text-accent" />
-          <h3 className="text-xs font-bold uppercase tracking-widest text-white">System Controls</h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-white">Zone Architect</h3>
         </div>
         
         <div className="grid grid-cols-2 gap-2">
@@ -131,42 +171,12 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
             )}
           >
             <Layout className="w-3.5 h-3.5" />
-            {isEditingZones ? 'Lock Zones' : 'Edit Zones'}
+            {isEditingZones ? 'Save Geometry' : 'Tune Zones'}
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="h-9 text-[10px] font-bold uppercase tracking-widest gap-2 border-white/10 hover:border-emerald-500"
-          >
+          <Button variant="outline" size="sm" className="h-9 text-[10px] font-bold uppercase tracking-widest gap-2 border-white/10">
             <Save className="w-3.5 h-3.5 text-emerald-500" />
-            Save Layout
+            Store Layout
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="h-9 text-[10px] font-bold uppercase tracking-widest gap-2 border-white/10 hover:border-red-500"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-red-500" />
-            Reset Zones
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="h-9 text-[10px] font-bold uppercase tracking-widest gap-2 border-white/10 hover:border-primary"
-          >
-            <Cpu className="w-3.5 h-3.5 text-primary" />
-            Hard Reset
-          </Button>
-        </div>
-
-        <div className="pt-4 border-t border-white/5">
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground uppercase font-bold mb-2">
-            <span>Arduino Connection</span>
-            <span className="text-emerald-500">CONNECTED</span>
-          </div>
-          <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-            <div className="h-full bg-accent w-2/3 animate-pulse" />
-          </div>
         </div>
       </div>
     </div>

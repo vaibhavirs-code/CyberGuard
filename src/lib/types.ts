@@ -1,13 +1,14 @@
+
 export type ZoneType = 'entry' | 'billing' | 'exit' | 'shopping';
 
 export interface Zone {
   id: string;
   type: ZoneType;
   label: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  x: number; // 0-100 percentage
+  y: number; // 0-100 percentage
+  width: number; // 0-100 percentage
+  height: number; // 0-100 percentage
   color: string;
 }
 
@@ -22,15 +23,7 @@ export interface TrackedCustomer {
   lastBillingZoneEntryTimestamp: string | null;
   history: { zone: ZoneType | 'none'; timestamp: string }[];
   confidence: number;
-}
-
-export interface PaymentEvent {
-  paymentId: string;
-  trackerId?: string;
-  paymentMethod: 'QR' | 'POS' | 'Card' | 'UPI';
-  amount: number;
-  timestamp: string;
-  status: 'success' | 'failed';
+  isReal: boolean; // True if from AI model, False if simulated
 }
 
 export interface SystemLog {
@@ -39,4 +32,9 @@ export interface SystemLog {
   type: 'info' | 'warning' | 'error' | 'success' | 'alert';
   message: string;
   metadata?: any;
+}
+
+export interface ArduinoStatus {
+  connected: boolean;
+  port: string | null;
 }
