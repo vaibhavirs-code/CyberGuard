@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -6,7 +7,6 @@ import { Sidebar } from '@/components/dashboard/sidebar';
 import { VideoFeed } from '@/components/dashboard/video-feed';
 import { SidebarPanels } from '@/components/dashboard/sidebar-panels';
 import { EventTimeline } from '@/components/dashboard/event-timeline';
-import { AnimatedBackground } from '@/components/dashboard/animated-background';
 import { Zone, TrackedCustomer, SystemLog } from '@/lib/types';
 import { ObjectTracker } from '@/lib/tracker';
 import { automatedPaymentMatcher } from '@/ai/flows/automated-payment-matcher';
@@ -67,7 +67,6 @@ export default function Dashboard() {
     if (!modelRef.current || isModelLoading) return;
 
     const now = performance.now();
-    // Throttle AI detection to ~10 FPS (every 100ms) to prevent UI blocking
     if (now - lastProcessTimeRef.current < 100) return;
     lastProcessTimeRef.current = now;
 
@@ -133,14 +132,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-background transition-colors duration-1000 relative overflow-hidden">
-      <AnimatedBackground />
+    <div className="flex h-screen w-full transition-colors duration-1000 relative overflow-hidden">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden relative z-10">
         <Header />
         <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
           <div className="flex-[3] flex flex-col gap-6 overflow-hidden min-h-0">
-            <div className="flex-[2] relative aura-border rounded-3xl glass overflow-hidden shadow-2xl transition-all duration-700">
+            <div className="flex-[2] relative rounded-3xl glass-light overflow-hidden shadow-2xl transition-all duration-700">
               <VideoFeed 
                 customers={customers} zones={zones} onZoneChange={setZones}
                 isEditingZones={isEditingZones} videoUrl={videoUrl} onFrame={handleFrame}
@@ -149,7 +147,7 @@ export default function Dashboard() {
             </div>
             
             <div className="flex gap-4 animate-in slide-in-from-bottom-4 duration-700">
-              <div className="flex-1 glass px-8 py-5 rounded-2xl border-white/10 flex items-center justify-between aura-border group hover:bg-white/5 transition-all shadow-xl">
+              <div className="flex-1 glass-light px-8 py-5 rounded-2xl flex items-center justify-between group hover:bg-white/5 transition-all shadow-xl">
                 <div className="flex items-center gap-5">
                   <div className="p-3 rounded-xl bg-accent/10 border border-accent/20 group-hover:scale-110 transition-transform">
                     <Cpu className="w-6 h-6 text-accent animate-pulse" />

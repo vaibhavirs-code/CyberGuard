@@ -1,6 +1,8 @@
-import type {Metadata} from 'next';
+
+import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { AnimatedBackground } from '@/components/dashboard/animated-background';
 
 export const metadata: Metadata = {
   title: 'CyberGuard Vision | AI Retail Intelligence',
@@ -32,6 +34,7 @@ export default function RootLayout({
         }} />
       </head>
       <body className="font-body antialiased bg-background text-foreground overflow-hidden">
+        <AnimatedBackground />
         {children}
         <Toaster />
       </body>
