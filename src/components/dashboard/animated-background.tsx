@@ -28,7 +28,7 @@ export const AnimatedBackground: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d', { alpha: false }); // Performance optimization
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
     let animationFrameId: number;
@@ -64,9 +64,9 @@ export const AnimatedBackground: React.FC = () => {
       update() {
         const dx = this.x - mouseRef.current.x;
         const dy = this.y - mouseRef.current.y;
-        const distSq = dx * dx + dy * dy; // Optimization: avoid Math.sqrt
+        const distSq = dx * dx + dy * dy;
         
-        if (distSq < 160000) { // 400 * 400
+        if (distSq < 160000) {
           const dist = Math.sqrt(distSq);
           const force = (400 - dist) / 400;
           this.vx += (dx / dist) * force * 1;
@@ -219,7 +219,6 @@ export const AnimatedBackground: React.FC = () => {
     }
 
     const init = () => {
-      // Reduced counts for performance
       particles = Array.from({ length: 150 }, () => new Particle());
       waves = Array.from({ length: 8 }, () => new Wave());
       lines = Array.from({ length: 40 }, () => new EnergyLine());
@@ -230,7 +229,7 @@ export const AnimatedBackground: React.FC = () => {
       const gridColor = isDark ? '25, 136, 245, 0.15' : '25, 136, 245, 0.2';
       ctx.strokeStyle = `rgba(${gridColor})`;
       ctx.lineWidth = 1;
-      const step = 120; // Larger steps
+      const step = 120;
       const time = Date.now() / 1500;
       const offsetX = (time * 60) % step;
       const offsetY = (time * 40) % step;
@@ -246,11 +245,11 @@ export const AnimatedBackground: React.FC = () => {
     };
 
     const drawConnectiveLines = () => {
-      const maxDistSq = 14400; // 120 * 120
+      const maxDistSq = 14400;
       const lineColor = isDark ? '15, 252, 235' : '25, 136, 245';
       
       ctx.lineWidth = 0.5;
-      for (let i = 0; i < particles.length; i += 2) { // Skip some for speed
+      for (let i = 0; i < particles.length; i += 2) {
         for (let j = i + 1; j < particles.length; j += 2) {
           const p1 = particles[i];
           const p2 = particles[j];
