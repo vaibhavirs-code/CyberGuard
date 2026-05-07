@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    /* LIGHT MODE: Luminous AI Lab / Apple Futuristic Aesthetic */
-    --background: 210 40% 98%;
+    /* ULTRA FUTURISTIC LIGHT MODE: Luminous AI Lab / Apple Holographic Aesthetic */
+    --background: 210 50% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 199 89% 48%;
+    --primary: 191 100% 45%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
-    --accent: 187 100% 42%;
+    --accent: 280 100% 60%;
     --accent-foreground: 222 47% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 199 89% 48%;
+    --ring: 191 100% 45%;
     --radius: 1.25rem;
   }
 
@@ -58,7 +58,7 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    transition: background-color 0.7s ease, color 0.7s ease;
+    transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1), color 0.8s ease;
   }
 }
 
@@ -71,15 +71,19 @@
 }
 
 .dark .glass {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(0, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.02);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.05);
 }
 
-.light .glass {
-  background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(0, 180, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.5);
+.light .glass, .light .cyber-panel {
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(32px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 10px 40px rgba(0, 180, 255, 0.1),
+    0 0 50px rgba(180, 120, 255, 0.08),
+    inset 0 0 30px rgba(255, 255, 255, 0.5);
 }
 
 .aura-border {
@@ -95,8 +99,7 @@
   background: linear-gradient(
     135deg,
     rgba(0, 255, 255, 0.5),
-    rgba(0, 120, 255, 0.2),
-    rgba(180, 0, 255, 0.5),
+    rgba(180, 0, 255, 0.4),
     rgba(0, 255, 255, 0.5)
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -108,8 +111,19 @@
   transition: opacity 0.3s ease;
 }
 
+.light .aura-border::after {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 220, 255, 0.6),
+    rgba(255, 100, 255, 0.4),
+    rgba(0, 255, 255, 0.6)
+  );
+  opacity: 0.6;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+}
+
 .aura-border:hover::after {
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .glow-text {
@@ -135,4 +149,52 @@
 
 .animate-scanline {
   animation: scanline 6s linear infinite;
+}
+
+/* ========================================= */
+/* ULTRA FUTURISTIC LIGHT MODE OVERRIDES */
+/* ========================================= */
+
+.light body {
+  background: 
+    radial-gradient(circle at 10% 10%, rgba(0, 255, 255, 0.1), transparent 30%),
+    radial-gradient(circle at 90% 90%, rgba(255, 0, 180, 0.08), transparent 30%),
+    linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #f9f0ff 100%);
+  background-attachment: fixed;
+}
+
+.light .neon-text {
+  color: #00bcd4;
+  text-shadow: 0 0 12px rgba(0, 188, 212, 0.4);
+}
+
+.light h1, .light h2, .light h3 {
+  color: #0f172a;
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+}
+
+/* SHIMMER ANIMATION */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.6),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 4s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.glow-pulse {
+  animation: glow-pulse 3s infinite ease-in-out;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.8; filter: blur(2px) brightness(1); }
+  50% { opacity: 1; filter: blur(4px) brightness(1.3); }
 }

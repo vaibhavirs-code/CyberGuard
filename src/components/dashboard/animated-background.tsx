@@ -36,7 +36,12 @@ export const AnimatedBackground: React.FC = () => {
     canvas.height = height;
 
     const particles: Particle[] = [];
+    const energyLines: EnergyLine[] = [];
+    const shards: Shard[] = [];
+    
     const particleCount = 200;
+    const energyLineCount = 15;
+    const shardCount = 8;
 
     class Particle {
       x: number;
@@ -54,8 +59,8 @@ export const AnimatedBackground: React.FC = () => {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
         this.size = Math.random() * 2 + 0.5;
-        this.speedX = (Math.random() - 0.5) * 0.4;
-        this.speedY = (Math.random() - 0.5) * 0.4;
+        this.speedX = (Math.random() - 0.5) * 0.6;
+        this.speedY = (Math.random() - 0.5) * 0.6;
         this.opacity = Math.random() * 0.5 + 0.2;
       }
 
@@ -68,7 +73,6 @@ export const AnimatedBackground: React.FC = () => {
         if (this.y < 0) this.y = height;
         if (this.y > height) this.y = 0;
 
-        // Interaction
         const dx = mouseRef.current.x - this.x;
         const dy = mouseRef.current.y - this.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -80,7 +84,9 @@ export const AnimatedBackground: React.FC = () => {
 
       draw() {
         if (!ctx) return;
-        const color = isDark ? `rgba(0, 255, 255, ${this.opacity})` : `rgba(0, 150, 255, ${this.opacity})`;
+        const color = isDark 
+          ? `rgba(0, 255, 255, ${this.opacity})` 
+          : `rgba(0, 180, 255, ${this.opacity * 0.8})`;
         ctx.beginPath();
         ctx.fillStyle = color;
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -88,22 +94,103 @@ export const AnimatedBackground: React.FC = () => {
       }
     }
 
-    for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle());
+    class EnergyLine {
+      x: number;
+      y: number;
+      length: number;
+      speed: number;
+      opacity: number;
+
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.length = Math.random() * 150 + 50;
+        this.speed = Math.random() * 2 + 1;
+        this.opacity = Math.random() * 0.1 + 0.05;
+      }
+
+      update() {
+        this.y -= this.speed;
+        if (this.y + this.length < 0) {
+          this.y = height + this.length;
+          this.x = Math.random() * width;
+        }
+      }
+
+      draw() {
+        if (!ctx) return;
+        const color = isDark 
+          ? `rgba(0, 255, 255, ${this.opacity})` 
+          : `rgba(180, 100, 255, ${this.opacity * 1.5})`;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x, this.y + this.length);
+        ctx.stroke();
+      }
     }
 
+    class Shard {
+      x: number;
+      y: number;
+      size: number;
+      angle: number;
+      rotation: number;
+      speed: number;
+
+      constructor() {
+        this.reset();
+      }
+
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.size = Math.random() * 30 + 10;
+        this.angle = Math.random() * Math.PI * 2;
+        this.rotation = (Math.random() - 0.5) * 0.01;
+        this.speed = Math.random() * 0.2 + 0.1;
+      }
+
+      update() {
+        this.angle += this.rotation;
+        this.y -= this.speed;
+        if (this.y + this.size < 0) {
+          this.y = height + this.size;
+          this.x = Math.random() * width;
+        }
+      }
+
+      draw() {
+        if (!ctx) return;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.strokeStyle = isDark ? 'rgba(0, 255, 255, 0.05)' : 'rgba(0, 180, 255, 0.15)';
+        ctx.strokeRect(-this.size/2, -this.size/2, this.size, this.size);
+        ctx.restore();
+      }
+    }
+
+    for (let i = 0; i < particleCount; i++) particles.push(new Particle());
+    for (let i = 0; i < energyLineCount; i++) energyLines.push(new EnergyLine());
+    for (let i = 0; i < shardCount; i++) shards.push(new Shard());
+
     const render = () => {
-      // Base background
       ctx.fillStyle = isDark ? '#02030a' : '#f8fbff';
       ctx.fillRect(0, 0, width, height);
 
       // Grid
       const time = Date.now() * 0.0002;
-      ctx.strokeStyle = isDark ? 'rgba(0, 255, 255, 0.05)' : 'rgba(0, 150, 255, 0.08)';
+      ctx.strokeStyle = isDark ? 'rgba(0, 255, 255, 0.03)' : 'rgba(0, 150, 255, 0.06)';
       ctx.lineWidth = 1;
       const gridSize = 80;
-      const offsetX = (time * 40) % gridSize;
-      const offsetY = (time * 30) % gridSize;
+      const offsetX = (time * 60) % gridSize;
+      const offsetY = (time * 40) % gridSize;
 
       for (let x = offsetX; x < width; x += gridSize) {
         ctx.beginPath();
@@ -125,30 +212,28 @@ export const AnimatedBackground: React.FC = () => {
         0,
         mouseRef.current.x,
         mouseRef.current.y,
-        350
+        400
       );
-      aura.addColorStop(0, isDark ? 'rgba(0, 255, 255, 0.12)' : 'rgba(0, 180, 255, 0.1)');
+      aura.addColorStop(0, isDark ? 'rgba(0, 255, 255, 0.12)' : 'rgba(0, 180, 255, 0.15)');
       aura.addColorStop(1, 'transparent');
       ctx.fillStyle = aura;
       ctx.fillRect(0, 0, width, height);
 
-      // Particles
-      particles.forEach(p => {
-        p.update();
-        p.draw();
-      });
+      energyLines.forEach(l => { l.update(); l.draw(); });
+      shards.forEach(s => { s.update(); s.draw(); });
+      particles.forEach(p => { p.update(); p.draw(); });
 
-      // Neural Connections
+      // Connective Lines
       ctx.lineWidth = 0.5;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 120) {
+          if (dist < 100) {
             ctx.strokeStyle = isDark 
-              ? `rgba(0, 255, 255, ${0.12 * (1 - dist/120)})` 
-              : `rgba(0, 180, 255, ${0.1 * (1 - dist/120)})`;
+              ? `rgba(0, 255, 255, ${0.1 * (1 - dist/100)})` 
+              : `rgba(0, 180, 255, ${0.12 * (1 - dist/100)})`;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
