@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -51,7 +50,6 @@ export const AnimatedBackground: React.FC = () => {
       speedX: number;
       speedY: number;
       color: string;
-      glowColor: string;
 
       constructor() {
         this.reset();
@@ -63,9 +61,7 @@ export const AnimatedBackground: React.FC = () => {
         this.size = Math.random() * 2 + 0.5;
         this.speedX = (Math.random() - 0.5) * 0.8;
         this.speedY = (Math.random() - 0.5) * 0.8;
-        const isCyan = Math.random() > 0.4;
-        this.color = isCyan ? 'rgba(0, 255, 255, 0.7)' : 'rgba(180, 0, 255, 0.7)';
-        this.glowColor = isCyan ? 'rgba(0, 255, 255, 0.3)' : 'rgba(180, 0, 255, 0.3)';
+        this.color = '';
       }
 
       update() {
@@ -84,11 +80,13 @@ export const AnimatedBackground: React.FC = () => {
         }
       }
 
-      draw() {
-        ctx!.beginPath();
-        ctx!.fillStyle = this.color;
-        ctx!.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx!.fill();
+      draw(isDark: boolean) {
+        if (!ctx) return;
+        const color = isDark ? 'rgba(0, 255, 255, 0.7)' : 'rgba(0, 120, 255, 0.7)';
+        ctx.beginPath();
+        ctx.fillStyle = color;
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
@@ -97,10 +95,13 @@ export const AnimatedBackground: React.FC = () => {
     }
 
     const render = () => {
-      ctx.fillStyle = isDark ? '#02030a' : '#f0f5ff';
+      // Background base color
+      // MODIFIY HERE FOR LIGHT SIDE BACKGROUND
+      ctx.fillStyle = isDark ? '#02030a' : '#f8faff';
       ctx.fillRect(0, 0, width, height);
 
       // Mouse Aura
+      // MODIFIY HERE FOR LIGHT SIDE MOUSE AURA
       const aura = ctx.createRadialGradient(
         mouseRef.current.x,
         mouseRef.current.y,
@@ -115,6 +116,7 @@ export const AnimatedBackground: React.FC = () => {
       ctx.fillRect(0, 0, width, height);
 
       // Grid
+      // MODIFIY HERE FOR LIGHT SIDE GRID
       const time = Date.now() * 0.0005;
       ctx.strokeStyle = isDark ? 'rgba(0, 255, 255, 0.05)' : 'rgba(0, 150, 255, 0.05)';
       ctx.lineWidth = 1;
@@ -137,10 +139,11 @@ export const AnimatedBackground: React.FC = () => {
 
       particles.forEach((p) => {
         p.update();
-        p.draw();
+        p.draw(isDark);
       });
 
       // Connections
+      // MODIFIY HERE FOR LIGHT SIDE NEURAL CONNECTIONS
       ctx.lineWidth = 0.5;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {

@@ -1,10 +1,11 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* LIGHT MODE: Futuristic AI Lab Aesthetic */
+    /* Define your primary colors here for the Light Side */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -28,6 +29,7 @@
   }
 
   .dark {
+    /* DARK MODE: Cyberpunk Command Center Aesthetic */
     --background: 230 40% 3%;
     --foreground: 210 40% 98%;
     --card: 222 47% 6%;
@@ -57,80 +59,74 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    transition: background-color 0.7s ease, color 0.7s ease;
   }
 }
 
-.cyber-panel {
+/* Aura & Cyber UI Effects */
+.aura-border {
   position: relative;
-  overflow: hidden;
-  border-radius: 28px;
-  backdrop-filter: blur(28px);
-  border: 1px solid rgba(0, 255, 255, 0.18);
-  background: rgba(5, 10, 25, 0.45);
-  box-shadow:
-    0 0 8px rgba(0, 255, 255, 0.25),
-    0 0 30px rgba(0, 255, 255, 0.12),
-    inset 0 0 25px rgba(255, 255, 255, 0.03);
 }
 
-.cyber-panel::before {
+.aura-border::after {
   content: "";
   position: absolute;
-  inset: -2px;
+  inset: -1px;
   border-radius: inherit;
+  padding: 1px;
   background: linear-gradient(
-    130deg,
-    rgba(0, 255, 255, 0.9),
-    rgba(0, 120, 255, 0.7),
-    rgba(180, 0, 255, 0.7),
-    rgba(0, 255, 255, 0.9)
+    135deg,
+    rgba(0, 255, 255, 0.4),
+    rgba(0, 120, 255, 0.2),
+    rgba(180, 0, 255, 0.4),
+    rgba(0, 255, 255, 0.4)
   );
-  filter: blur(18px);
-  opacity: 0.35;
-  z-index: -1;
-  animation: cyberAura 7s linear infinite;
-}
-
-@keyframes cyberAura {
-  0% { transform: rotate(0deg) scale(1); }
-  50% { transform: rotate(180deg) scale(1.03); }
-  100% { transform: rotate(360deg) scale(1); }
-}
-
-.mouse-light {
-  position: relative;
-  overflow: hidden;
-}
-
-.mouse-light::after {
-  content: "";
-  position: absolute;
-  width: 350px;
-  height: 350px;
-  background: radial-gradient(circle, rgba(0, 255, 255, 0.2), transparent 70%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
   pointer-events: none;
-  transform: translate(-50%, -50%);
-  left: var(--mouse-x, -1000px);
-  top: var(--mouse-y, -1000px);
-  transition: opacity 0.3s ease;
-  z-index: 100;
-}
-
-.ultra-glow {
-  box-shadow:
-    0 0 15px rgba(0, 255, 255, 0.4),
-    0 0 35px rgba(0, 255, 255, 0.2),
-    0 0 70px rgba(0, 255, 255, 0.1);
-}
-
-.glass-light {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  opacity: 0.6;
 }
 
 .glow-text {
   text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+}
+
+.glow-pulse {
+  animation: glowPulse 3s infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.8; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); }
+  50% { opacity: 1; box-shadow: 0 0 25px rgba(0, 255, 255, 0.5); }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 5s infinite linear;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .hide-scrollbar::-webkit-scrollbar {
