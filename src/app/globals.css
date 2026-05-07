@@ -4,15 +4,14 @@
 
 @layer base {
   :root {
-    /* LIGHT MODE: Futuristic AI Lab Aesthetic */
-    /* Define your primary colors here for the Light Side */
+    /* LIGHT MODE: Luminous AI Lab / Apple Futuristic Aesthetic */
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 221 83% 53%;
+    --primary: 199 89% 48%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
@@ -24,19 +23,19 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 221 83% 53%;
-    --radius: 1rem;
+    --ring: 199 89% 48%;
+    --radius: 1.25rem;
   }
 
   .dark {
-    /* DARK MODE: Cyberpunk Command Center Aesthetic */
-    --background: 230 40% 3%;
+    /* DARK MODE: Deep Cyberpunk Command Center */
+    --background: 230 50% 2%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 6%;
+    --card: 222 47% 4%;
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 4%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
+    --primary: 191 100% 50%;
     --primary-foreground: 222 47% 11%;
     --secondary: 222 47% 11%;
     --secondary-foreground: 210 40% 98%;
@@ -48,7 +47,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217 32% 17%;
     --input: 217 32% 17%;
-    --ring: 224 76% 48%;
+    --ring: 191 100% 50%;
   }
 }
 
@@ -63,7 +62,26 @@
   }
 }
 
-/* Aura & Cyber UI Effects */
+/* Glass & Aura Effects */
+.glass {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(0, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.02);
+}
+
+.light .glass {
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(0, 180, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
 .aura-border {
   position: relative;
 }
@@ -76,57 +94,30 @@
   padding: 1px;
   background: linear-gradient(
     135deg,
-    rgba(0, 255, 255, 0.4),
+    rgba(0, 255, 255, 0.5),
     rgba(0, 120, 255, 0.2),
-    rgba(180, 0, 255, 0.4),
-    rgba(0, 255, 255, 0.4)
+    rgba(180, 0, 255, 0.5),
+    rgba(0, 255, 255, 0.5)
   );
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.4;
+  transition: opacity 0.3s ease;
+}
+
+.aura-border:hover::after {
+  opacity: 0.8;
 }
 
 .glow-text {
-  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  text-shadow: 0 0 15px currentColor;
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.dark .glass {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(0, 255, 255, 0.1);
-}
-
-.glow-pulse {
-  animation: glowPulse 3s infinite;
-}
-
-@keyframes glowPulse {
-  0%, 100% { opacity: 0.8; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); }
-  50% { opacity: 1; box-shadow: 0 0 25px rgba(0, 255, 255, 0.5); }
-}
-
-.shimmer {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-  background-size: 200% 100%;
-  animation: shimmer 5s infinite linear;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.neon-glow {
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -135,4 +126,13 @@
 .hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.animate-scanline {
+  animation: scanline 6s linear infinite;
 }

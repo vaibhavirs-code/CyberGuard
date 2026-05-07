@@ -11,12 +11,7 @@ export const AnimatedBackground: React.FC = () => {
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.classList.contains('dark'));
     });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
-
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     setIsDark(document.documentElement.classList.contains('dark'));
     return () => observer.disconnect();
   }, []);
@@ -41,7 +36,7 @@ export const AnimatedBackground: React.FC = () => {
     canvas.height = height;
 
     const particles: Particle[] = [];
-    const particleCount = 180;
+    const particleCount = 200;
 
     class Particle {
       x: number;
@@ -49,7 +44,7 @@ export const AnimatedBackground: React.FC = () => {
       size: number;
       speedX: number;
       speedY: number;
-      color: string;
+      opacity: number;
 
       constructor() {
         this.reset();
@@ -59,30 +54,33 @@ export const AnimatedBackground: React.FC = () => {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
         this.size = Math.random() * 2 + 0.5;
-        this.speedX = (Math.random() - 0.5) * 0.8;
-        this.speedY = (Math.random() - 0.5) * 0.8;
-        this.color = '';
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.speedY = (Math.random() - 0.5) * 0.4;
+        this.opacity = Math.random() * 0.5 + 0.2;
       }
 
       update() {
         this.x += this.speedX;
         this.y += this.speedY;
 
-        if (this.x < 0 || this.x > width) this.speedX *= -1;
-        if (this.y < 0 || this.y > height) this.speedY *= -1;
+        if (this.x < 0) this.x = width;
+        if (this.x > width) this.x = 0;
+        if (this.y < 0) this.y = height;
+        if (this.y > height) this.y = 0;
 
+        // Interaction
         const dx = mouseRef.current.x - this.x;
         const dy = mouseRef.current.y - this.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance < 150) {
-          this.x -= dx * 0.01;
-          this.y -= dy * 0.01;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 200) {
+          this.x -= dx * 0.005;
+          this.y -= dy * 0.005;
         }
       }
 
-      draw(isDark: boolean) {
+      draw() {
         if (!ctx) return;
-        const color = isDark ? 'rgba(0, 255, 255, 0.7)' : 'rgba(0, 120, 255, 0.7)';
+        const color = isDark ? `rgba(0, 255, 255, ${this.opacity})` : `rgba(0, 150, 255, ${this.opacity})`;
         ctx.beginPath();
         ctx.fillStyle = color;
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
@@ -95,34 +93,17 @@ export const AnimatedBackground: React.FC = () => {
     }
 
     const render = () => {
-      // Background base color
-      // MODIFIY HERE FOR LIGHT SIDE BACKGROUND
-      ctx.fillStyle = isDark ? '#02030a' : '#f8faff';
-      ctx.fillRect(0, 0, width, height);
-
-      // Mouse Aura
-      // MODIFIY HERE FOR LIGHT SIDE MOUSE AURA
-      const aura = ctx.createRadialGradient(
-        mouseRef.current.x,
-        mouseRef.current.y,
-        0,
-        mouseRef.current.x,
-        mouseRef.current.y,
-        300
-      );
-      aura.addColorStop(0, isDark ? 'rgba(0, 255, 255, 0.15)' : 'rgba(0, 180, 255, 0.1)');
-      aura.addColorStop(1, 'transparent');
-      ctx.fillStyle = aura;
+      // Base background
+      ctx.fillStyle = isDark ? '#02030a' : '#f8fbff';
       ctx.fillRect(0, 0, width, height);
 
       // Grid
-      // MODIFIY HERE FOR LIGHT SIDE GRID
-      const time = Date.now() * 0.0005;
-      ctx.strokeStyle = isDark ? 'rgba(0, 255, 255, 0.05)' : 'rgba(0, 150, 255, 0.05)';
+      const time = Date.now() * 0.0002;
+      ctx.strokeStyle = isDark ? 'rgba(0, 255, 255, 0.05)' : 'rgba(0, 150, 255, 0.08)';
       ctx.lineWidth = 1;
-      const gridSize = 60;
-      const offsetX = (time * 20) % gridSize;
-      const offsetY = (time * 15) % gridSize;
+      const gridSize = 80;
+      const offsetX = (time * 40) % gridSize;
+      const offsetY = (time * 30) % gridSize;
 
       for (let x = offsetX; x < width; x += gridSize) {
         ctx.beginPath();
@@ -137,24 +118,37 @@ export const AnimatedBackground: React.FC = () => {
         ctx.stroke();
       }
 
-      particles.forEach((p) => {
+      // Mouse Aura
+      const aura = ctx.createRadialGradient(
+        mouseRef.current.x,
+        mouseRef.current.y,
+        0,
+        mouseRef.current.x,
+        mouseRef.current.y,
+        350
+      );
+      aura.addColorStop(0, isDark ? 'rgba(0, 255, 255, 0.12)' : 'rgba(0, 180, 255, 0.1)');
+      aura.addColorStop(1, 'transparent');
+      ctx.fillStyle = aura;
+      ctx.fillRect(0, 0, width, height);
+
+      // Particles
+      particles.forEach(p => {
         p.update();
-        p.draw(isDark);
+        p.draw();
       });
 
-      // Connections
-      // MODIFIY HERE FOR LIGHT SIDE NEURAL CONNECTIONS
+      // Neural Connections
       ctx.lineWidth = 0.5;
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < 100) {
+          if (dist < 120) {
             ctx.strokeStyle = isDark 
-              ? `rgba(0, 255, 255, ${0.1 * (1 - dist/100)})` 
-              : `rgba(0, 180, 255, ${0.1 * (1 - dist/100)})`;
+              ? `rgba(0, 255, 255, ${0.12 * (1 - dist/120)})` 
+              : `rgba(0, 180, 255, ${0.1 * (1 - dist/120)})`;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
@@ -182,10 +176,5 @@ export const AnimatedBackground: React.FC = () => {
     };
   }, [isDark]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 z-[-1] pointer-events-none"
-    />
-  );
+  return <canvas ref={canvasRef} className="fixed inset-0 z-[-1] pointer-events-none" />;
 };
