@@ -1,40 +1,73 @@
+export type ZoneType = "entry" | "billing" | "exit" | "floor";
 
-export type ZoneType = 'entry-exit' | 'billing' | 'shopping';
+export type PaymentMethod = "qr" | "pos" | "card" | "upi" | "cash";
 
-export interface Zone {
+export type PaymentStatus = "unpaid" | "paid" | "pending" | "failed";
+
+export type Direction = "in" | "out" | "unknown";
+
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface ZoneDefinition extends BoundingBox {
   id: string;
-  type: ZoneType;
   label: string;
-  x: number; // 0-100 percentage
-  y: number; // 0-100 percentage
-  width: number; // 0-100 percentage
-  height: number; // 0-100 percentage
+  type: ZoneType;
   color: string;
 }
 
-export type PaymentStatus = 'unpaid' | 'pending' | 'paid' | 'flagged';
+export interface DetectionInput {
+  id?: string;
+  label: string;
+  confidence: number;
+  bbox: BoundingBox;
+}
+
+export interface TrackHistoryPoint {
+  x: number;
+  y: number;
+  zone: ZoneType;
+  at: number;
+}
 
 export interface TrackedCustomer {
-  trackerId: string;
-  token: string;
-  bbox: { x: number; y: number; w: number; h: number };
-  status: PaymentStatus;
-  currentZone: ZoneType | 'none';
-  lastBillingZoneEntryTimestamp: string | null;
-  history: { zone: ZoneType | 'none'; timestamp: string }[];
-  confidence: number;
-  isReal: boolean; // True if from AI model, False if simulated
-}
-
-export interface SystemLog {
   id: string;
-  timestamp: string;
-  type: 'info' | 'warning' | 'error' | 'success' | 'alert';
-  message: string;
-  metadata?: any;
+  label: string;
+  confidence: number;
+  bbox: BoundingBox;
+  centroid: { x: number; y: number };
+  zone: ZoneType;
+  direction: Direction;
+  enteredStore: boolean;
+  seenBilling: boolean;
+  paid: boolean;
+  paymentMethod?: PaymentMethod;
+  paymentAt?: number;
+  alerted: boolean;
+  alertAt?: number;
+  lastSeen: number;
+  history: TrackHistoryPoint[];
+
+  insideStore?: boolean;
+  firstSeenAt?: number;
+  zoneEnteredAt?: number;
+  exitCandidateAt?: number;
 }
 
-export interface ArduinoStatus {
-  connected: boolean;
-  port: string | null;
+export interface PaymentEvent {
+  method: PaymentMethod;
+  timestamp?: number;
+  amount?: number;
+  referenceId?: string;
+  confirmed?: boolean;
+}
+
+export interface MatchResult {
+  customers: TrackedCustomer[];
+  matchedCustomerId?: string;
+  message: string;
 }

@@ -12,7 +12,7 @@ interface SidebarPanelsProps {
   customers: TrackedCustomer[];
   isEditingZones: boolean;
   onToggleEditing: () => void;
-  onSimulatePayment: (method: 'QR' | 'POS' | 'Card' | 'UPI') => void;
+  onSimulatePayment: (method: 'QR' | 'POS' | 'Card' | 'UPI') => Promise<void>;
   isProcessing: boolean;
   onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isArduinoConnected: boolean;

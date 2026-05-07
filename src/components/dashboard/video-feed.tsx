@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { TrackedCustomer, Zone } from '@/lib/types';
+import { TrackedCustomer, ZoneDefinition as Zone } from '@/lib/types';
 import { ShieldCheck, Loader2, Scan, Activity, Target, Move, Maximize2, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +26,9 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   useEffect(() => {
     let animationFrame: number;
     const process = async () => {
-      if (videoRef.current && !videoRef.current.paused) onFrame(videoRef.current);
+      if (videoRef.current && !videoRef.current.paused) {
+        onFrame(videoRef.current);
+      }
       animationFrame = requestAnimationFrame(process);
     };
     process();
@@ -122,12 +124,29 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
 
       <div className="absolute inset-0 pointer-events-none">
         {customers.map((c) => (
-          <div key={c.trackerId} className={cn("absolute border-2 transition-all duration-150 ease-linear", c.status === 'flagged' ? 'border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.7)]' : 'border-accent shadow-[0_0_25px_rgba(25,136,245,0.5)]')} style={{ left: `${c.bbox.x}%`, top: `${c.bbox.y}%`, width: `${c.bbox.w}%`, height: `${c.bbox.h}%` }}>
-            <div className={cn("absolute -top-10 left-0 px-3 py-1 text-[11px] font-bold text-white rounded-t-xl flex items-center gap-3 backdrop-blur-xl border-t border-x border-white/30 shadow-2xl", c.status === 'paid' ? 'bg-emerald-500/90' : (c.status === 'flagged' ? 'bg-red-500/90' : 'bg-primary/90'))}>
+          <div 
+            key={c.id} 
+            className={cn(
+              "absolute border-2 transition-all duration-150 ease-linear", 
+              c.alerted ? 'border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.7)]' : 'border-accent shadow-[0_0_25px_rgba(25,136,245,0.5)]'
+            )} 
+            style={{ 
+              left: `${c.bbox.x}%`, 
+              top: `${c.bbox.y}%`, 
+              width: `${c.bbox.width}%`, 
+              height: `${c.bbox.height}%` 
+            }}
+          >
+            <div className={cn(
+              "absolute -top-10 left-0 px-3 py-1 text-[11px] font-bold text-white rounded-t-xl flex items-center gap-3 backdrop-blur-xl border-t border-x border-white/30 shadow-2xl", 
+              c.paid ? 'bg-emerald-500/90' : (c.alerted ? 'bg-red-500/90' : 'bg-primary/90')
+            )}>
               <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              <span className="tracking-[0.2em] uppercase">{c.trackerId}</span>
+              <span className="tracking-[0.2em] uppercase">{c.id}</span>
               <div className="w-px h-4 bg-white/20" />
-              <span className="font-code text-[9px] uppercase">{c.status}</span>
+              <span className="font-code text-[9px] uppercase">
+                {c.paid ? 'Paid' : (c.alerted ? 'Flagged' : 'Unpaid')}
+              </span>
             </div>
             <div className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-white/60" />
             <div className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 border-white/60" />
