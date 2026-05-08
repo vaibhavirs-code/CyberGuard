@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -155,28 +156,25 @@ export default function Dashboard() {
     const COOLDOWN_MS = 8000;
 
     customers.forEach((customer) => {
-      const hasVisitedBilling = customer.history.some(
-        (h) => h.zone === "billing"
-      );
+      // VIOLATION LOGIC:
+      // A customer is in violation if they are leaving the exit zone
+      // AND have previously been inside the store (floor or billing)
+      // AND have NOT paid.
+      
+      const hasBeenInside = customer.enteredStore || 
+                           customer.history.some(h => h.zone === 'floor' || h.zone === 'billing');
 
-      const hasInsideProof =
-        customer.enteredStore ||
-        customer.insideStore === true ||
-        customer.zone === "floor" ||
-        customer.zone === "billing";
-
-      const isLeavingThroughExit =
-        customer.zone === "exit" && customer.direction === "out";
-
+      const isExiting = customer.zone === "exit" && customer.direction === "out";
       const unpaid = !customer.paid;
+
       const lastAlertAt = lastAlertAtRef.current.get(customer.id) ?? 0;
       const cooldownOk = now - lastAlertAt > COOLDOWN_MS;
       const ageOk = now - customer.lastSeen > 1200;
 
+      // Logic check: skipping billing zone is also a violation if unpaid.
       const shouldAlert =
-        isLeavingThroughExit &&
-        hasInsideProof &&
-        hasVisitedBilling &&
+        isExiting &&
+        hasBeenInside &&
         unpaid &&
         !customer.alerted &&
         cooldownOk &&
@@ -191,7 +189,7 @@ export default function Dashboard() {
         if (isArduinoConnected) {
           void sendAlert();
         } else {
-          addLog("Arduino not connected: alert not sent to buzzer", "warning");
+          addLog("Arduino not connected: alert signal generated locally", "warning");
         }
 
         lastAlertAtRef.current.set(customer.id, now);
@@ -238,7 +236,8 @@ export default function Dashboard() {
 
       if (result.matchedCustomerId) {
         trackerRef.current.markPaid(result.matchedCustomerId, normalizedMethod);
-        setCustomers(result.customers);
+        // Refresh local state with updated tracker data
+        setCustomers(trackerRef.current.getSnapshot());
 
         addLog(
           `Payment Associated [${payId}] -> TARGET: ${result.matchedCustomerId}`,

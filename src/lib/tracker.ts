@@ -1,3 +1,4 @@
+
 import {
   BoundingBox,
   DetectionInput,
@@ -74,16 +75,16 @@ function identifyZone(
 
 function deriveDirection(prevX: number, currentX: number): Direction {
   const delta = currentX - prevX;
-  if (Math.abs(delta) < 8) return "unknown";
+  if (Math.abs(delta) < 5) return "unknown";
   return delta > 0 ? "out" : "in";
 }
 
 export class ObjectTracker {
   private tracks = new Map<string, InternalTrack>();
   private nextId = 1;
-  private readonly maxMissedFrames = 12;
-  private readonly associationDistance = 85;
-  private readonly iouThreshold = 0.12;
+  private readonly maxMissedFrames = 15;
+  private readonly associationDistance = 100;
+  private readonly iouThreshold = 0.1;
 
   reset() {
     this.tracks.clear();
@@ -122,7 +123,6 @@ export class ObjectTracker {
   update(detections: DetectionInput[], zones: ZoneDefinition[]): TrackedCustomer[] {
     const now = Date.now();
 
-    // Mark all existing tracks as missed initially.
     for (const track of this.tracks.values()) {
       track.missedFrames += 1;
     }
@@ -137,14 +137,9 @@ export class ObjectTracker {
         const cDist = distance(track.centroid, detCentroid);
         const overlap = iou(track.bbox, detection.bbox);
 
-        const score =
-          overlap * 1.4 +
-          Math.max(0, 1 - cDist / 200) * 0.8;
+        const score = overlap * 1.5 + Math.max(0, 1 - cDist / 150) * 0.7;
 
-        if (
-          overlap >= this.iouThreshold ||
-          cDist <= this.associationDistance
-        ) {
+        if (overlap >= this.iouThreshold || cDist <= this.associationDistance) {
           if (score > bestScore) {
             bestScore = score;
             bestId = id;
@@ -162,8 +157,6 @@ export class ObjectTracker {
       if (!track) continue;
 
       const previousX = track.centroid.x;
-      const previousZone = track.zone;
-
       const currentZone = identifyZone(detection.bbox, zones);
       const currentCentroid = detCentroid;
       const direction = deriveDirection(previousX, currentCentroid.x);
@@ -173,19 +166,13 @@ export class ObjectTracker {
       track.centroid = currentCentroid;
       track.confidence = detection.confidence;
       track.zone = currentZone;
-      track.direction = direction;
+      if (direction !== "unknown") track.direction = direction;
       track.lastSeen = now;
       track.missedFrames = 0;
 
-      if (currentZone === "entry") {
-        if (direction === "in") {
-          track.enteredStore = true;
-        }
-        if (direction === "out") {
-          track.enteredStore = true;
-        }
+      if (currentZone === "entry" && direction === "in") {
+        track.enteredStore = true;
       }
-
       if (currentZone === "billing") {
         track.seenBilling = true;
       }
@@ -197,18 +184,11 @@ export class ObjectTracker {
         at: now,
       });
 
-      // keep history small
-      if (track.history.length > 25) {
-        track.history.splice(0, track.history.length - 25);
-      }
-
-      // if still in same previous zone, keep state
-      if (previousZone === "billing" && currentZone !== "billing") {
-        track.seenBilling = track.seenBilling || true;
+      if (track.history.length > 50) {
+        track.history.splice(0, track.history.length - 50);
       }
     }
 
-    // Remove stale tracks.
     for (const [id, track] of this.tracks.entries()) {
       if (track.missedFrames > this.maxMissedFrames) {
         this.tracks.delete(id);
