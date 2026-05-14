@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -34,7 +33,6 @@ const INITIAL_ZONES: Zone[] = [
   { id: "z4", type: "exit", label: "Exit Gate", x: 83, y: 10, width: 12, height: 80, color: "#06b6d4" },
 ];
 
-// MANUAL TIMELINE CORRECTIONS (For Demo Reliability)
 const DEMO_CORRECTIONS = [
   { at: 35000, type: "TRANSFER", from: "T2", to: "T1", message: "[ITEM] Child (T2) transferred item to Adult (T1)" },
   { at: 55000, type: "STATUS", id: "T2", force: "SAFE_EXIT", message: "[SAFE EXIT] T2 leaving without items" },
@@ -57,7 +55,12 @@ export default function Dashboard() {
   const appliedCorrectionsRef = useRef<Set<number>>(new Set());
   const startTimeRef = useRef<number>(Date.now());
 
-  const { connect: connectArduino, sendAlert, isConnected: isArduinoConnected } = useArduino();
+  const { 
+    connect: connectArduino, 
+    sendAlert, 
+    isConnected: isArduinoConnected,
+    isBlockedByPolicy
+  } = useArduino();
 
   const addLog = useCallback((message: string, type: SystemLog["type"] = "info") => {
     const newLog: SystemLog = {
@@ -112,7 +115,6 @@ export default function Dashboard() {
 
     const updatedTrackers = trackerRef.current.update(personDetections, zones);
 
-    // Apply Manual Demo Corrections
     const elapsed = Date.now() - startTimeRef.current;
     DEMO_CORRECTIONS.forEach((corr, idx) => {
       if (elapsed > corr.at && !appliedCorrectionsRef.current.has(idx)) {
@@ -132,18 +134,16 @@ export default function Dashboard() {
   useEffect(() => {
     const now = Date.now();
     const COOLDOWN_MS = 10000;
-    const CONFIRMATION_DELAY = 3000; // Stabilization window
+    const CONFIRMATION_DELAY = 3000;
 
     customers.forEach((customer) => {
       const isExiting = customer.zone === "exit" && customer.direction === "out";
       const hasUnpaidItem = customer.hasItem && !customer.paid;
       
-      // LOGIC: Trigger ONLY if they had an item AND it wasn't paid for.
       const lastAlertAt = lastAlertAtRef.current.get(customer.id) ?? 0;
       const cooldownOk = now - lastAlertAt > COOLDOWN_MS;
 
       if (isExiting && hasUnpaidItem && !customer.alerted && cooldownOk) {
-        // Stabilization: Must be exiting with item for 3 seconds before buzzer
         if (!customer.theftConfirmedAt) {
           customer.theftConfirmedAt = now;
           addLog(`[TRACK] Possible unpaid exit detected: ${customer.id}. Confirming...`, "warning");
@@ -163,7 +163,6 @@ export default function Dashboard() {
           trackerRef.current.markAlerted(customer.id);
         }
       } else if (isExiting && !customer.hasItem && !customer.paid) {
-         // Log safe exits for people without items
          if (customer.state !== "EXITED") {
             addLog(`[SAFE EXIT] ${customer.id} exiting without items`, "success");
             customer.state = "EXITED";
@@ -266,6 +265,7 @@ export default function Dashboard() {
               }}
               isArduinoConnected={isArduinoConnected}
               onConnectArduino={connectArduino}
+              isBlockedByPolicy={isBlockedByPolicy}
             />
           </div>
         </main>

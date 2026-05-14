@@ -3,7 +3,7 @@
 import React, { useRef } from 'react';
 import { TrackedCustomer } from '@/lib/types';
 import { PaymentConsole } from './payment-console';
-import { Cpu, Upload, Video, Link, Link2Off, Activity, Zap } from 'lucide-react';
+import { Cpu, Upload, Video, Link, Link2Off, Activity, Zap, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -17,14 +17,17 @@ interface SidebarPanelsProps {
   onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isArduinoConnected: boolean;
   onConnectArduino: () => void;
+  isBlockedByPolicy?: boolean;
 }
 
 export const SidebarPanels: React.FC<SidebarPanelsProps> = ({ 
   customers, isEditingZones, onToggleEditing,
   onSimulatePayment, isProcessing, onVideoUpload,
-  isArduinoConnected, onConnectArduino
+  isArduinoConnected, onConnectArduino,
+  isBlockedByPolicy = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   return (
     <div className="space-y-8 pb-12">
@@ -40,13 +43,37 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
               <span className="text-[10px] text-muted-foreground uppercase tracking-widest opacity-60">Nano Serial V3</span>
             </div>
           </div>
-          <Badge variant="outline" className={cn("text-[9px] h-6 uppercase border-white/10 backdrop-blur-3xl px-3", isArduinoConnected ? "text-emerald-400 border-emerald-500/50 bg-emerald-500/10" : "text-red-400 border-red-500/50 bg-red-500/10")}>
-            {isArduinoConnected ? 'Synced' : 'Offline'}
-          </Badge>
+          <div className="flex flex-col items-end gap-1">
+             <Badge variant="outline" className={cn("text-[9px] h-5 uppercase border-white/10 backdrop-blur-3xl px-3", isArduinoConnected ? "text-emerald-400 border-emerald-500/50 bg-emerald-500/10" : "text-red-400 border-red-500/50 bg-red-500/10")}>
+              {isArduinoConnected ? 'Synced' : 'Offline'}
+            </Badge>
+            <span className={cn("text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border", isLocal ? "text-emerald-500 border-emerald-500/30" : "text-amber-500 border-amber-500/30")}>
+              {isLocal ? 'Local Mode' : 'Preview Mode'}
+            </span>
+          </div>
         </div>
+
+        {isBlockedByPolicy && (
+          <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3 mb-2">
+              <ShieldAlert className="w-4 h-4 text-amber-500" />
+              <span className="text-[10px] font-bold uppercase text-amber-500 tracking-widest">Protocol Restriction</span>
+            </div>
+            <p className="text-[9px] text-amber-200/70 leading-relaxed font-medium">
+              Hardware serial access is blocked inside preview mode. Run the app on <span className="text-amber-400">localhost</span> for full Arduino integration.
+            </p>
+          </div>
+        )}
+
         <Button 
-          variant="outline" disabled={isArduinoConnected} onClick={onConnectArduino}
-          className="w-full h-14 rounded-2xl border-white/10 hover:border-accent text-[11px] font-bold uppercase tracking-[0.3em] gap-4 aura-border bg-white/5 hover:bg-accent/15 transition-all duration-500"
+          variant="outline" 
+          disabled={isArduinoConnected || isBlockedByPolicy} 
+          onClick={onConnectArduino}
+          className={cn(
+            "w-full h-14 rounded-2xl border-white/10 text-[11px] font-bold uppercase tracking-[0.3em] gap-4 aura-border bg-white/5 transition-all duration-500",
+            !isBlockedByPolicy && "hover:border-accent hover:bg-accent/15",
+            isBlockedByPolicy && "opacity-50 grayscale"
+          )}
         >
           {isArduinoConnected ? <><Link className="w-5 h-5 text-emerald-400" /> Interface Linked</> : <><Link2Off className="w-5 h-5" /> Initialize Port</>}
         </Button>

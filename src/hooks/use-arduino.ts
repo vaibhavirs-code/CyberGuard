@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 type SerialWriter = WritableStreamDefaultWriter<Uint8Array<ArrayBufferLike>>;
@@ -8,15 +8,26 @@ type SerialWriter = WritableStreamDefaultWriter<Uint8Array<ArrayBufferLike>>;
 export function useArduino() {
   const [port, setPort] = useState<SerialPort | null>(null);
   const [writer, setWriter] = useState<SerialWriter | null>(null);
+  const [isSupported, setIsSupported] = useState<boolean>(false);
+  const [isBlockedByPolicy, setIsBlockedByPolicy] = useState<boolean>(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if running on localhost or similar local dev environment
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    
+    if (typeof navigator !== "undefined" && "serial" in navigator) {
+      setIsSupported(true);
+    }
+  }, []);
 
   const connect = useCallback(async () => {
     try {
-      if (!("serial" in navigator)) {
+      if (!isSupported) {
         toast({
           variant: "destructive",
-          title: "Not Supported",
-          description: "Web Serial API not supported in this browser.",
+          title: "Feature Not Supported",
+          description: "Web Serial API is not supported in this browser.",
         });
         return;
       }
@@ -38,20 +49,34 @@ export function useArduino() {
 
       setPort(selectedPort);
       setWriter(streamWriter);
+      setIsBlockedByPolicy(false);
 
       toast({
         title: "Arduino Connected",
         description: "Successfully established serial link with the board.",
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Serial connect error:", err);
-      toast({
-        variant: "destructive",
-        title: "Connection Failed",
-        description: "Could not connect to the serial port.",
-      });
+      
+      // Handle permission policy blocks (common in sandbox/iframes)
+      if (err.name === 'SecurityError') {
+        setIsBlockedByPolicy(true);
+        toast({
+          variant: "destructive",
+          title: "Permission Blocked",
+          description: "Hardware serial access is blocked inside preview mode. Run locally for full Arduino integration.",
+        });
+      } else if (err.name === 'NotFoundError') {
+        // User cancelled the selection
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Connection Failed",
+          description: err.message || "Could not connect to the serial port.",
+        });
+      }
     }
-  }, [toast]);
+  }, [isSupported, toast]);
 
   const sendAlert = useCallback(async () => {
     if (!writer) return;
@@ -95,5 +120,7 @@ export function useArduino() {
     disconnect,
     sendAlert,
     isConnected: !!port,
+    isSupported,
+    isBlockedByPolicy
   };
 }
