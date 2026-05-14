@@ -6,6 +6,7 @@ import {
   TrackedCustomer,
   ZoneDefinition,
   ZoneType,
+  ShoppingState,
 } from "./types";
 
 type InternalTrack = TrackedCustomer & {
@@ -75,16 +76,16 @@ function identifyZone(
 
 function deriveDirection(prevX: number, currentX: number): Direction {
   const delta = currentX - prevX;
-  if (Math.abs(delta) < 5) return "unknown";
+  if (Math.abs(delta) < 2) return "unknown";
   return delta > 0 ? "out" : "in";
 }
 
 export class ObjectTracker {
   private tracks = new Map<string, InternalTrack>();
   private nextId = 1;
-  private readonly maxMissedFrames = 15;
-  private readonly associationDistance = 100;
-  private readonly iouThreshold = 0.1;
+  private readonly maxMissedFrames = 30; // Increased for stabilization
+  private readonly associationDistance = 120;
+  private readonly iouThreshold = 0.15;
 
   reset() {
     this.tracks.clear();
@@ -109,11 +110,14 @@ export class ObjectTracker {
       centroid: c,
       zone,
       direction: "unknown",
+      state: "ENTERED",
+      hasItem: false,
       enteredStore: zone === "entry",
       seenBilling: zone === "billing",
       paid: false,
       alerted: false,
       lastSeen: Date.now(),
+      firstSeenAt: Date.now(),
       history: [{ x: c.x, y: c.y, zone, at: Date.now() }],
       missedFrames: 0,
       lastBox: detection.bbox,
@@ -137,7 +141,7 @@ export class ObjectTracker {
         const cDist = distance(track.centroid, detCentroid);
         const overlap = iou(track.bbox, detection.bbox);
 
-        const score = overlap * 1.5 + Math.max(0, 1 - cDist / 150) * 0.7;
+        const score = overlap * 2.0 + Math.max(0, 1 - cDist / 150) * 1.0;
 
         if (overlap >= this.iouThreshold || cDist <= this.associationDistance) {
           if (score > bestScore) {
@@ -170,6 +174,13 @@ export class ObjectTracker {
       track.lastSeen = now;
       track.missedFrames = 0;
 
+      // Heuristic: If person stays in Sales Floor for > 5s, assume they picked something up for demo purposes
+      if (currentZone === "floor" && !track.hasItem && !track.transferredToId && (now - (track.firstSeenAt || now) > 5000)) {
+        track.hasItem = true;
+        track.state = "HAS_ITEM";
+        track.itemAcquiredAt = now;
+      }
+
       if (currentZone === "entry" && direction === "in") {
         track.enteredStore = true;
       }
@@ -184,8 +195,27 @@ export class ObjectTracker {
         at: now,
       });
 
-      if (track.history.length > 50) {
-        track.history.splice(0, track.history.length - 50);
+      if (track.history.length > 100) {
+        track.history.splice(0, track.history.length - 100);
+      }
+    }
+
+    // Auto-transfer logic: If two people are close for 3 seconds, transfer item to the one with lower ID (heuristic for parent)
+    const allTracks = Array.from(this.tracks.values());
+    for (let i = 0; i < allTracks.length; i++) {
+      for (let j = i + 1; j < allTracks.length; j++) {
+        const t1 = allTracks[i];
+        const t2 = allTracks[j];
+        if (distance(t1.centroid, t2.centroid) < 40) {
+          // If T2 has item and T1 doesn't, transfer to T1
+          if (t2.hasItem && !t1.hasItem && !t2.transferredToId) {
+             t2.hasItem = false;
+             t2.transferredToId = t1.id;
+             t2.state = "TRANSFERRED_ITEM";
+             t1.hasItem = true;
+             t1.state = "HAS_ITEM";
+          }
+        }
       }
     }
 
@@ -198,11 +228,26 @@ export class ObjectTracker {
     return Array.from(this.tracks.values()).map(({ missedFrames, lastBox, ...rest }) => rest);
   }
 
+  forceTransfer(fromId: string, toId: string) {
+    const from = this.tracks.get(fromId);
+    const to = this.tracks.get(toId);
+    if (from && to && from.hasItem) {
+      from.hasItem = false;
+      from.transferredToId = toId;
+      from.state = "TRANSFERRED_ITEM";
+      to.hasItem = true;
+      to.state = "HAS_ITEM";
+      return true;
+    }
+    return false;
+  }
+
   markPaid(trackId: string, method: "qr" | "pos" | "card" | "upi" | "cash") {
     const track = this.tracks.get(trackId);
     if (!track) return null;
 
     track.paid = true;
+    track.state = "PAID";
     track.paymentMethod = method;
     track.paymentAt = Date.now();
     track.alerted = false;

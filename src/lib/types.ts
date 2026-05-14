@@ -1,3 +1,4 @@
+
 export type ZoneType = "entry" | "billing" | "exit" | "floor";
 
 export type PaymentMethod = "qr" | "pos" | "card" | "upi" | "cash";
@@ -5,6 +6,8 @@ export type PaymentMethod = "qr" | "pos" | "card" | "upi" | "cash";
 export type PaymentStatus = "unpaid" | "paid" | "pending" | "failed";
 
 export type Direction = "in" | "out" | "unknown";
+
+export type ShoppingState = "ENTERED" | "HAS_ITEM" | "TRANSFERRED_ITEM" | "PAID" | "EXITED";
 
 export interface BoundingBox {
   x: number;
@@ -42,20 +45,28 @@ export interface TrackedCustomer {
   centroid: { x: number; y: number };
   zone: ZoneType;
   direction: Direction;
+  
+  // Advanced State Tracking
+  state: ShoppingState;
+  hasItem: boolean;
+  itemAcquiredAt?: number;
+  transferredToId?: string;
+  
   enteredStore: boolean;
   seenBilling: boolean;
   paid: boolean;
   paymentMethod?: PaymentMethod;
   paymentAt?: number;
+  
   alerted: boolean;
   alertAt?: number;
+  theftConfirmedAt?: number; // For stabilization
+  
   lastSeen: number;
   history: TrackHistoryPoint[];
 
   insideStore?: boolean;
   firstSeenAt?: number;
-  zoneEnteredAt?: number;
-  exitCandidateAt?: number;
 }
 
 export interface PaymentEvent {
