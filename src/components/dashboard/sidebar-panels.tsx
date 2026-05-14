@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { TrackedCustomer } from '@/lib/types';
 import { PaymentConsole } from './payment-console';
 import { Cpu, Upload, Video, Link, Link2Off, Activity, Zap, AlertTriangle, ShieldAlert } from 'lucide-react';
@@ -27,7 +27,15 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
   isBlockedByPolicy = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const [isMounted, setIsMounted] = useState(false);
+  const [isLocal, setIsLocal] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const localCheck = typeof window !== 'undefined' && 
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+    setIsLocal(localCheck);
+  }, []);
 
   return (
     <div className="space-y-8 pb-12">
@@ -47,8 +55,11 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
              <Badge variant="outline" className={cn("text-[9px] h-5 uppercase border-white/10 backdrop-blur-3xl px-3", isArduinoConnected ? "text-emerald-400 border-emerald-500/50 bg-emerald-500/10" : "text-red-400 border-red-500/50 bg-red-500/10")}>
               {isArduinoConnected ? 'Synced' : 'Offline'}
             </Badge>
-            <span className={cn("text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border", isLocal ? "text-emerald-500 border-emerald-500/30" : "text-amber-500 border-amber-500/30")}>
-              {isLocal ? 'Local Mode' : 'Preview Mode'}
+            <span className={cn(
+              "text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border transition-colors duration-500", 
+              isMounted && isLocal ? "text-emerald-500 border-emerald-500/30" : "text-amber-500 border-amber-500/30"
+            )}>
+              {!isMounted ? 'Detecting Mode...' : (isLocal ? 'Local Mode' : 'Preview Mode')}
             </span>
           </div>
         </div>
