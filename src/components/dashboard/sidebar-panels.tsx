@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -39,8 +38,37 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
     }
   };
 
+  const isLocal = isMounted && window.location.hostname === "localhost";
+
   return (
     <div className="space-y-8 pb-12">
+      {/* Vision Source Panel */}
+      <div className="glass rounded-[2rem] p-8 border-white/10 aura-border">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="p-3 rounded-2xl bg-primary/20"><Video className="w-6 h-6 text-primary" /></div>
+          <div className="flex flex-col">
+            <h3 className="text-[12px] font-bold uppercase tracking-[0.3em]">Vision Source</h3>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Neural Feed Selector</span>
+          </div>
+        </div>
+
+        <input
+          type="file"
+          accept="video/*"
+          className="hidden"
+          ref={fileInputRef}
+          onChange={onVideoUpload}
+        />
+
+        <Button 
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full h-14 rounded-2xl border border-white/10 text-[11px] font-bold uppercase tracking-[0.3em] gap-4 bg-white/5 hover:bg-primary/15 transition-all shimmer"
+        >
+          <Upload className="w-4 h-4" />
+          Inject Demo Feed
+        </Button>
+      </div>
+
       {/* Hardware Link */}
       <div className="glass rounded-[2rem] p-8 border-white/10 aura-border">
         <div className="flex items-center justify-between mb-8">
@@ -52,7 +80,7 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
             </div>
           </div>
           <Badge variant="outline" className={cn("text-[9px] h-5 uppercase px-3", getStatusColor(arduinoStatus))}>
-            {arduinoStatus}
+            {!isMounted ? "Checking..." : (isLocal ? "Local Mode" : "Preview Mode")}
           </Badge>
         </div>
 

@@ -1,4 +1,3 @@
-
 import {
   BoundingBox,
   DetectionInput,
@@ -45,19 +44,22 @@ function identifyZone(point: { x: number; y: number }, zones: ZoneDefinition[]):
 export class ObjectTracker {
   private tracks = new Map<string, TrackedCustomer & { missedFrames: number }>();
   private nextId = 1;
-  private readonly maxMissedFrames = 45; // Support occlusion
+  private readonly maxMissedFrames = 45; 
   private readonly iouThreshold = 0.2;
   private readonly associationDistance = 150;
+
+  reset() {
+    this.tracks.clear();
+    this.nextId = 1;
+  }
 
   update(detections: DetectionInput[], zones: ZoneDefinition[]): TrackedCustomer[] {
     const now = Date.now();
     
-    // Age existing tracks
     for (const track of this.tracks.values()) {
       track.missedFrames++;
     }
 
-    // Match detections
     for (const det of detections) {
       const detCentroid = centroid(det.bbox);
       let bestId: string | null = null;
@@ -118,10 +120,8 @@ export class ObjectTracker {
       }
     }
 
-    // Process multi-person transfers & family clusters
     this.processGroupContext(now);
 
-    // Cleanup
     for (const [id, track] of this.tracks.entries()) {
       if (track.missedFrames > this.maxMissedFrames) {
         this.tracks.delete(id);
@@ -134,7 +134,6 @@ export class ObjectTracker {
   private processIntelligentOwnership(track: TrackedCustomer, now: number) {
     if (track.paid || track.ownershipState === "TRANSFERRED_ITEM") return;
 
-    // Heuristic: Dwell time + shelf proximity
     const dwellInFloor = now - track.firstSeenAt;
     
     if (track.zone === "floor" && dwellInFloor > 5000 && track.ownershipState === "NO_ITEM") {
@@ -162,7 +161,6 @@ export class ObjectTracker {
         const b = all[j];
         const dist = distance(a.centroid, b.centroid);
 
-        // Sustained proximity for Transfer validation
         if (dist < 45) {
           if (a.hasItem && !b.hasItem && !a.transferredToId) {
             a.transferConfidence = Math.min(1, a.transferConfidence + 0.05);
