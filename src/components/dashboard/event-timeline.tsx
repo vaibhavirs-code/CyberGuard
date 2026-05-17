@@ -1,10 +1,11 @@
+
 "use client"
 
 import React, { useEffect, useRef } from 'react';
 import { SystemLog } from '@/lib/types';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Terminal, Info, AlertTriangle, CheckCircle2, XCircle, ChevronRight } from 'lucide-react';
+import { Terminal, Info, AlertTriangle, CheckCircle2, XCircle, ChevronRight, Share2, Activity, ShieldCheck } from 'lucide-react';
 
 interface EventTimelineProps {
   logs: SystemLog[];
@@ -13,68 +14,69 @@ interface EventTimelineProps {
 export const EventTimeline: React.FC<EventTimelineProps> = ({ logs }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [logs]);
-
-  const getIcon = (type: SystemLog['type']) => {
-    switch (type) {
-      case 'success': return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
-      case 'error': return <XCircle className="w-3.5 h-3.5 text-red-400" />;
-      case 'warning': return <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />;
-      case 'alert': return <AlertTriangle className="w-3.5 h-3.5 text-red-500 animate-pulse" />;
-      default: return <Info className="w-3.5 h-3.5 text-primary" />;
+  const getIcon = (type: SystemLog['type'], category: SystemLog['category']) => {
+    if (type === 'alert') return <ShieldCheck className="w-3.5 h-3.5 text-red-500 animate-pulse" />;
+    switch (category) {
+      case 'ITEM': return <Share2 className="w-3.5 h-3.5 text-accent" />;
+      case 'PAYMENT': return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />;
+      case 'EXIT': return <Activity className="w-3.5 h-3.5 text-primary" />;
+      default: return <Info className="w-3.5 h-3.5 text-muted-foreground" />;
     }
   };
 
   return (
-    <div className="flex flex-col h-full glass rounded-2xl overflow-hidden aura-border transition-all duration-700">
-      <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-md relative overflow-hidden">
+    <div className="flex flex-col h-full glass rounded-[2rem] overflow-hidden aura-border transition-all duration-700 bg-black/40">
+      <div className="px-8 py-5 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-md relative overflow-hidden">
         <div className="absolute inset-0 shimmer opacity-5" />
         <div className="flex items-center gap-4 relative z-10">
           <div className="p-2 rounded-lg bg-accent/20">
             <Terminal className="w-4 h-4 text-accent" />
           </div>
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.4em] text-foreground">Matrix Event Stream</h3>
-        </div>
-        <div className="flex items-center gap-6 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">Buffer Sync: ACTIVE</span>
-          </div>
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.4em] text-foreground">Audit Stream / Replay Buffer</h3>
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-3 font-code text-[11px] hide-scrollbar bg-black/40">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 font-code text-[11px] hide-scrollbar">
         {logs.map((log) => (
-          <div key={log.id} className="flex gap-4 group animate-in slide-in-from-left-4 duration-500 items-start border-l-2 border-white/5 pl-4 hover:border-accent/40 transition-all hover:bg-white/5 py-1">
-            <span className="text-muted-foreground/30 shrink-0 font-bold tabular-nums">
-              {format(new Date(log.timestamp), 'HH:mm:ss:SSS')}
-            </span>
-            <div className="flex items-start gap-3">
-              <div className="mt-1 shrink-0">{getIcon(log.type)}</div>
-              <p className={cn(
-                "leading-relaxed tracking-wider",
-                log.type === 'error' && "text-red-400 font-bold",
-                log.type === 'success' && "text-emerald-400",
-                log.type === 'alert' && "text-red-500 animate-pulse",
-                log.type === 'warning' && "text-yellow-400",
-                log.type === 'info' && "text-muted-foreground/80"
-              )}>
-                <span className="uppercase font-bold opacity-40 mr-2 tracking-tighter">[{log.type}]</span>
-                <span className="text-foreground/90">{log.message}</span>
-              </p>
+          <div key={log.id} className="flex gap-4 group animate-in slide-in-from-left-4 duration-500 items-start border-l-2 border-white/5 pl-6 hover:border-accent/40 transition-all hover:bg-white/5 py-3 rounded-r-xl">
+            <div className="flex flex-col gap-1 w-24 shrink-0">
+               <span className="text-muted-foreground/30 font-bold tabular-nums">
+                {format(new Date(log.timestamp), 'HH:mm:ss:SSS')}
+              </span>
+              <span className="text-[8px] uppercase tracking-widest font-black opacity-40">[{log.category}]</span>
             </div>
-            <ChevronRight className="w-3 h-3 text-white/10 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="shrink-0">{getIcon(log.type, log.category)}</div>
+                <p className={cn(
+                  "leading-relaxed tracking-wider font-bold",
+                  log.type === 'alert' ? "text-red-500" : "text-foreground/90"
+                )}>
+                  {log.message} {log.trackerId && <span className="text-accent ml-2">[{log.trackerId}]</span>}
+                </p>
+              </div>
+              
+              {log.reasoning && (
+                <p className="text-[9px] text-muted-foreground/60 leading-relaxed font-medium italic border-l border-white/10 pl-3">
+                  Reasoning: {log.reasoning}
+                </p>
+              )}
+              
+              {log.confidence && (
+                <div className="flex items-center gap-2">
+                  <div className="w-20 h-1 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-accent" style={{ width: `${log.confidence * 100}%` }} />
+                  </div>
+                  <span className="text-[8px] font-bold opacity-30">{Math.round(log.confidence * 100)}% CONFIDENCE</span>
+                </div>
+              )}
+            </div>
           </div>
         ))}
         {logs.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground/20 font-bold uppercase tracking-[1em] space-y-4">
-            <div className="w-16 h-px bg-current animate-pulse" />
-            <span className="animate-pulse">Awaiting Buffer Ingestion</span>
-            <div className="w-16 h-px bg-current animate-pulse" />
+            <span className="animate-pulse">Buffer Empty</span>
           </div>
         )}
       </div>

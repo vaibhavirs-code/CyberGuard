@@ -1,13 +1,30 @@
 
 export type ZoneType = "entry" | "billing" | "exit" | "floor";
-
 export type PaymentMethod = "qr" | "pos" | "card" | "upi" | "cash";
-
-export type PaymentStatus = "unpaid" | "paid" | "pending" | "failed";
-
 export type Direction = "in" | "out" | "unknown";
 
-export type ShoppingState = "ENTERED" | "HAS_ITEM" | "TRANSFERRED_ITEM" | "PAID" | "EXITED";
+export type OwnershipState = 
+  | "NO_ITEM" 
+  | "POSSIBLE_ITEM" 
+  | "OBSERVED_ITEM" 
+  | "CONFIRMED_ITEM" 
+  | "TRANSFERRED_ITEM" 
+  | "PAID_ITEM" 
+  | "CLEARED_EXIT";
+
+export type ExitState = 
+  | "WATCHING" 
+  | "EXIT_PENDING" 
+  | "REVIEW_EXIT" 
+  | "SAFE_EXIT" 
+  | "ALERT_EXIT";
+
+export type ArduinoStatus = 
+  | "DISCONNECTED" 
+  | "CONNECTING" 
+  | "CONNECTED" 
+  | "OFFLINE" 
+  | "ERROR";
 
 export interface BoundingBox {
   x: number;
@@ -37,6 +54,13 @@ export interface TrackHistoryPoint {
   at: number;
 }
 
+export interface ShoppingGroup {
+  id: string;
+  memberIds: string[];
+  cartId?: string;
+  lastUpdated: number;
+}
+
 export interface TrackedCustomer {
   id: string;
   label: string;
@@ -46,13 +70,23 @@ export interface TrackedCustomer {
   zone: ZoneType;
   direction: Direction;
   
-  // Advanced State Tracking
-  state: ShoppingState;
-  hasItem: boolean;
-  itemAcquiredAt?: number;
-  transferredToId?: string;
+  // Advanced State Management
+  ownershipState: OwnershipState;
+  ownershipConfidence: number; // 0..1
+  groupId?: string;
   
-  enteredStore: boolean;
+  // Transition Tracking
+  exitState: ExitState;
+  exitConfidence: number;
+  
+  // Items & Transfers
+  hasItem: boolean;
+  transferredToId?: string;
+  transferConfidence: number;
+  
+  // Security Meta
+  firstSeenAt: number;
+  lastSeen: number;
   seenBilling: boolean;
   paid: boolean;
   paymentMethod?: PaymentMethod;
@@ -60,19 +94,26 @@ export interface TrackedCustomer {
   
   alerted: boolean;
   alertAt?: number;
-  theftConfirmedAt?: number; // For stabilization
+  theftConfirmedAt?: number;
   
-  lastSeen: number;
   history: TrackHistoryPoint[];
+  velocity: { x: number; y: number };
+}
 
-  insideStore?: boolean;
-  firstSeenAt?: number;
+export interface SystemLog {
+  id: string;
+  timestamp: string;
+  type: "info" | "success" | "warning" | "error" | "alert" | "transfer";
+  category: "TRACK" | "ITEM" | "PAYMENT" | "EXIT" | "HARDWARE" | "SYSTEM";
+  message: string;
+  reasoning?: string;
+  confidence?: number;
+  trackerId?: string;
 }
 
 export interface PaymentEvent {
   method: PaymentMethod;
   timestamp?: number;
-  amount?: number;
   referenceId?: string;
   confirmed?: boolean;
 }

@@ -6,264 +6,209 @@ import {
   TrackedCustomer,
   ZoneDefinition,
   ZoneType,
-  ShoppingState,
+  OwnershipState,
+  ExitState,
 } from "./types";
 
-type InternalTrack = TrackedCustomer & {
-  missedFrames: number;
-  lastBox: BoundingBox;
-};
-
 function centroid(box: BoundingBox) {
-  return {
-    x: box.x + box.width / 2,
-    y: box.y + box.height / 2,
-  };
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
 function area(box: BoundingBox) {
   return Math.max(0, box.width) * Math.max(0, box.height);
 }
 
-function intersection(a: BoundingBox, b: BoundingBox) {
+function iou(a: BoundingBox, b: BoundingBox) {
   const x1 = Math.max(a.x, b.x);
   const y1 = Math.max(a.y, b.y);
   const x2 = Math.min(a.x + a.width, b.x + b.width);
   const y2 = Math.min(a.y + a.height, b.y + b.height);
   const w = Math.max(0, x2 - x1);
   const h = Math.max(0, y2 - y1);
-  return { width: w, height: h };
-}
-
-function iou(a: BoundingBox, b: BoundingBox) {
-  const inter = intersection(a, b);
-  const interArea = inter.width * inter.height;
+  const interArea = w * h;
   const union = area(a) + area(b) - interArea;
-  if (union <= 0) return 0;
-  return interArea / union;
+  return union <= 0 ? 0 : interArea / union;
 }
 
 function distance(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-function pointInZone(point: { x: number; y: number }, zone: ZoneDefinition) {
-  return (
-    point.x >= zone.x &&
-    point.x <= zone.x + zone.width &&
-    point.y >= zone.y &&
-    point.y <= zone.y + zone.height
+function identifyZone(point: { x: number; y: number }, zones: ZoneDefinition[]): ZoneType {
+  const zone = zones.find(z => 
+    point.x >= z.x && point.x <= z.x + z.width && 
+    point.y >= z.y && point.y <= z.y + z.height
   );
-}
-
-function identifyZone(
-  box: BoundingBox,
-  zones: ZoneDefinition[]
-): ZoneType {
-  const c = centroid(box);
-
-  const billing = zones.find((z) => z.type === "billing" && pointInZone(c, z));
-  if (billing) return "billing";
-
-  const entry = zones.find((z) => z.type === "entry" && pointInZone(c, z));
-  if (entry) return "entry";
-
-  const exit = zones.find((z) => z.type === "exit" && pointInZone(c, z));
-  if (exit) return "exit";
-
-  return "floor";
-}
-
-function deriveDirection(prevX: number, currentX: number): Direction {
-  const delta = currentX - prevX;
-  if (Math.abs(delta) < 2) return "unknown";
-  return delta > 0 ? "out" : "in";
+  return zone?.type || "floor";
 }
 
 export class ObjectTracker {
-  private tracks = new Map<string, InternalTrack>();
+  private tracks = new Map<string, TrackedCustomer & { missedFrames: number }>();
   private nextId = 1;
-  private readonly maxMissedFrames = 30; // Increased for stabilization
-  private readonly associationDistance = 120;
-  private readonly iouThreshold = 0.15;
-
-  reset() {
-    this.tracks.clear();
-    this.nextId = 1;
-  }
-
-  private generateId() {
-    const id = `T${this.nextId}`;
-    this.nextId += 1;
-    return id;
-  }
-
-  private createTrack(detection: DetectionInput, zones: ZoneDefinition[]): InternalTrack {
-    const c = centroid(detection.bbox);
-    const zone = identifyZone(detection.bbox, zones);
-
-    return {
-      id: this.generateId(),
-      label: detection.label,
-      confidence: detection.confidence,
-      bbox: detection.bbox,
-      centroid: c,
-      zone,
-      direction: "unknown",
-      state: "ENTERED",
-      hasItem: false,
-      enteredStore: zone === "entry",
-      seenBilling: zone === "billing",
-      paid: false,
-      alerted: false,
-      lastSeen: Date.now(),
-      firstSeenAt: Date.now(),
-      history: [{ x: c.x, y: c.y, zone, at: Date.now() }],
-      missedFrames: 0,
-      lastBox: detection.bbox,
-    };
-  }
+  private readonly maxMissedFrames = 45; // Support occlusion
+  private readonly iouThreshold = 0.2;
+  private readonly associationDistance = 150;
 
   update(detections: DetectionInput[], zones: ZoneDefinition[]): TrackedCustomer[] {
     const now = Date.now();
-
+    
+    // Age existing tracks
     for (const track of this.tracks.values()) {
-      track.missedFrames += 1;
+      track.missedFrames++;
     }
 
-    for (const detection of detections) {
-      const detCentroid = centroid(detection.bbox);
-
+    // Match detections
+    for (const det of detections) {
+      const detCentroid = centroid(det.bbox);
       let bestId: string | null = null;
       let bestScore = 0;
 
       for (const [id, track] of this.tracks.entries()) {
-        const cDist = distance(track.centroid, detCentroid);
-        const overlap = iou(track.bbox, detection.bbox);
+        const overlap = iou(track.bbox, det.bbox);
+        const dist = distance(track.centroid, detCentroid);
+        const score = overlap * 2.5 + Math.max(0, 1 - dist / 200);
 
-        const score = overlap * 2.0 + Math.max(0, 1 - cDist / 150) * 1.0;
-
-        if (overlap >= this.iouThreshold || cDist <= this.associationDistance) {
-          if (score > bestScore) {
-            bestScore = score;
-            bestId = id;
-          }
+        if ((overlap > this.iouThreshold || dist < this.associationDistance) && score > bestScore) {
+          bestScore = score;
+          bestId = id;
         }
       }
 
-      if (!bestId) {
-        const newTrack = this.createTrack(detection, zones);
-        this.tracks.set(newTrack.id, newTrack);
-        continue;
-      }
+      if (bestId) {
+        const track = this.tracks.get(bestId)!;
+        const prevC = track.centroid;
+        track.velocity = { x: detCentroid.x - prevC.x, y: detCentroid.y - prevC.y };
+        track.bbox = det.bbox;
+        track.centroid = detCentroid;
+        track.confidence = det.confidence;
+        track.zone = identifyZone(detCentroid, zones);
+        track.direction = track.velocity.x > 1.5 ? "out" : (track.velocity.x < -1.5 ? "in" : track.direction);
+        track.lastSeen = now;
+        track.missedFrames = 0;
+        track.history.push({ ...detCentroid, zone: track.zone, at: now });
+        if (track.history.length > 60) track.history.shift();
 
-      const track = this.tracks.get(bestId);
-      if (!track) continue;
-
-      const previousX = track.centroid.x;
-      const currentZone = identifyZone(detection.bbox, zones);
-      const currentCentroid = detCentroid;
-      const direction = deriveDirection(previousX, currentCentroid.x);
-
-      track.bbox = detection.bbox;
-      track.lastBox = detection.bbox;
-      track.centroid = currentCentroid;
-      track.confidence = detection.confidence;
-      track.zone = currentZone;
-      if (direction !== "unknown") track.direction = direction;
-      track.lastSeen = now;
-      track.missedFrames = 0;
-
-      // Heuristic: If person stays in Sales Floor for > 5s, assume they picked something up for demo purposes
-      if (currentZone === "floor" && !track.hasItem && !track.transferredToId && (now - (track.firstSeenAt || now) > 5000)) {
-        track.hasItem = true;
-        track.state = "HAS_ITEM";
-        track.itemAcquiredAt = now;
-      }
-
-      if (currentZone === "entry" && direction === "in") {
-        track.enteredStore = true;
-      }
-      if (currentZone === "billing") {
-        track.seenBilling = true;
-      }
-
-      track.history.push({
-        x: currentCentroid.x,
-        y: currentCentroid.y,
-        zone: currentZone,
-        at: now,
-      });
-
-      if (track.history.length > 100) {
-        track.history.splice(0, track.history.length - 100);
+        this.processIntelligentOwnership(track, now);
+      } else {
+        const id = `T${this.nextId++}`;
+        const zone = identifyZone(detCentroid, zones);
+        this.tracks.set(id, {
+          id,
+          label: det.label,
+          confidence: det.confidence,
+          bbox: det.bbox,
+          centroid: detCentroid,
+          zone,
+          direction: "unknown",
+          ownershipState: "NO_ITEM",
+          ownershipConfidence: 0,
+          exitState: "WATCHING",
+          exitConfidence: 0,
+          hasItem: false,
+          transferConfidence: 0,
+          firstSeenAt: now,
+          lastSeen: now,
+          seenBilling: zone === "billing",
+          paid: false,
+          alerted: false,
+          history: [{ ...detCentroid, zone, at: now }],
+          velocity: { x: 0, y: 0 },
+          missedFrames: 0
+        });
       }
     }
 
-    // Auto-transfer logic: If two people are close for 3 seconds, transfer item to the one with lower ID (heuristic for parent)
-    const allTracks = Array.from(this.tracks.values());
-    for (let i = 0; i < allTracks.length; i++) {
-      for (let j = i + 1; j < allTracks.length; j++) {
-        const t1 = allTracks[i];
-        const t2 = allTracks[j];
-        if (distance(t1.centroid, t2.centroid) < 40) {
-          // If T2 has item and T1 doesn't, transfer to T1
-          if (t2.hasItem && !t1.hasItem && !t2.transferredToId) {
-             t2.hasItem = false;
-             t2.transferredToId = t1.id;
-             t2.state = "TRANSFERRED_ITEM";
-             t1.hasItem = true;
-             t1.state = "HAS_ITEM";
-          }
-        }
-      }
-    }
+    // Process multi-person transfers & family clusters
+    this.processGroupContext(now);
 
+    // Cleanup
     for (const [id, track] of this.tracks.entries()) {
       if (track.missedFrames > this.maxMissedFrames) {
         this.tracks.delete(id);
       }
     }
 
-    return Array.from(this.tracks.values()).map(({ missedFrames, lastBox, ...rest }) => rest);
+    return Array.from(this.tracks.values());
   }
 
-  forceTransfer(fromId: string, toId: string) {
-    const from = this.tracks.get(fromId);
-    const to = this.tracks.get(toId);
-    if (from && to && from.hasItem) {
-      from.hasItem = false;
-      from.transferredToId = toId;
-      from.state = "TRANSFERRED_ITEM";
-      to.hasItem = true;
-      to.state = "HAS_ITEM";
-      return true;
+  private processIntelligentOwnership(track: TrackedCustomer, now: number) {
+    if (track.paid || track.ownershipState === "TRANSFERRED_ITEM") return;
+
+    // Heuristic: Dwell time + shelf proximity
+    const dwellInFloor = now - track.firstSeenAt;
+    
+    if (track.zone === "floor" && dwellInFloor > 5000 && track.ownershipState === "NO_ITEM") {
+      track.ownershipState = "POSSIBLE_ITEM";
+      track.ownershipConfidence = 0.4;
     }
-    return false;
+
+    if (track.ownershipState === "POSSIBLE_ITEM" && dwellInFloor > 12000) {
+      track.ownershipState = "OBSERVED_ITEM";
+      track.ownershipConfidence = 0.7;
+      track.hasItem = true;
+    }
+
+    if (track.ownershipState === "OBSERVED_ITEM" && dwellInFloor > 20000) {
+      track.ownershipState = "CONFIRMED_ITEM";
+      track.ownershipConfidence = 0.95;
+    }
   }
 
-  markPaid(trackId: string, method: "qr" | "pos" | "card" | "upi" | "cash") {
-    const track = this.tracks.get(trackId);
-    if (!track) return null;
+  private processGroupContext(now: number) {
+    const all = Array.from(this.tracks.values());
+    for (let i = 0; i < all.length; i++) {
+      for (let j = i + 1; j < all.length; j++) {
+        const a = all[i];
+        const b = all[j];
+        const dist = distance(a.centroid, b.centroid);
 
-    track.paid = true;
-    track.state = "PAID";
-    track.paymentMethod = method;
-    track.paymentAt = Date.now();
-    track.alerted = false;
-    return track;
+        // Sustained proximity for Transfer validation
+        if (dist < 45) {
+          if (a.hasItem && !b.hasItem && !a.transferredToId) {
+            a.transferConfidence = Math.min(1, a.transferConfidence + 0.05);
+            if (a.transferConfidence > 0.8) {
+              this.executeTransfer(a, b, now);
+            }
+          } else if (b.hasItem && !a.hasItem && !b.transferredToId) {
+            b.transferConfidence = Math.min(1, b.transferConfidence + 0.05);
+            if (b.transferConfidence > 0.8) {
+              this.executeTransfer(b, a, now);
+            }
+          }
+        } else {
+          a.transferConfidence = Math.max(0, a.transferConfidence - 0.02);
+          b.transferConfidence = Math.max(0, b.transferConfidence - 0.02);
+        }
+      }
+    }
   }
 
-  markAlerted(trackId: string) {
-    const track = this.tracks.get(trackId);
-    if (!track) return null;
+  private executeTransfer(from: TrackedCustomer, to: TrackedCustomer, now: number) {
+    from.hasItem = false;
+    from.ownershipState = "TRANSFERRED_ITEM";
+    from.transferredToId = to.id;
+    to.hasItem = true;
+    to.ownershipState = "CONFIRMED_ITEM";
+    to.ownershipConfidence = 0.9;
+  }
 
-    track.alerted = true;
-    track.alertAt = Date.now();
-    return track;
+  markPaid(id: string, method: any) {
+    const track = this.tracks.get(id);
+    if (track) {
+      track.paid = true;
+      track.ownershipState = "PAID_ITEM";
+      track.paymentMethod = method;
+      track.paymentAt = Date.now();
+      track.alerted = false;
+    }
+  }
+
+  markAlerted(id: string) {
+    const track = this.tracks.get(id);
+    if (track) track.alerted = true;
   }
 
   getSnapshot() {
-    return Array.from(this.tracks.values()).map(({ missedFrames, lastBox, ...rest }) => rest);
+    return Array.from(this.tracks.values());
   }
 }

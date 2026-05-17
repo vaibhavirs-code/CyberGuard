@@ -1,126 +1,73 @@
+
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { ArduinoStatus } from "@/lib/types";
 
-type SerialWriter = WritableStreamDefaultWriter<Uint8Array<ArrayBufferLike>>;
+type SerialWriter = WritableStreamDefaultWriter<Uint8Array>;
 
 export function useArduino() {
-  const [port, setPort] = useState<SerialPort | null>(null);
+  const [status, setStatus] = useState<ArduinoStatus>("DISCONNECTED");
   const [writer, setWriter] = useState<SerialWriter | null>(null);
-  const [isSupported, setIsSupported] = useState<boolean>(false);
-  const [isBlockedByPolicy, setIsBlockedByPolicy] = useState<boolean>(false);
+  const [port, setPort] = useState<SerialPort | null>(null);
+  const [isBlockedByPolicy, setIsBlockedByPolicy] = useState(false);
   const { toast } = useToast();
+  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Check if running on localhost or similar local dev environment
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    if (typeof navigator !== "undefined" && "serial" in navigator) {
-      setIsSupported(true);
-    }
+    return () => {
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+    };
   }, []);
 
   const connect = useCallback(async () => {
     try {
-      if (!isSupported) {
-        toast({
-          variant: "destructive",
-          title: "Feature Not Supported",
-          description: "Web Serial API is not supported in this browser.",
-        });
+      if (!("serial" in navigator)) {
+        toast({ variant: "destructive", title: "Unsupported", description: "Web Serial not supported." });
         return;
       }
 
+      setStatus("CONNECTING");
       const selectedPort = await navigator.serial.requestPort();
       await selectedPort.open({ baudRate: 9600 });
 
-      if (!selectedPort.writable) {
-        toast({
-          variant: "destructive",
-          title: "Connection Failed",
-          description: "Serial port opened, but writable stream is unavailable.",
-        });
-        await selectedPort.close();
-        return;
+      if (selectedPort.writable) {
+        const streamWriter = selectedPort.writable.getWriter();
+        setWriter(streamWriter);
+        setPort(selectedPort);
+        setStatus("CONNECTED");
+        setIsBlockedByPolicy(false);
+
+        // Simple Heartbeat
+        heartbeatRef.current = setInterval(() => {
+          streamWriter.write(new TextEncoder().encode("PING\n")).catch(() => {
+            setStatus("OFFLINE");
+            clearInterval(heartbeatRef.current!);
+          });
+        }, 5000);
+
+        toast({ title: "Hardware Linked", description: "Arduino Nano serial tunnel established." });
       }
-
-      const streamWriter = selectedPort.writable.getWriter();
-
-      setPort(selectedPort);
-      setWriter(streamWriter);
-      setIsBlockedByPolicy(false);
-
-      toast({
-        title: "Arduino Connected",
-        description: "Successfully established serial link with the board.",
-      });
     } catch (err: any) {
-      console.error("Serial connect error:", err);
-      
-      // Handle permission policy blocks (common in sandbox/iframes)
       if (err.name === 'SecurityError') {
         setIsBlockedByPolicy(true);
-        toast({
-          variant: "destructive",
-          title: "Permission Blocked",
-          description: "Hardware serial access is blocked inside preview mode. Run locally for full Arduino integration.",
-        });
-      } else if (err.name === 'NotFoundError') {
-        // User cancelled the selection
+        setStatus("ERROR");
       } else {
-        toast({
-          variant: "destructive",
-          title: "Connection Failed",
-          description: err.message || "Could not connect to the serial port.",
-        });
+        setStatus("OFFLINE");
+        toast({ variant: "destructive", title: "Link Failed", description: err.message });
       }
     }
-  }, [isSupported, toast]);
+  }, [toast]);
 
   const sendAlert = useCallback(async () => {
-    if (!writer) return;
-
+    if (!writer || status !== "CONNECTED") return;
     try {
       await writer.write(new TextEncoder().encode("ALERT\n"));
-    } catch (err) {
-      console.error("Serial write error:", err);
-      toast({
-        variant: "destructive",
-        title: "Alert Failed",
-        description: "Could not send alert signal to the board.",
-      });
+    } catch (e) {
+      setStatus("OFFLINE");
     }
-  }, [writer, toast]);
+  }, [writer, status]);
 
-  const disconnect = useCallback(async () => {
-    try {
-      if (writer) {
-        writer.releaseLock();
-        setWriter(null);
-      }
-
-      if (port) {
-        await port.close();
-        setPort(null);
-      }
-
-      toast({
-        title: "Arduino Disconnected",
-        description: "Serial connection closed.",
-      });
-    } catch (err) {
-      console.error("Disconnect error:", err);
-    }
-  }, [port, writer, toast]);
-
-  return {
-    port,
-    connect,
-    disconnect,
-    sendAlert,
-    isConnected: !!port,
-    isSupported,
-    isBlockedByPolicy
-  };
+  return { status, connect, sendAlert, isBlockedByPolicy };
 }
