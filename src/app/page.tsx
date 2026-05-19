@@ -66,7 +66,9 @@ export default function Dashboard() {
   useEffect(() => {
     async function load() {
       try {
-        modelRef.current = await cocoSsd.load();
+        if (!modelRef.current) {
+          modelRef.current = await cocoSsd.load();
+        }
         setIsModelLoading(false);
         addLog("Neural Core v4.0 ONLINE", "success", "SYSTEM");
       } catch (e) {
@@ -79,7 +81,7 @@ export default function Dashboard() {
   const handleFrame = useCallback(async (video: HTMLVideoElement) => {
     if (!modelRef.current || isModelLoading) return;
     const now = performance.now();
-    if (now - lastProcessTimeRef.current < 100) return; // 10 FPS for stability
+    if (now - lastProcessTimeRef.current < 100) return; // Throttled to ~10 FPS
     lastProcessTimeRef.current = now;
 
     const start = performance.now();
@@ -102,7 +104,7 @@ export default function Dashboard() {
     setCustomers(updated);
   }, [isModelLoading, zones]);
 
-  // Security Auditor Logic
+  // Security Auditor Loop
   useEffect(() => {
     const now = Date.now();
     customers.forEach(c => {
@@ -116,7 +118,7 @@ export default function Dashboard() {
           return;
         }
 
-        if (now - c.theftConfirmedAt > 3000) { // 3s Confirmation Delay
+        if (now - c.theftConfirmedAt > 3000) { 
           addLog(`[ALERT] UNPAID EXIT CONFIRMED: ${c.id}`, "alert", "EXIT", "Review timeout passed. Payment record not found for confirmed items.", 1.0, c.id);
           if (arduinoStatus === "CONNECTED") sendAlert();
           trackerRef.current.markAlerted(c.id);
@@ -134,7 +136,13 @@ export default function Dashboard() {
     setIsProcessingPayment(true);
     const payId = `PAY-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
     await new Promise(r => setTimeout(r, 1500));
-    const result = await automatedPaymentMatcherFlow({ customers, paymentEvent: { method, referenceId: payId, confirmed: true }, zones });
+    
+    const result = await automatedPaymentMatcherFlow({ 
+      customers, 
+      paymentEvent: { method, referenceId: payId, confirmed: true }, 
+      zones 
+    });
+
     if (result.matchedCustomerId) {
       trackerRef.current.markPaid(result.matchedCustomerId, method);
       setCustomers(trackerRef.current.getSnapshot());

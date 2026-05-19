@@ -1,3 +1,4 @@
+
 import {
   BoundingBox,
   DetectionInput,
@@ -84,9 +85,14 @@ export class ObjectTracker {
         track.centroid = detCentroid;
         track.confidence = det.confidence;
         track.zone = identifyZone(detCentroid, zones);
-        track.direction = track.velocity.x > 1.5 ? "out" : (track.velocity.x < -1.5 ? "in" : track.direction);
+        track.direction = track.velocity.x > 1.2 ? "out" : (track.velocity.x < -1.2 ? "in" : track.direction);
         track.lastSeen = now;
         track.missedFrames = 0;
+        
+        // Semantic location flags
+        if (track.zone === "entry") track.enteredStore = true;
+        if (track.zone === "floor" || track.zone === "billing") track.insideStore = true;
+
         track.history.push({ ...detCentroid, zone: track.zone, at: now });
         if (track.history.length > 60) track.history.shift();
 
@@ -112,6 +118,8 @@ export class ObjectTracker {
           lastSeen: now,
           seenBilling: zone === "billing",
           paid: false,
+          enteredStore: zone === "entry",
+          insideStore: zone === "floor" || zone === "billing",
           alerted: false,
           history: [{ ...detCentroid, zone, at: now }],
           velocity: { x: 0, y: 0 },

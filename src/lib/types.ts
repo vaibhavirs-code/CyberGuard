@@ -54,13 +54,6 @@ export interface TrackHistoryPoint {
   at: number;
 }
 
-export interface ShoppingGroup {
-  id: string;
-  memberIds: string[];
-  cartId?: string;
-  lastUpdated: number;
-}
-
 export interface TrackedCustomer {
   id: string;
   label: string;
@@ -91,6 +84,10 @@ export interface TrackedCustomer {
   paid: boolean;
   paymentMethod?: PaymentMethod;
   paymentAt?: number;
+  
+  // Semantic Flags for AI Matcher
+  enteredStore: boolean;
+  insideStore: boolean;
   
   alerted: boolean;
   alertAt?: number;
