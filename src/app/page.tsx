@@ -21,12 +21,12 @@ import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
 import { Cpu, Target, ShieldCheck } from "lucide-react";
 
-// CALIBRATED ZONES BASED ON MANUAL ANNOTATION REFERENCE
+// RECALIBRATED ZONES: THIN STRIPS ALIGNED WITH EXIT PATH
 const INITIAL_ZONES: Zone[] = [
   { id: "z1", type: "billing", label: "RED: PAYMENT AREA", x: 2, y: 15, width: 18, height: 70, color: "#ef4444" },
-  { id: "z2", type: "floor", label: "YELLOW: RETAIL FLOOR", x: 20, y: 5, width: 45, height: 90, color: "#f59e0b" },
-  { id: "z3", type: "safe", label: "GREEN: SAFE CORRIDOR", x: 65, y: 5, width: 12, height: 90, color: "#10b981" },
-  { id: "z4", type: "exit", label: "BLUE: EXIT DANGER ZONE", x: 77, y: 5, width: 21, height: 90, color: "#3b82f6" },
+  { id: "z2", type: "floor", label: "YELLOW: RETAIL FLOOR", x: 20, y: 5, width: 52, height: 90, color: "#f59e0b" },
+  { id: "z3", type: "safe", label: "GREEN: SAFE STRIP", x: 74, y: 5, width: 6, height: 90, color: "#10b981" },
+  { id: "z4", type: "exit", label: "BLUE: EXIT THRESHOLD", x: 86, y: 5, width: 10, height: 90, color: "#3b82f6" },
 ];
 
 export default function Dashboard() {
@@ -104,37 +104,33 @@ export default function Dashboard() {
     setCustomers(updated);
   }, [isModelLoading, zones]);
 
-  // CALIBRATED SECURITY AUDITOR LOOP
+  // PRECISION SECURITY AUDITOR
   useEffect(() => {
     const now = Date.now();
     customers.forEach(c => {
-      // 1. Zone Checks
-      const inExitDanger = c.zone === "exit";
-      const inSafeCorridor = c.zone === "safe";
-      
-      // 2. State Checks
+      const inExitDanger = c.zone === "exit"; // BLUE ZONE
+      const inSafeCorridor = c.zone === "safe"; // GREEN ZONE
       const confirmedTheft = c.hasItem && !c.paid && c.ownershipConfidence > 0.8;
 
-      // Logic: If in GREEN (Safe), suppress everything
+      // 1. GREEN ZONE: Suppress alerts and mark safe
       if (inSafeCorridor) {
         if (c.ownershipState !== "CLEARED_EXIT") {
-          addLog(`[SAFE MOTION] ${c.id} in Safe Corridor`, "success", "TRACK", "Subject detected in non-alert green zone.", 1.0, c.id);
+          addLog(`[SAFE] ${c.id} in Green corridor`, "success", "TRACK", "Subject detected in non-alert buffer zone.", 1.0, c.id);
           c.ownershipState = "CLEARED_EXIT";
         }
-        return;
+        return; // Exit early, do not check for alerts in Green zone
       }
 
-      // Logic: If in BLUE (Exit) and unpaid, trigger alert protocol
+      // 2. BLUE ZONE: Final exit threshold check
       if (inExitDanger && confirmedTheft && !c.alerted) {
         if (!c.theftConfirmedAt) {
           c.theftConfirmedAt = now;
-          addLog(`[REVIEW] EXIT DANGER: ${c.id}`, "warning", "EXIT", "Subject entered BLUE exit zone with unpaid items. Review timer active.", 0.85, c.id);
-          return;
+          addLog(`[WARNING] Blue threshold approach: ${c.id}`, "warning", "EXIT", "Unpaid item detected at final exit boundary.", 0.85, c.id);
         }
 
-        // 3-second stable confirmation window in Blue Zone
-        if (now - c.theftConfirmedAt > 3000) { 
-          addLog(`[ALERT] UNPAID EXIT CONFIRMED: ${c.id}`, "alert", "EXIT", "Final exit threshold breached. Triggering hardware alert.", 1.0, c.id);
+        // Brief stability check in the thin Blue strip (1.5s)
+        if (now - c.theftConfirmedAt > 1500) { 
+          addLog(`[CRITICAL] UNPAID EXIT: ${c.id}`, "alert", "EXIT", "Final threshold breached. Activating hardware buzzer.", 1.0, c.id);
           if (arduinoStatus === "CONNECTED") sendAlert();
           trackerRef.current.markAlerted(c.id);
         }
