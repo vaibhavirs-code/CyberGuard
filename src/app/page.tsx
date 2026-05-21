@@ -21,11 +21,12 @@ import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
 import { Cpu, Target, ShieldCheck } from "lucide-react";
 
+// CALIBRATED ZONES BASED ON MANUAL ANNOTATION REFERENCE
 const INITIAL_ZONES: Zone[] = [
-  { id: "z1", type: "billing", label: "Payment Counter", x: 5, y: 35, width: 22, height: 30, color: "#ef4444" },
-  { id: "z2", type: "floor", label: "Sales Floor", x: 30, y: 10, width: 38, height: 80, color: "#f59e0b" },
-  { id: "z3", type: "entry", label: "Entry Gate", x: 72, y: 10, width: 11, height: 80, color: "#10b981" },
-  { id: "z4", type: "exit", label: "Exit Gate", x: 83, y: 10, width: 12, height: 80, color: "#06b6d4" },
+  { id: "z1", type: "billing", label: "RED: PAYMENT AREA", x: 2, y: 15, width: 18, height: 70, color: "#ef4444" },
+  { id: "z2", type: "floor", label: "YELLOW: RETAIL FLOOR", x: 20, y: 5, width: 45, height: 90, color: "#f59e0b" },
+  { id: "z3", type: "safe", label: "GREEN: SAFE CORRIDOR", x: 65, y: 5, width: 12, height: 90, color: "#10b981" },
+  { id: "z4", type: "exit", label: "BLUE: EXIT DANGER ZONE", x: 77, y: 5, width: 21, height: 90, color: "#3b82f6" },
 ];
 
 export default function Dashboard() {
@@ -41,7 +42,6 @@ export default function Dashboard() {
   const modelRef = useRef<cocoSsd.ObjectDetection | null>(null);
   const trackerRef = useRef<ObjectTracker>(new ObjectTracker());
   const lastProcessTimeRef = useRef<number>(0);
-  const startTimeRef = useRef<number>(Date.now());
 
   const { 
     connect: connectArduino, 
@@ -81,7 +81,7 @@ export default function Dashboard() {
   const handleFrame = useCallback(async (video: HTMLVideoElement) => {
     if (!modelRef.current || isModelLoading) return;
     const now = performance.now();
-    if (now - lastProcessTimeRef.current < 100) return; // Throttled to ~10 FPS for stability
+    if (now - lastProcessTimeRef.current < 100) return; 
     lastProcessTimeRef.current = now;
 
     const start = performance.now();
@@ -104,29 +104,39 @@ export default function Dashboard() {
     setCustomers(updated);
   }, [isModelLoading, zones]);
 
-  // Security Auditor Loop
+  // CALIBRATED SECURITY AUDITOR LOOP
   useEffect(() => {
     const now = Date.now();
     customers.forEach(c => {
-      const atExit = c.zone === "exit" && c.direction === "out";
+      // 1. Zone Checks
+      const inExitDanger = c.zone === "exit";
+      const inSafeCorridor = c.zone === "safe";
+      
+      // 2. State Checks
       const confirmedTheft = c.hasItem && !c.paid && c.ownershipConfidence > 0.8;
 
-      if (atExit && confirmedTheft && !c.alerted) {
+      // Logic: If in GREEN (Safe), suppress everything
+      if (inSafeCorridor) {
+        if (c.ownershipState !== "CLEARED_EXIT") {
+          addLog(`[SAFE MOTION] ${c.id} in Safe Corridor`, "success", "TRACK", "Subject detected in non-alert green zone.", 1.0, c.id);
+          c.ownershipState = "CLEARED_EXIT";
+        }
+        return;
+      }
+
+      // Logic: If in BLUE (Exit) and unpaid, trigger alert protocol
+      if (inExitDanger && confirmedTheft && !c.alerted) {
         if (!c.theftConfirmedAt) {
           c.theftConfirmedAt = now;
-          addLog(`[REVIEW] Staged exit detected for ${c.id}`, "warning", "EXIT", "Person approaching exit with confirmed items. Starting review timer.", 0.85, c.id);
+          addLog(`[REVIEW] EXIT DANGER: ${c.id}`, "warning", "EXIT", "Subject entered BLUE exit zone with unpaid items. Review timer active.", 0.85, c.id);
           return;
         }
 
+        // 3-second stable confirmation window in Blue Zone
         if (now - c.theftConfirmedAt > 3000) { 
-          addLog(`[ALERT] UNPAID EXIT CONFIRMED: ${c.id}`, "alert", "EXIT", "Review timeout passed. Payment record not found for confirmed items.", 1.0, c.id);
+          addLog(`[ALERT] UNPAID EXIT CONFIRMED: ${c.id}`, "alert", "EXIT", "Final exit threshold breached. Triggering hardware alert.", 1.0, c.id);
           if (arduinoStatus === "CONNECTED") sendAlert();
           trackerRef.current.markAlerted(c.id);
-        }
-      } else if (atExit && !c.hasItem && !c.paid) {
-        if (c.ownershipState !== "CLEARED_EXIT") {
-          addLog(`[SAFE EXIT] ${c.id} cleared`, "success", "EXIT", "Person exiting with NO_ITEM state. Verification successful.", 1.0, c.id);
-          c.ownershipState = "CLEARED_EXIT";
         }
       }
     });
@@ -160,7 +170,6 @@ export default function Dashboard() {
         <Header />
         <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
           <div className="flex-[3] flex flex-col gap-6 overflow-hidden min-h-0">
-            {/* Primary Vision HUD */}
             <div className="flex-[2] relative rounded-[2.5rem] glass overflow-hidden shadow-2xl aura-border border-white/5">
               <VideoFeed
                 customers={customers}
@@ -173,7 +182,6 @@ export default function Dashboard() {
               />
             </div>
             
-            {/* Real-time Telemetry */}
             <div className="flex gap-4">
               <div className="flex-1 glass px-8 py-5 rounded-2xl flex items-center justify-between shadow-xl aura-border">
                 <div className="flex items-center gap-5">

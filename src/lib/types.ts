@@ -1,5 +1,5 @@
 
-export type ZoneType = "entry" | "billing" | "exit" | "floor";
+export type ZoneType = "entry" | "billing" | "exit" | "floor" | "safe";
 export type PaymentMethod = "qr" | "pos" | "card" | "upi" | "cash";
 export type Direction = "in" | "out" | "unknown";
 
