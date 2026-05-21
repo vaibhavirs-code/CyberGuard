@@ -21,12 +21,12 @@ import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
 import { Cpu, Target, ShieldCheck } from "lucide-react";
 
-// RECALIBRATED ZONES: THIN STRIPS ALIGNED WITH EXIT PATH
+// RECALIBRATED ZONES: THIN STRIPS ALIGNED WITH FAR EXIT PATH
 const INITIAL_ZONES: Zone[] = [
-  { id: "z1", type: "billing", label: "RED: PAYMENT AREA", x: 2, y: 15, width: 18, height: 70, color: "#ef4444" },
-  { id: "z2", type: "floor", label: "YELLOW: RETAIL FLOOR", x: 20, y: 5, width: 52, height: 90, color: "#f59e0b" },
-  { id: "z3", type: "safe", label: "GREEN: SAFE STRIP", x: 74, y: 5, width: 6, height: 90, color: "#10b981" },
-  { id: "z4", type: "exit", label: "BLUE: EXIT THRESHOLD", x: 86, y: 5, width: 10, height: 90, color: "#3b82f6" },
+  { id: "z1", type: "billing", label: "RED: PAYMENT AREA", x: 2, y: 15, width: 15, height: 70, color: "#ef4444" },
+  { id: "z2", type: "floor", label: "YELLOW: RETAIL FLOOR", x: 18, y: 5, width: 65, height: 90, color: "#f59e0b" },
+  { id: "z3", type: "safe", label: "GREEN: SAFE STRIP", x: 84, y: 5, width: 5, height: 90, color: "#10b981" },
+  { id: "z4", type: "exit", label: "BLUE: EXIT THRESHOLD", x: 91, y: 5, width: 7, height: 90, color: "#3b82f6" },
 ];
 
 export default function Dashboard() {
@@ -118,7 +118,7 @@ export default function Dashboard() {
           addLog(`[SAFE] ${c.id} in Green corridor`, "success", "TRACK", "Subject detected in non-alert buffer zone.", 1.0, c.id);
           c.ownershipState = "CLEARED_EXIT";
         }
-        return; // Exit early, do not check for alerts in Green zone
+        return; 
       }
 
       // 2. BLUE ZONE: Final exit threshold check
@@ -128,8 +128,8 @@ export default function Dashboard() {
           addLog(`[WARNING] Blue threshold approach: ${c.id}`, "warning", "EXIT", "Unpaid item detected at final exit boundary.", 0.85, c.id);
         }
 
-        // Brief stability check in the thin Blue strip (1.5s)
-        if (now - c.theftConfirmedAt > 1500) { 
+        // Reduced dwell time for thin threshold (1s stability)
+        if (now - c.theftConfirmedAt > 1000) { 
           addLog(`[CRITICAL] UNPAID EXIT: ${c.id}`, "alert", "EXIT", "Final threshold breached. Activating hardware buzzer.", 1.0, c.id);
           if (arduinoStatus === "CONNECTED") sendAlert();
           trackerRef.current.markAlerted(c.id);
