@@ -81,7 +81,7 @@ export default function Dashboard() {
   const handleFrame = useCallback(async (video: HTMLVideoElement) => {
     if (!modelRef.current || isModelLoading) return;
     const now = performance.now();
-    if (now - lastProcessTimeRef.current < 100) return; // Throttled to ~10 FPS
+    if (now - lastProcessTimeRef.current < 100) return; // Throttled to ~10 FPS for stability
     lastProcessTimeRef.current = now;
 
     const start = performance.now();
@@ -112,18 +112,21 @@ export default function Dashboard() {
       const confirmedTheft = c.hasItem && !c.paid && c.ownershipConfidence > 0.8;
 
       if (atExit && confirmedTheft && !c.alerted) {
+        // Staged Exit Validation
         if (!c.theftConfirmedAt) {
           c.theftConfirmedAt = now;
           addLog(`[REVIEW] Staged exit detected for ${c.id}`, "warning", "EXIT", "Person approaching exit with confirmed items. Starting review timer.", 0.85, c.id);
           return;
         }
 
+        // Wait 3s before triggering buzzer to reduce jitter false positives
         if (now - c.theftConfirmedAt > 3000) { 
           addLog(`[ALERT] UNPAID EXIT CONFIRMED: ${c.id}`, "alert", "EXIT", "Review timeout passed. Payment record not found for confirmed items.", 1.0, c.id);
           if (arduinoStatus === "CONNECTED") sendAlert();
           trackerRef.current.markAlerted(c.id);
         }
       } else if (atExit && !c.hasItem && !c.paid) {
+        // Safe Exit Confirmation
         if (c.ownershipState !== "CLEARED_EXIT") {
           addLog(`[SAFE EXIT] ${c.id} cleared`, "success", "EXIT", "Person exiting with NO_ITEM state. Verification successful.", 1.0, c.id);
           c.ownershipState = "CLEARED_EXIT";
@@ -160,6 +163,7 @@ export default function Dashboard() {
         <Header />
         <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
           <div className="flex-[3] flex flex-col gap-6 overflow-hidden min-h-0">
+            {/* Primary Vision HUD */}
             <div className="flex-[2] relative rounded-[2.5rem] glass overflow-hidden shadow-2xl aura-border border-white/5">
               <VideoFeed
                 customers={customers}
@@ -172,6 +176,7 @@ export default function Dashboard() {
               />
             </div>
             
+            {/* Real-time Telemetry */}
             <div className="flex gap-4">
               <div className="flex-1 glass px-8 py-5 rounded-2xl flex items-center justify-between shadow-xl aura-border">
                 <div className="flex items-center gap-5">
@@ -191,11 +196,13 @@ export default function Dashboard() {
               </div>
             </div>
 
+            {/* Audit stream */}
             <div className="flex-1 min-h-0">
               <EventTimeline logs={logs} />
             </div>
           </div>
 
+          {/* Configuration & Action Panels */}
           <div className="w-full lg:w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 hide-scrollbar">
             <SidebarPanels
               customers={customers}

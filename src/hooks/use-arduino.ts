@@ -24,7 +24,11 @@ export function useArduino() {
   const connect = useCallback(async () => {
     try {
       if (!("serial" in navigator)) {
-        toast({ variant: "destructive", title: "Unsupported", description: "Web Serial not supported." });
+        toast({ 
+          variant: "destructive", 
+          title: "Unsupported", 
+          description: "Web Serial not supported in this browser." 
+        });
         return;
       }
 
@@ -39,7 +43,7 @@ export function useArduino() {
         setStatus("CONNECTED");
         setIsBlockedByPolicy(false);
 
-        // Simple Heartbeat
+        // Simple Heartbeat to ensure link remains active
         heartbeatRef.current = setInterval(() => {
           streamWriter.write(new TextEncoder().encode("PING\n")).catch(() => {
             setStatus("OFFLINE");
@@ -47,15 +51,23 @@ export function useArduino() {
           });
         }, 5000);
 
-        toast({ title: "Hardware Linked", description: "Arduino Nano serial tunnel established." });
+        toast({ 
+          title: "Hardware Linked", 
+          description: "Arduino Nano serial tunnel established successfully." 
+        });
       }
     } catch (err: any) {
+      // Handle permission/policy blocks (common in Studio preview iframe)
       if (err.name === 'SecurityError') {
         setIsBlockedByPolicy(true);
         setStatus("ERROR");
       } else {
         setStatus("OFFLINE");
-        toast({ variant: "destructive", title: "Link Failed", description: err.message });
+        toast({ 
+          variant: "destructive", 
+          title: "Link Failed", 
+          description: err.message 
+        });
       }
     }
   }, [toast]);

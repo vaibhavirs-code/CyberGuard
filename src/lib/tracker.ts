@@ -57,6 +57,7 @@ export class ObjectTracker {
   update(detections: DetectionInput[], zones: ZoneDefinition[]): TrackedCustomer[] {
     const now = Date.now();
     
+    // Increment missed frames for all existing tracks
     for (const track of this.tracks.values()) {
       track.missedFrames++;
     }
@@ -69,6 +70,8 @@ export class ObjectTracker {
       for (const [id, track] of this.tracks.entries()) {
         const overlap = iou(track.bbox, det.bbox);
         const dist = distance(track.centroid, detCentroid);
+        
+        // Weighted scoring for association
         const score = overlap * 2.5 + Math.max(0, 1 - dist / 200);
 
         if ((overlap > this.iouThreshold || dist < this.associationDistance) && score > bestScore) {
@@ -85,19 +88,26 @@ export class ObjectTracker {
         track.centroid = detCentroid;
         track.confidence = det.confidence;
         track.zone = identifyZone(detCentroid, zones);
-        track.direction = track.velocity.x > 1.2 ? "out" : (track.velocity.x < -1.2 ? "in" : track.direction);
+        
+        // Direction smoothing
+        if (Math.abs(track.velocity.x) > 1.2) {
+          track.direction = track.velocity.x > 0 ? "out" : "in";
+        }
+        
         track.lastSeen = now;
         track.missedFrames = 0;
         
         // Semantic location flags
         if (track.zone === "entry") track.enteredStore = true;
         if (track.zone === "floor" || track.zone === "billing") track.insideStore = true;
+        if (track.zone === "billing") track.seenBilling = true;
 
         track.history.push({ ...detCentroid, zone: track.zone, at: now });
         if (track.history.length > 60) track.history.shift();
 
         this.processIntelligentOwnership(track, now);
       } else {
+        // Create new track
         const id = `T${this.nextId++}`;
         const zone = identifyZone(detCentroid, zones);
         this.tracks.set(id, {
@@ -130,6 +140,7 @@ export class ObjectTracker {
 
     this.processGroupContext(now);
 
+    // Clean up lost tracks
     for (const [id, track] of this.tracks.entries()) {
       if (track.missedFrames > this.maxMissedFrames) {
         this.tracks.delete(id);
@@ -144,6 +155,7 @@ export class ObjectTracker {
 
     const dwellInFloor = now - track.firstSeenAt;
     
+    // Proxy for shelf interaction
     if (track.zone === "floor" && dwellInFloor > 5000 && track.ownershipState === "NO_ITEM") {
       track.ownershipState = "POSSIBLE_ITEM";
       track.ownershipConfidence = 0.4;
@@ -169,6 +181,7 @@ export class ObjectTracker {
         const b = all[j];
         const dist = distance(a.centroid, b.centroid);
 
+        // Group association & transfer
         if (dist < 45) {
           if (a.hasItem && !b.hasItem && !a.transferredToId) {
             a.transferConfidence = Math.min(1, a.transferConfidence + 0.05);

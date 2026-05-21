@@ -26,7 +26,9 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   useEffect(() => {
     let anim: number;
     const proc = () => {
-      if (videoRef.current && !videoRef.current.paused) onFrame(videoRef.current);
+      if (videoRef.current && !videoRef.current.paused) {
+        onFrame(videoRef.current);
+      }
       anim = requestAnimationFrame(proc);
     };
     proc();
@@ -41,6 +43,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         <video ref={videoRef} src="https://storage.googleapis.com/tfjs-models/demos/cvat/beach.mp4" autoPlay loop muted crossOrigin="anonymous" className="w-full h-full object-cover opacity-80" />
       )}
       
+      {/* HUD Overlays */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-0 opacity-15 bg-[linear-gradient(rgba(15,252,235,0.1)_2px,transparent_2px),linear-gradient(90deg,rgba(15,252,235,0.1)_2px,transparent_2px)] bg-[size:60px_60px]" />
         <div className="absolute inset-0 overflow-hidden opacity-40">
@@ -55,6 +58,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         </div>
       )}
 
+      {/* Zone Rendering */}
       <div className="absolute inset-0 pointer-events-none">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           {zones.map((zone) => (
@@ -70,6 +74,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         </svg>
       </div>
 
+      {/* Tracker Rendering */}
       <div className="absolute inset-0 pointer-events-none">
         {customers.map((c) => (
           <div 
