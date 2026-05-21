@@ -19,7 +19,7 @@ import { automatedPaymentMatcherFlow } from "@/ai/flows/automated-payment-matche
 import { useArduino } from "@/hooks/use-arduino";
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
-import { Cpu, Target, ShieldCheck, Activity } from "lucide-react";
+import { Cpu, Target, ShieldCheck } from "lucide-react";
 
 const INITIAL_ZONES: Zone[] = [
   { id: "z1", type: "billing", label: "Payment Counter", x: 5, y: 35, width: 22, height: 30, color: "#ef4444" },
@@ -112,21 +112,18 @@ export default function Dashboard() {
       const confirmedTheft = c.hasItem && !c.paid && c.ownershipConfidence > 0.8;
 
       if (atExit && confirmedTheft && !c.alerted) {
-        // Staged Exit Validation
         if (!c.theftConfirmedAt) {
           c.theftConfirmedAt = now;
           addLog(`[REVIEW] Staged exit detected for ${c.id}`, "warning", "EXIT", "Person approaching exit with confirmed items. Starting review timer.", 0.85, c.id);
           return;
         }
 
-        // Wait 3s before triggering buzzer to reduce jitter false positives
         if (now - c.theftConfirmedAt > 3000) { 
           addLog(`[ALERT] UNPAID EXIT CONFIRMED: ${c.id}`, "alert", "EXIT", "Review timeout passed. Payment record not found for confirmed items.", 1.0, c.id);
           if (arduinoStatus === "CONNECTED") sendAlert();
           trackerRef.current.markAlerted(c.id);
         }
       } else if (atExit && !c.hasItem && !c.paid) {
-        // Safe Exit Confirmation
         if (c.ownershipState !== "CLEARED_EXIT") {
           addLog(`[SAFE EXIT] ${c.id} cleared`, "success", "EXIT", "Person exiting with NO_ITEM state. Verification successful.", 1.0, c.id);
           c.ownershipState = "CLEARED_EXIT";
@@ -196,13 +193,11 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Audit stream */}
             <div className="flex-1 min-h-0">
               <EventTimeline logs={logs} />
             </div>
           </div>
 
-          {/* Configuration & Action Panels */}
           <div className="w-full lg:w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 hide-scrollbar">
             <SidebarPanels
               customers={customers}
@@ -213,11 +208,13 @@ export default function Dashboard() {
               onVideoUpload={(e) => {
                 const file = e.target.files?.[0];
                 if (file) {
-                  setVideoUrl(URL.createObjectURL(file));
+                  const url = URL.createObjectURL(file);
+                  setVideoUrl(url);
                   trackerRef.current.reset();
-                  startTimeRef.current = Date.now();
+                  addLog(`Vision Feed Injected: ${file.name}`, "info", "SYSTEM");
                 }
               }}
+              isVideoLoaded={!!videoUrl}
               arduinoStatus={arduinoStatus}
               onConnectArduino={connectArduino}
               isBlockedByPolicy={isBlockedByPolicy}
