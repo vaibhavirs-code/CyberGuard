@@ -123,7 +123,13 @@ export default function Dashboard() {
     if (DEMO_PRESET_ENABLED && !hasDemoBuzzerFired.current && currentTime >= DEMO_PRESET_BUZZER_TIME_SEC) {
       hasDemoBuzzerFired.current = true;
       addLog(`[DEMO PRESET] Threshold Breach: ${DEMO_PRESET_BUZZER_TIME_SEC}s`, "alert", "EXIT", "Manually configured demo threshold reached. Triggering hardware.", 1.0);
-      if (arduinoStatus === "CONNECTED") sendAlert();
+      
+      if (arduinoStatus === "CONNECTED") {
+        sendAlert();
+        addLog(`[HARDWARE] Preset Trigger Dispatched`, "success", "HARDWARE");
+      } else {
+        addLog(`[HARDWARE] Preset Suppressed: Device Not Linked`, "warning", "HARDWARE");
+      }
     }
 
     customers.forEach(c => {
@@ -147,7 +153,13 @@ export default function Dashboard() {
 
         if (now - c.theftConfirmedAt > 1000) { 
           addLog(`[CRITICAL] UNPAID EXIT: ${c.id}`, "alert", "EXIT", "Final threshold breached. Activating hardware buzzer.", 1.0, c.id);
-          if (arduinoStatus === "CONNECTED") sendAlert();
+          
+          if (arduinoStatus === "CONNECTED") {
+            sendAlert();
+            addLog(`[HARDWARE] Alert Command Dispatched`, "success", "HARDWARE");
+          } else {
+             addLog(`[HARDWARE] Alert Suppressed: Device Not Linked`, "warning", "HARDWARE");
+          }
           trackerRef.current.markAlerted(c.id);
         }
       }
@@ -252,6 +264,10 @@ export default function Dashboard() {
                   hasDemoBuzzerFired.current = false;
                   addLog(`Vision Feed Injected: ${file.name}`, "info", "SYSTEM");
                 }
+              }}
+              onTestAlert={() => {
+                sendAlert();
+                addLog(`[HARDWARE] Manual Test Signal Dispatched`, "success", "HARDWARE");
               }}
               isVideoLoaded={!!videoUrl}
               arduinoStatus={arduinoStatus}

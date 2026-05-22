@@ -43,11 +43,15 @@ export function useArduino() {
         setStatus("CONNECTED");
         setIsBlockedByPolicy(false);
 
+        // Clear any existing heartbeat
+        if (heartbeatRef.current) clearInterval(heartbeatRef.current);
+
         // Simple Heartbeat to ensure link remains active
         heartbeatRef.current = setInterval(() => {
-          streamWriter.write(new TextEncoder().encode("PING\n")).catch(() => {
+          streamWriter.write(new TextEncoder().encode("PING\n")).catch((err) => {
+            console.error("[HARDWARE] Heartbeat failed:", err);
             setStatus("OFFLINE");
-            clearInterval(heartbeatRef.current!);
+            if (heartbeatRef.current) clearInterval(heartbeatRef.current);
           });
         }, 5000);
 
@@ -57,7 +61,7 @@ export function useArduino() {
         });
       }
     } catch (err: any) {
-      // Handle permission/policy blocks (common in Studio preview iframe)
+      console.error("[HARDWARE] Connection error:", err);
       if (err.name === 'SecurityError') {
         setIsBlockedByPolicy(true);
         setStatus("ERROR");
@@ -73,10 +77,17 @@ export function useArduino() {
   }, [toast]);
 
   const sendAlert = useCallback(async () => {
-    if (!writer || status !== "CONNECTED") return;
+    if (!writer || status !== "CONNECTED") {
+      console.warn("[HARDWARE] Cannot send alert: Not connected or writer unavailable", { status, hasWriter: !!writer });
+      return;
+    }
+    
     try {
+      console.log("[HARDWARE] Dispatching ALERT command...");
       await writer.write(new TextEncoder().encode("ALERT\n"));
+      console.log("[HARDWARE] ALERT command written to stream");
     } catch (e) {
+      console.error("[HARDWARE] Failed to write ALERT command:", e);
       setStatus("OFFLINE");
     }
   }, [writer, status]);

@@ -4,7 +4,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { TrackedCustomer, ArduinoStatus } from '@/lib/types';
 import { PaymentConsole } from './payment-console';
-import { Cpu, Upload, Video, Zap, Target, ShieldCheck } from 'lucide-react';
+import { Cpu, Upload, Video, Zap, Target, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ interface SidebarPanelsProps {
   onSimulatePayment: (method: any) => Promise<void>;
   isProcessing: boolean;
   onVideoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onTestAlert?: () => void;
   arduinoStatus: ArduinoStatus;
   onConnectArduino: () => void;
   isBlockedByPolicy: boolean;
@@ -23,7 +24,7 @@ interface SidebarPanelsProps {
 }
 
 export const SidebarPanels: React.FC<SidebarPanelsProps> = ({ 
-  customers, onSimulatePayment, isProcessing, onVideoUpload,
+  customers, onSimulatePayment, isProcessing, onVideoUpload, onTestAlert,
   arduinoStatus, onConnectArduino, isBlockedByPolicy, isVideoLoaded
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,7 +45,7 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Vision Source Panel - RESTORED & PROMINENT */}
+      {/* Vision Source Panel */}
       <div className="glass rounded-[2rem] p-8 border-white/10 aura-border bg-black/40">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
@@ -101,13 +102,25 @@ export const SidebarPanels: React.FC<SidebarPanelsProps> = ({
           </div>
         )}
 
-        <Button 
-          disabled={arduinoStatus === "CONNECTED" || isBlockedByPolicy} 
-          onClick={onConnectArduino}
-          className="w-full h-14 rounded-2xl border border-white/10 text-[11px] font-bold uppercase tracking-[0.3em] gap-4 bg-white/5 hover:bg-accent/15 transition-all"
-        >
-          {arduinoStatus === "CONNECTED" ? "Linked" : "Initialize Port"}
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            disabled={arduinoStatus === "CONNECTED" || isBlockedByPolicy} 
+            onClick={onConnectArduino}
+            className="flex-[2] h-14 rounded-2xl border border-white/10 text-[11px] font-bold uppercase tracking-[0.3em] gap-4 bg-white/5 hover:bg-accent/15 transition-all"
+          >
+            {arduinoStatus === "CONNECTED" ? "Linked" : "Initialize Port"}
+          </Button>
+          
+          {arduinoStatus === "CONNECTED" && (
+            <Button 
+              onClick={onTestAlert}
+              className="flex-1 h-14 rounded-2xl border border-white/10 text-[11px] font-bold uppercase tracking-[0.3em] bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all aura-border"
+              title="Test Buzzer Trigger"
+            >
+              <Bell className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Neural Matching */}
