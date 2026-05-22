@@ -8,6 +8,7 @@ import {
   ZoneType,
   OwnershipState,
   ExitState,
+  AgeClass,
 } from "./types";
 
 function centroid(box: BoundingBox) {
@@ -110,9 +111,15 @@ export class ObjectTracker {
         // Create new track
         const id = `T${this.nextId++}`;
         const zone = identifyZone(detCentroid, zones);
+        
+        // Age classification heuristic: Smaller height/area often corresponds to a child in this wide angle
+        // Bbox coordinates are 0-100.
+        const ageClass: AgeClass = (det.bbox.height < 42 && det.bbox.width < 15) ? "child" : "adult";
+
         this.tracks.set(id, {
           id,
           label: det.label,
+          ageClass,
           confidence: det.confidence,
           bbox: det.bbox,
           centroid: detCentroid,

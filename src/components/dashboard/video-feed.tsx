@@ -81,17 +81,21 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
             key={c.id} 
             className={cn(
               "absolute border-2 transition-all duration-150 ease-linear", 
-              c.alerted ? 'border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.7)]' : 'border-accent shadow-[0_0_25px_rgba(25,136,245,0.5)]'
+              c.ageClass === 'child' 
+                ? 'border-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.5)]' 
+                : (c.alerted ? 'border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.7)]' : 'border-accent shadow-[0_0_25px_rgba(25,136,245,0.5)]')
             )} 
             style={{ left: `${c.bbox.x}%`, top: `${c.bbox.y}%`, width: `${c.bbox.width}%`, height: `${c.bbox.height}%` }}
           >
             <div className={cn(
               "absolute -top-12 left-0 px-3 py-1.5 min-w-[120px] backdrop-blur-xl border border-white/20 shadow-2xl rounded-t-xl", 
-              c.paid ? 'bg-emerald-500/80' : (c.alerted ? 'bg-red-500/80' : 'bg-primary/80')
+              c.ageClass === 'child' ? 'bg-yellow-500/80' : (c.paid ? 'bg-emerald-500/80' : (c.alerted ? 'bg-red-500/80' : 'bg-primary/80'))
             )}>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white">{c.id}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white">
+                    {c.ageClass === 'child' ? 'KID' : 'TARGET'} {c.id}
+                  </span>
                   <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                 </div>
                 <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-1">

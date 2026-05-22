@@ -21,7 +21,10 @@ import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
 import { Cpu, Target, ShieldCheck } from "lucide-react";
 
-// RECALIBRATED ZONES: THIN STRIPS ALIGNED WITH FAR EXIT PATH
+// DEMO CONFIGURATION
+const DEMO_PRESET_ENABLED = true;
+const DEMO_PRESET_BUZZER_TIME_SEC = 20;
+
 const INITIAL_ZONES: Zone[] = [
   { id: "z1", type: "billing", label: "RED: PAYMENT AREA", x: 2, y: 15, width: 15, height: 70, color: "#ef4444" },
   { id: "z2", type: "floor", label: "YELLOW: RETAIL FLOOR", x: 18, y: 5, width: 65, height: 90, color: "#f59e0b" },
@@ -38,10 +41,12 @@ export default function Dashboard() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [fps, setFps] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const modelRef = useRef<cocoSsd.ObjectDetection | null>(null);
   const trackerRef = useRef<ObjectTracker>(new ObjectTracker());
   const lastProcessTimeRef = useRef<number>(0);
+  const hasDemoBuzzerFired = useRef(false);
 
   const { 
     connect: connectArduino, 
@@ -80,6 +85,8 @@ export default function Dashboard() {
 
   const handleFrame = useCallback(async (video: HTMLVideoElement) => {
     if (!modelRef.current || isModelLoading) return;
+    setCurrentTime(video.currentTime);
+    
     const now = performance.now();
     if (now - lastProcessTimeRef.current < 100) return; 
     lastProcessTimeRef.current = now;
@@ -107,6 +114,14 @@ export default function Dashboard() {
   // PRECISION SECURITY AUDITOR
   useEffect(() => {
     const now = Date.now();
+
+    // 0. DEMO PRESET FALLBACK
+    if (DEMO_PRESET_ENABLED && !hasDemoBuzzerFired.current && currentTime >= DEMO_PRESET_BUZZER_TIME_SEC) {
+      hasDemoBuzzerFired.current = true;
+      addLog(`[DEMO PRESET] Threshold Breach: ${DEMO_PRESET_BUZZER_TIME_SEC}s`, "alert", "EXIT", "Manually configured demo threshold reached. Triggering hardware.", 1.0);
+      if (arduinoStatus === "CONNECTED") sendAlert();
+    }
+
     customers.forEach(c => {
       const inExitDanger = c.zone === "exit"; // BLUE ZONE
       const inSafeCorridor = c.zone === "safe"; // GREEN ZONE
@@ -115,7 +130,7 @@ export default function Dashboard() {
       // 1. GREEN ZONE: Suppress alerts and mark safe
       if (inSafeCorridor) {
         if (c.ownershipState !== "CLEARED_EXIT") {
-          addLog(`[SAFE] ${c.id} in Green corridor`, "success", "TRACK", "Subject detected in non-alert buffer zone.", 1.0, c.id);
+          addLog(`[SAFE] ${c.id} (${c.ageClass}) in Green corridor`, "success", "TRACK", "Subject detected in non-alert buffer zone.", 1.0, c.id);
           c.ownershipState = "CLEARED_EXIT";
         }
         return; 
@@ -136,7 +151,7 @@ export default function Dashboard() {
         }
       }
     });
-  }, [customers, addLog, arduinoStatus, sendAlert]);
+  }, [customers, addLog, arduinoStatus, sendAlert, currentTime]);
 
   const handlePayment = async (method: PaymentMethod) => {
     setIsProcessingPayment(true);
@@ -215,6 +230,7 @@ export default function Dashboard() {
                   const url = URL.createObjectURL(file);
                   setVideoUrl(url);
                   trackerRef.current.reset();
+                  hasDemoBuzzerFired.current = false;
                   addLog(`Vision Feed Injected: ${file.name}`, "info", "SYSTEM");
                 }
               }}

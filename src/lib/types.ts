@@ -2,6 +2,7 @@
 export type ZoneType = "entry" | "billing" | "exit" | "floor" | "safe";
 export type PaymentMethod = "qr" | "pos" | "card" | "upi" | "cash";
 export type Direction = "in" | "out" | "unknown";
+export type AgeClass = "adult" | "child";
 
 export type OwnershipState = 
   | "NO_ITEM" 
@@ -57,6 +58,7 @@ export interface TrackHistoryPoint {
 export interface TrackedCustomer {
   id: string;
   label: string;
+  ageClass: AgeClass;
   confidence: number;
   bbox: BoundingBox;
   centroid: { x: number; y: number };
