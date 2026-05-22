@@ -1,9 +1,9 @@
 
 "use client"
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { TrackedCustomer, ZoneDefinition as Zone } from '@/lib/types';
-import { ShieldCheck, Loader2, Scan, Activity, Target, Move, Maximize2, Zap, AlertTriangle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface VideoFeedProps {
@@ -17,8 +17,7 @@ interface VideoFeedProps {
 }
 
 export const VideoFeed: React.FC<VideoFeedProps> = ({ 
-  customers, zones, onZoneChange, isEditingZones,
-  videoUrl, onFrame, isModelLoading
+  customers, zones, videoUrl, onFrame, isModelLoading
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,6 +33,30 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
     proc();
     return () => cancelAnimationFrame(anim);
   }, [onFrame]);
+
+  const getLabelText = (c: TrackedCustomer) => {
+    switch (c.ageClass) {
+      case 'child': return 'KID';
+      case 'adult': return 'ADULT';
+      case 'shopper': return 'SHOPPER';
+      case 'teen': return 'TEEN';
+      default: return 'UNKNOWN';
+    }
+  };
+
+  const getBoxColorClass = (c: TrackedCustomer) => {
+    if (c.ageClass === 'child') return 'border-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.5)]';
+    if (c.alerted) return 'border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.7)]';
+    if (c.paid) return 'border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.5)]';
+    return 'border-accent shadow-[0_0_25px_rgba(25,136,245,0.5)]';
+  };
+
+  const getHeaderBgClass = (c: TrackedCustomer) => {
+    if (c.ageClass === 'child') return 'bg-yellow-500/80';
+    if (c.paid) return 'bg-emerald-500/80';
+    if (c.alerted) return 'bg-red-500/80';
+    return 'bg-primary/80';
+  };
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-black group rounded-[2.5rem] overflow-hidden shadow-2xl aura-border border-white/5">
@@ -81,20 +104,18 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
             key={c.id} 
             className={cn(
               "absolute border-2 transition-all duration-150 ease-linear", 
-              c.ageClass === 'child' 
-                ? 'border-yellow-400 shadow-[0_0_25px_rgba(250,204,21,0.5)]' 
-                : (c.alerted ? 'border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.7)]' : 'border-accent shadow-[0_0_25px_rgba(25,136,245,0.5)]')
+              getBoxColorClass(c)
             )} 
             style={{ left: `${c.bbox.x}%`, top: `${c.bbox.y}%`, width: `${c.bbox.width}%`, height: `${c.bbox.height}%` }}
           >
             <div className={cn(
               "absolute -top-12 left-0 px-3 py-1.5 min-w-[120px] backdrop-blur-xl border border-white/20 shadow-2xl rounded-t-xl", 
-              c.ageClass === 'child' ? 'bg-yellow-500/80' : (c.paid ? 'bg-emerald-500/80' : (c.alerted ? 'bg-red-500/80' : 'bg-primary/80'))
+              getHeaderBgClass(c)
             )}>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-[10px] font-black uppercase tracking-widest text-white">
-                    {c.ageClass === 'child' ? 'KID' : 'TARGET'} {c.id}
+                    {getLabelText(c)} {c.id}
                   </span>
                   <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                 </div>
@@ -105,7 +126,6 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
               </div>
             </div>
             
-            {/* Visual Corner Accents */}
             <div className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-2 border-l-2 border-white/60" />
             <div className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-2 border-r-2 border-white/60" />
           </div>
