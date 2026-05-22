@@ -7,6 +7,8 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { VideoFeed } from "@/components/dashboard/video-feed";
 import { SidebarPanels } from "@/components/dashboard/sidebar-panels";
 import { EventTimeline } from "@/components/dashboard/event-timeline";
+import { WelcomeScreen } from "@/components/auth/welcome-screen";
+import { LoginPanel } from "@/components/auth/login-panel";
 import {
   PaymentEvent,
   PaymentMethod,
@@ -33,6 +35,10 @@ const INITIAL_ZONES: Zone[] = [
 ];
 
 export default function Dashboard() {
+  const [isMounted, setIsMounted] = useState(false);
+  const [view, setView] = useState<'welcome' | 'auth' | 'dashboard'>('welcome');
+  const [session, setSession] = useState<{ name: string; id: string; level: string; mode: 'TEST' | 'ACTIVE' } | null>(null);
+  
   const [customers, setCustomers] = useState<TrackedCustomer[]>([]);
   const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
   const [logs, setLogs] = useState<SystemLog[]>([]);
@@ -69,6 +75,7 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
+    setIsMounted(true);
     async function load() {
       try {
         if (!modelRef.current) {
@@ -111,11 +118,8 @@ export default function Dashboard() {
     setCustomers(updated);
   }, [isModelLoading, zones]);
 
-  // PRECISION SECURITY AUDITOR
   useEffect(() => {
     const now = Date.now();
-
-    // 0. DEMO PRESET FALLBACK
     if (DEMO_PRESET_ENABLED && !hasDemoBuzzerFired.current && currentTime >= DEMO_PRESET_BUZZER_TIME_SEC) {
       hasDemoBuzzerFired.current = true;
       addLog(`[DEMO PRESET] Threshold Breach: ${DEMO_PRESET_BUZZER_TIME_SEC}s`, "alert", "EXIT", "Manually configured demo threshold reached. Triggering hardware.", 1.0);
@@ -123,11 +127,10 @@ export default function Dashboard() {
     }
 
     customers.forEach(c => {
-      const inExitDanger = c.zone === "exit"; // BLUE ZONE
-      const inSafeCorridor = c.zone === "safe"; // GREEN ZONE
+      const inExitDanger = c.zone === "exit"; 
+      const inSafeCorridor = c.zone === "safe"; 
       const confirmedTheft = c.hasItem && !c.paid && c.ownershipConfidence > 0.8;
 
-      // 1. GREEN ZONE: Suppress alerts and mark safe
       if (inSafeCorridor) {
         if (c.ownershipState !== "CLEARED_EXIT") {
           addLog(`[SAFE] ${c.id} (${c.ageClass}) in Green corridor`, "success", "TRACK", "Subject detected in non-alert buffer zone.", 1.0, c.id);
@@ -136,14 +139,12 @@ export default function Dashboard() {
         return; 
       }
 
-      // 2. BLUE ZONE: Final exit threshold check
       if (inExitDanger && confirmedTheft && !c.alerted) {
         if (!c.theftConfirmedAt) {
           c.theftConfirmedAt = now;
           addLog(`[WARNING] Blue threshold approach: ${c.id}`, "warning", "EXIT", "Unpaid item detected at final exit boundary.", 0.85, c.id);
         }
 
-        // Reduced dwell time for thin threshold (1s stability)
         if (now - c.theftConfirmedAt > 1000) { 
           addLog(`[CRITICAL] UNPAID EXIT: ${c.id}`, "alert", "EXIT", "Final threshold breached. Activating hardware buzzer.", 1.0, c.id);
           if (arduinoStatus === "CONNECTED") sendAlert();
@@ -174,11 +175,29 @@ export default function Dashboard() {
     setIsProcessingPayment(false);
   };
 
+  const handleRegister = (data: any) => {
+    setSession({ ...data, mode: 'ACTIVE' });
+    setView('dashboard');
+    addLog(`OPERATOR AUTHENTICATED: ${data.name}`, 'success', 'SYSTEM');
+  };
+
+  const handleSkip = () => {
+    setSession({ name: 'ANONYMOUS', id: 'DEMO-01', level: 'TEST', mode: 'TEST' });
+    setView('dashboard');
+    addLog('SYSTEM STARTED IN TEST MODE', 'info', 'SYSTEM');
+  };
+
+  // Prevent hydration errors
+  if (!isMounted) return null;
+
+  if (view === 'welcome') return <WelcomeScreen onEnter={() => setView('auth')} />;
+  if (view === 'auth') return <LoginPanel onRegister={handleRegister} onSkip={handleSkip} />;
+
   return (
     <div className="flex h-screen w-full relative overflow-hidden font-body">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden relative z-10">
-        <Header />
+        <Header session={session} />
         <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
           <div className="flex-[3] flex flex-col gap-6 overflow-hidden min-h-0">
             <div className="flex-[2] relative rounded-[2.5rem] glass overflow-hidden shadow-2xl aura-border border-white/5">

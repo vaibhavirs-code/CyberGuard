@@ -1,11 +1,16 @@
+
 "use client"
 
 import React, { useEffect, useState } from 'react';
-import { Cpu, Moon, Sun, Terminal, Shield, Zap } from 'lucide-react';
+import { Cpu, Moon, Sun, Terminal, Shield, Zap, User } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  session?: { name: string; id: string; level: string; mode: 'TEST' | 'ACTIVE' } | null;
+}
+
+export const Header: React.FC<HeaderProps> = ({ session }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
 
   useEffect(() => {
@@ -34,21 +39,30 @@ export const Header: React.FC = () => {
             <span className="text-primary glow-text">Vision</span>
           </h1>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-[8px] h-4 uppercase tracking-[0.2em] border-primary/20 text-primary/70 bg-primary/5">
-              Autonomous Neural Security
-            </Badge>
+            {session?.mode === 'TEST' ? (
+              <Badge variant="outline" className="text-[8px] h-4 uppercase tracking-[0.2em] border-amber-500/40 text-amber-500 bg-amber-500/5">
+                DEMO / TEST SESSION
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="text-[8px] h-4 uppercase tracking-[0.2em] border-primary/20 text-primary/70 bg-primary/5">
+                Autonomous Neural Security
+              </Badge>
+            )}
           </div>
         </div>
       </div>
 
       <div className="hidden lg:flex items-center gap-8">
-        <div className="flex items-center gap-4 px-5 py-2.5 rounded-xl border border-primary/10 bg-white/5 hover:bg-white/10 transition-all aura-border">
-          <Cpu className="w-4 h-4 text-primary" />
-          <div className="flex flex-col">
-            <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Neural Engine</span>
-            <span className="text-[10px] font-bold text-foreground">v4.0 ACTIVE</span>
+        {session && (
+          <div className="flex items-center gap-4 px-5 py-2.5 rounded-xl border border-primary/10 bg-white/5 aura-border">
+            <User className="w-4 h-4 text-primary" />
+            <div className="flex flex-col">
+              <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">{session.level}</span>
+              <span className="text-[10px] font-bold text-foreground truncate max-w-[100px]">{session.name}</span>
+            </div>
           </div>
-        </div>
+        )}
+        
         <div className="flex items-center gap-4 px-5 py-2.5 rounded-xl border border-emerald-500/10 bg-white/5 hover:bg-white/10 transition-all aura-border">
           <Zap className="w-4 h-4 text-emerald-400" />
           <div className="flex flex-col">
