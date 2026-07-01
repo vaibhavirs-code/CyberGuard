@@ -2,15 +2,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { User, Shield, Terminal, Zap, ChevronRight, Activity } from "lucide-react";
+import { ChevronRight, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import type { OperatorLevel, OperatorSession } from "@/lib/types";
 
 interface LoginPanelProps {
-  onRegister: (data: any) => void;
+  onRegister: (data: Omit<OperatorSession, "mode">) => void;
   onSkip: () => void;
 }
 
@@ -19,7 +20,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
     name: "",
     id: "",
     store: "FLAGSHIP_01",
-    level: "OPERATOR",
+    level: "OPERATOR" as OperatorLevel,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -38,7 +39,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
           </div>
           <div>
             <h2 className="text-xl font-black uppercase tracking-widest text-foreground font-headline">Operator Initialization</h2>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">Neural Link Authorization</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">Session Access Control</span>
           </div>
         </div>
 
@@ -72,7 +73,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
                   <Label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold ml-1">Security Level</Label>
                   <Select 
                     value={formData.level}
-                    onValueChange={(v) => setFormData({ ...formData, level: v })}
+                    onValueChange={(value) => setFormData({ ...formData, level: value as OperatorLevel })}
                   >
                     <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl text-xs font-bold tracking-widest uppercase">
                       <SelectValue />
@@ -104,19 +105,19 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
             </div>
           </div>
 
-          {/* Option 2: Skip */}
+          {/* Option 2: Local mode */}
           <div className="space-y-4">
             <Button 
               variant="ghost" 
               onClick={onSkip}
               className="w-full h-12 rounded-xl border border-white/5 hover:bg-white/5 text-[9px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-all"
             >
-              Skip to Test Mode (Demo only)
+              Continue In Local Mode
             </Button>
             
             <div className="flex justify-center gap-4">
-              <Badge variant="outline" className="text-[7px] border-white/5 opacity-40 uppercase tracking-widest px-2">Local Latency: 4ms</Badge>
-              <Badge variant="outline" className="text-[7px] border-white/5 opacity-40 uppercase tracking-widest px-2">Node: US-EAST-1</Badge>
+              <Badge variant="outline" className="text-[7px] border-white/5 opacity-40 uppercase tracking-widest px-2">Browser Session</Badge>
+              <Badge variant="outline" className="text-[7px] border-white/5 opacity-40 uppercase tracking-widest px-2">Manual Video Source</Badge>
             </div>
           </div>
         </div>

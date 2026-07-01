@@ -1,8 +1,24 @@
 
 import type { Metadata } from 'next';
+import { Inter, Source_Code_Pro, Space_Grotesk } from "next/font/google";
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AnimatedBackground } from '@/components/dashboard/animated-background';
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-body",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-headline",
+});
+
+const sourceCodePro = Source_Code_Pro({
+  subsets: ["latin"],
+  variable: "--font-code",
+});
 
 export const metadata: Metadata = {
   title: 'CyberGuard Vision | AI Retail Intelligence',
@@ -17,9 +33,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet" />
         <script dangerouslySetInnerHTML={{
           __html: `
             (function() {
@@ -33,7 +46,7 @@ export default function RootLayout({
           `
         }} />
       </head>
-      <body className="font-body antialiased bg-background text-foreground overflow-hidden">
+      <body className={`${inter.variable} ${spaceGrotesk.variable} ${sourceCodePro.variable} font-body antialiased bg-background text-foreground overflow-hidden`}>
         <AnimatedBackground />
         {children}
         <Toaster />

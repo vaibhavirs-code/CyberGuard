@@ -2,12 +2,13 @@
 "use client"
 
 import React, { useEffect, useState } from 'react';
-import { Cpu, Moon, Sun, Terminal, Shield, Zap, User } from 'lucide-react';
+import { Moon, Sun, Terminal, Shield, Zap, User } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import type { OperatorSession } from '@/lib/types';
 
 interface HeaderProps {
-  session?: { name: string; id: string; level: string; mode: 'TEST' | 'ACTIVE' } | null;
+  session?: OperatorSession | null;
 }
 
 export const Header: React.FC<HeaderProps> = ({ session }) => {
@@ -39,13 +40,13 @@ export const Header: React.FC<HeaderProps> = ({ session }) => {
             <span className="text-primary glow-text">Vision</span>
           </h1>
           <div className="flex items-center gap-2">
-            {session?.mode === 'TEST' ? (
+            {session?.mode === 'LOCAL' ? (
               <Badge variant="outline" className="text-[8px] h-4 uppercase tracking-[0.2em] border-amber-500/40 text-amber-500 bg-amber-500/5">
-                DEMO / TEST SESSION
+                Local Operator Session
               </Badge>
             ) : (
               <Badge variant="outline" className="text-[8px] h-4 uppercase tracking-[0.2em] border-primary/20 text-primary/70 bg-primary/5">
-                Autonomous Neural Security
+                Active Operator Session
               </Badge>
             )}
           </div>
@@ -67,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({ session }) => {
           <Zap className="w-4 h-4 text-emerald-400" />
           <div className="flex flex-col">
             <span className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">CCTV Status</span>
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">Encrypted</span>
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-tighter">Monitoring</span>
           </div>
         </div>
       </div>

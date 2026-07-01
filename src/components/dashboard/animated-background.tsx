@@ -39,17 +39,19 @@ export const AnimatedBackground: React.FC = () => {
     const energyLines: EnergyLine[] = [];
     const shards: Shard[] = [];
     
-    const particleCount = 200;
-    const energyLineCount = 15;
-    const shardCount = 8;
+    const particleCount = 120;
+    const energyLineCount = 10;
+    const shardCount = 6;
+    let frameId = 0;
+    let isPaused = document.hidden;
 
     class Particle {
-      x: number;
-      y: number;
-      size: number;
-      speedX: number;
-      speedY: number;
-      opacity: number;
+      x = 0;
+      y = 0;
+      size = 0;
+      speedX = 0;
+      speedY = 0;
+      opacity = 0;
 
       constructor() {
         this.reset();
@@ -95,11 +97,11 @@ export const AnimatedBackground: React.FC = () => {
     }
 
     class EnergyLine {
-      x: number;
-      y: number;
-      length: number;
-      speed: number;
-      opacity: number;
+      x = 0;
+      y = 0;
+      length = 0;
+      speed = 0;
+      opacity = 0;
 
       constructor() {
         this.reset();
@@ -136,12 +138,12 @@ export const AnimatedBackground: React.FC = () => {
     }
 
     class Shard {
-      x: number;
-      y: number;
-      size: number;
-      angle: number;
-      rotation: number;
-      speed: number;
+      x = 0;
+      y = 0;
+      size = 0;
+      angle = 0;
+      rotation = 0;
+      speed = 0;
 
       constructor() {
         this.reset();
@@ -181,6 +183,10 @@ export const AnimatedBackground: React.FC = () => {
     for (let i = 0; i < shardCount; i++) shards.push(new Shard());
 
     const render = () => {
+      if (isPaused) {
+        return;
+      }
+
       ctx.fillStyle = isDark ? '#02030a' : '#f8fbff';
       ctx.fillRect(0, 0, width, height);
 
@@ -242,7 +248,7 @@ export const AnimatedBackground: React.FC = () => {
         }
       }
 
-      requestAnimationFrame(render);
+      frameId = requestAnimationFrame(render);
     };
 
     const handleResize = () => {
@@ -252,12 +258,21 @@ export const AnimatedBackground: React.FC = () => {
       canvas.height = height;
     };
 
+    const handleVisibilityChange = () => {
+      isPaused = document.hidden;
+      if (!isPaused) {
+        frameId = requestAnimationFrame(render);
+      }
+    };
+
     window.addEventListener('resize', handleResize);
-    const animId = requestAnimationFrame(render);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    frameId = requestAnimationFrame(render);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      cancelAnimationFrame(frameId);
     };
   }, [isDark]);
 

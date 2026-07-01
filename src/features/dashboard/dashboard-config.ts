@@ -1,0 +1,66 @@
+import type { ZoneDefinition } from "@/lib/types";
+
+export const INITIAL_ZONES: ZoneDefinition[] = [
+  {
+    id: "checkout",
+    type: "checkout",
+    label: "Payment / Checkout",
+    x: 2,
+    y: 14,
+    width: 20,
+    height: 72,
+    color: "#38bdf8",
+  },
+  {
+    id: "shelf",
+    type: "shelf",
+    label: "Shopping / Shelves",
+    x: 18,
+    y: 6,
+    width: 64,
+    height: 88,
+    color: "#fbbf24",
+  },
+  {
+    id: "aisle",
+    type: "aisle",
+    label: "Aisle / Movement",
+    x: 32,
+    y: 8,
+    width: 30,
+    height: 84,
+    color: "#22c55e",
+  },
+  {
+    id: "exit",
+    type: "exit",
+    label: "Exit Buffer",
+    x: 82,
+    y: 16,
+    width: 8,
+    height: 68,
+    color: "#a855f7",
+  },
+  {
+    id: "outside",
+    type: "outside",
+    label: "Outside Boundary",
+    x: 90,
+    y: 14,
+    width: 10,
+    height: 72,
+    color: "#ec4899",
+  },
+  {
+    id: "entrance",
+    type: "entrance",
+    label: "Entry Edge",
+    x: 0,
+    y: 14,
+    width: 4,
+    height: 72,
+    color: "#60a5fa",
+  },
+];
+
+export const MAX_LOG_ENTRIES = 80;

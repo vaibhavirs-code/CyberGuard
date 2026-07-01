@@ -18,7 +18,7 @@ export const Sidebar: React.FC = () => {
         </div>
         <div className="hidden lg:flex flex-col items-center group-hover/sidebar:flex animate-in fade-in slide-in-from-top-2">
           <span className="text-[10px] font-bold tracking-[0.4em] uppercase opacity-50 text-foreground">CyberGuard</span>
-          <span className="text-[8px] font-bold tracking-[0.2em] uppercase text-accent">Neural Core v2.5</span>
+          <span className="text-[8px] font-bold tracking-[0.2em] uppercase text-accent">Operations Console</span>
         </div>
       </div>
 

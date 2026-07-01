@@ -1,282 +1,98 @@
-
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Header } from "@/components/dashboard/header";
-import { Sidebar } from "@/components/dashboard/sidebar";
-import { VideoFeed } from "@/components/dashboard/video-feed";
-import { SidebarPanels } from "@/components/dashboard/sidebar-panels";
-import { EventTimeline } from "@/components/dashboard/event-timeline";
-import { WelcomeScreen } from "@/components/auth/welcome-screen";
+import { useEffect, useState } from "react";
+import { DeploymentSelectionScreen } from "@/components/auth/deployment-selection-screen";
 import { LoginPanel } from "@/components/auth/login-panel";
-import {
-  PaymentEvent,
-  PaymentMethod,
-  TrackedCustomer,
-  ZoneDefinition as Zone,
-  SystemLog,
-} from "@/lib/types";
-import { ObjectTracker } from "@/lib/tracker";
-import { automatedPaymentMatcherFlow } from "@/ai/flows/automated-payment-matcher";
-import { useArduino } from "@/hooks/use-arduino";
-import * as cocoSsd from "@tensorflow-models/coco-ssd";
-import "@tensorflow/tfjs";
-import { Cpu, Target, ShieldCheck } from "lucide-react";
+import { SessionSetupScreen } from "@/components/auth/session-setup-screen";
+import { ZoneConfigurationScreen } from "@/components/auth/zone-configuration-screen";
+import { DashboardScreen } from "@/components/dashboard/dashboard-screen";
+import { useDashboardController } from "@/features/dashboard/use-dashboard-controller";
+import { getAppConfig } from "@/lib/env";
+import type { DeploymentConfig, OperatorSession } from "@/lib/types";
 
-// DEMO CONFIGURATION
-const DEMO_PRESET_ENABLED = true;
-const DEMO_PRESET_BUZZER_TIME_SEC = 20;
+type AppView = "deployment" | "auth" | "setup" | "zoneConfig" | "dashboard";
 
-const INITIAL_ZONES: Zone[] = [
-  { id: "z1", type: "billing", label: "RED: PAYMENT AREA", x: 2, y: 15, width: 15, height: 70, color: "#ef4444" },
-  { id: "z2", type: "floor", label: "YELLOW: RETAIL FLOOR", x: 18, y: 5, width: 65, height: 90, color: "#f59e0b" },
-  { id: "z3", type: "safe", label: "GREEN: SAFE STRIP", x: 84, y: 5, width: 5, height: 90, color: "#10b981" },
-  { id: "z4", type: "exit", label: "BLUE: EXIT THRESHOLD", x: 91, y: 5, width: 7, height: 90, color: "#3b82f6" },
-];
+const appConfig = getAppConfig();
 
-export default function Dashboard() {
+export default function DashboardPage() {
+  const controller = useDashboardController();
   const [isMounted, setIsMounted] = useState(false);
-  const [view, setView] = useState<'welcome' | 'auth' | 'dashboard'>('welcome');
-  const [session, setSession] = useState<{ name: string; id: string; level: string; mode: 'TEST' | 'ACTIVE' } | null>(null);
-  
-  const [customers, setCustomers] = useState<TrackedCustomer[]>([]);
-  const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
-  const [logs, setLogs] = useState<SystemLog[]>([]);
-  const [isEditingZones, setIsEditingZones] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [isModelLoading, setIsModelLoading] = useState(true);
-  const [fps, setFps] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-
-  const modelRef = useRef<cocoSsd.ObjectDetection | null>(null);
-  const trackerRef = useRef<ObjectTracker>(new ObjectTracker());
-  const lastProcessTimeRef = useRef<number>(0);
-  const hasDemoBuzzerFired = useRef(false);
-
-  const { 
-    connect: connectArduino, 
-    sendAlert, 
-    status: arduinoStatus,
-    isBlockedByPolicy
-  } = useArduino();
-
-  const addLog = useCallback((msg: string, type: SystemLog["type"] = "info", category: SystemLog["category"] = "SYSTEM", reasoning?: string, confidence?: number, trackerId?: string) => {
-    setLogs(prev => [{
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date().toISOString(),
-      type,
-      category,
-      message: msg,
-      reasoning,
-      confidence,
-      trackerId
-    }, ...prev].slice(0, 50));
-  }, []);
+  const [view, setView] = useState<AppView>("deployment");
+  const [deploymentConfig, setDeploymentConfig] = useState<DeploymentConfig | null>(null);
+  const [pendingSession, setPendingSession] = useState<OperatorSession | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
-    async function load() {
-      try {
-        if (!modelRef.current) {
-          modelRef.current = await cocoSsd.load();
-        }
-        setIsModelLoading(false);
-        addLog("Neural Core v4.0 ONLINE", "success", "SYSTEM");
-      } catch (e) {
-        addLog("Neural Core Failure", "error", "SYSTEM");
-      }
-    }
-    load();
-  }, [addLog]);
+  }, []);
 
-  const handleFrame = useCallback(async (video: HTMLVideoElement) => {
-    if (!modelRef.current || isModelLoading) return;
-    setCurrentTime(video.currentTime);
-    
-    const now = performance.now();
-    if (now - lastProcessTimeRef.current < 100) return; 
-    lastProcessTimeRef.current = now;
+  if (!isMounted) {
+    return null;
+  }
 
-    const start = performance.now();
-    const preds = await modelRef.current.detect(video);
-    const end = performance.now();
-    setFps(Math.round(1000 / (end - start || 1)));
+  if (view === "deployment") {
+    return (
+      <DeploymentSelectionScreen
+        onLaunch={(config) => {
+          setDeploymentConfig(config);
+          controller.initializeCameraWall(config.cameraCount);
+          setView("auth");
+        }}
+      />
+    );
+  }
 
-    const detections = preds.filter(p => p.class === "person").map(p => ({
-      label: "person",
-      confidence: p.score ?? 0,
-      bbox: {
-        x: (p.bbox[0] / video.videoWidth) * 100,
-        y: (p.bbox[1] / video.videoHeight) * 100,
-        width: (p.bbox[2] / video.videoWidth) * 100,
-        height: (p.bbox[3] / video.videoHeight) * 100,
-      }
-    }));
+  if (view === "auth") {
+    return (
+      <LoginPanel
+        onRegister={(session) => {
+          setPendingSession({ ...session, mode: "ACTIVE" });
+          setView("setup");
+        }}
+        onSkip={() => {
+          const localSession: OperatorSession = {
+            name: "LOCAL_OPERATOR",
+            id: "LOCAL-01",
+            level: "OPERATOR",
+            mode: "LOCAL",
+            store: appConfig.NEXT_PUBLIC_DEFAULT_STORE_ID,
+          };
+          setPendingSession(localSession);
+          setView("setup");
+        }}
+      />
+    );
+  }
 
-    const updated = trackerRef.current.update(detections, zones);
-    setCustomers(updated);
-  }, [isModelLoading, zones]);
+  if (view === "setup" && pendingSession) {
+    return (
+      <SessionSetupScreen
+        session={pendingSession}
+        onComplete={() => {
+          setView("zoneConfig");
+        }}
+        onSkip={() => {
+          setView("zoneConfig");
+        }}
+      />
+    );
+  }
 
-  useEffect(() => {
-    const now = Date.now();
-    if (DEMO_PRESET_ENABLED && !hasDemoBuzzerFired.current && currentTime >= DEMO_PRESET_BUZZER_TIME_SEC) {
-      hasDemoBuzzerFired.current = true;
-      addLog(`[DEMO PRESET] Threshold Breach: ${DEMO_PRESET_BUZZER_TIME_SEC}s`, "alert", "EXIT", "Manually configured demo threshold reached. Triggering hardware.", 1.0);
-      
-      if (arduinoStatus === "CONNECTED") {
-        sendAlert();
-        addLog(`[HARDWARE] Preset Trigger Dispatched`, "success", "HARDWARE");
-      } else {
-        addLog(`[HARDWARE] Preset Suppressed: Device Not Linked`, "warning", "HARDWARE");
-      }
-    }
+  if (view === "zoneConfig" && pendingSession) {
+    return (
+      <ZoneConfigurationScreen
+        zones={controller.zones}
+        onContinueWithRecommendedLayout={() => {
+          controller.setSession(pendingSession);
+          setView("dashboard");
+        }}
+        onSaveLayout={(zones) => {
+          controller.setZones(zones);
+          controller.setSession(pendingSession);
+          setView("dashboard");
+        }}
+      />
+    );
+  }
 
-    customers.forEach(c => {
-      const inExitDanger = c.zone === "exit"; 
-      const inSafeCorridor = c.zone === "safe"; 
-      const confirmedTheft = c.hasItem && !c.paid && c.ownershipConfidence > 0.8;
-
-      if (inSafeCorridor) {
-        if (c.ownershipState !== "CLEARED_EXIT") {
-          addLog(`[SAFE] ${c.id} (${c.ageClass}) in Green corridor`, "success", "TRACK", "Subject detected in non-alert buffer zone.", 1.0, c.id);
-          c.ownershipState = "CLEARED_EXIT";
-        }
-        return; 
-      }
-
-      if (inExitDanger && confirmedTheft && !c.alerted) {
-        if (!c.theftConfirmedAt) {
-          c.theftConfirmedAt = now;
-          addLog(`[WARNING] Blue threshold approach: ${c.id}`, "warning", "EXIT", "Unpaid item detected at final exit boundary.", 0.85, c.id);
-        }
-
-        if (now - c.theftConfirmedAt > 1000) { 
-          addLog(`[CRITICAL] UNPAID EXIT: ${c.id}`, "alert", "EXIT", "Final threshold breached. Activating hardware buzzer.", 1.0, c.id);
-          
-          if (arduinoStatus === "CONNECTED") {
-            sendAlert();
-            addLog(`[HARDWARE] Alert Command Dispatched`, "success", "HARDWARE");
-          } else {
-             addLog(`[HARDWARE] Alert Suppressed: Device Not Linked`, "warning", "HARDWARE");
-          }
-          trackerRef.current.markAlerted(c.id);
-        }
-      }
-    });
-  }, [customers, addLog, arduinoStatus, sendAlert, currentTime]);
-
-  const handlePayment = async (method: PaymentMethod) => {
-    setIsProcessingPayment(true);
-    const payId = `PAY-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-    await new Promise(r => setTimeout(r, 1500));
-    
-    const result = await automatedPaymentMatcherFlow({ 
-      customers, 
-      paymentEvent: { method, referenceId: payId, confirmed: true }, 
-      zones 
-    });
-
-    if (result.matchedCustomerId) {
-      trackerRef.current.markPaid(result.matchedCustomerId, method);
-      setCustomers(trackerRef.current.getSnapshot());
-      addLog(`[PAYMENT] Auth Success: ${payId}`, "success", "PAYMENT", `Linked to ${result.matchedCustomerId} via neural matching.`, 0.98, result.matchedCustomerId);
-    } else {
-      addLog(`[PAYMENT] Ambiguous Match`, "warning", "PAYMENT", result.message);
-    }
-    setIsProcessingPayment(false);
-  };
-
-  const handleRegister = (data: any) => {
-    setSession({ ...data, mode: 'ACTIVE' });
-    setView('dashboard');
-    addLog(`OPERATOR AUTHENTICATED: ${data.name}`, 'success', 'SYSTEM');
-  };
-
-  const handleSkip = () => {
-    setSession({ name: 'ANONYMOUS', id: 'DEMO-01', level: 'TEST', mode: 'TEST' });
-    setView('dashboard');
-    addLog('SYSTEM STARTED IN TEST MODE', 'info', 'SYSTEM');
-  };
-
-  // Prevent hydration errors
-  if (!isMounted) return null;
-
-  if (view === 'welcome') return <WelcomeScreen onEnter={() => setView('auth')} />;
-  if (view === 'auth') return <LoginPanel onRegister={handleRegister} onSkip={handleSkip} />;
-
-  return (
-    <div className="flex h-screen w-full relative overflow-hidden font-body">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden relative z-10">
-        <Header session={session} />
-        <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
-          <div className="flex-[3] flex flex-col gap-6 overflow-hidden min-h-0">
-            <div className="flex-[2] relative rounded-[2.5rem] glass overflow-hidden shadow-2xl aura-border border-white/5">
-              <VideoFeed
-                customers={customers}
-                zones={zones}
-                onZoneChange={setZones}
-                isEditingZones={isEditingZones}
-                videoUrl={videoUrl}
-                onFrame={handleFrame}
-                isModelLoading={isModelLoading}
-              />
-            </div>
-            
-            <div className="flex gap-4">
-              <div className="flex-1 glass px-8 py-5 rounded-2xl flex items-center justify-between shadow-xl aura-border">
-                <div className="flex items-center gap-5">
-                  <div className="p-3 rounded-xl bg-accent/10 border border-accent/20"><Cpu className="w-6 h-6 text-accent animate-pulse" /></div>
-                  <div><span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Processor</span><span className="text-2xl font-code text-accent font-bold leading-none">{fps} FPS</span></div>
-                </div>
-                <div className="w-px h-10 bg-white/10" />
-                <div className="flex items-center gap-5">
-                  <div className="p-3 rounded-xl bg-primary/10 border border-primary/20"><Target className="w-6 h-6 text-primary" /></div>
-                  <div><span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Neural Links</span><span className="text-2xl font-code text-foreground font-bold leading-none">{customers.length}</span></div>
-                </div>
-                <div className="w-px h-10 bg-white/10" />
-                <div className="flex items-center gap-5">
-                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"><ShieldCheck className="w-6 h-6 text-emerald-500" /></div>
-                  <div><span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest block opacity-60">Security</span><span className="text-2xl font-code text-emerald-400 font-bold leading-none">ACTIVE</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 min-h-0">
-              <EventTimeline logs={logs} />
-            </div>
-          </div>
-
-          <div className="w-full lg:w-[420px] flex flex-col gap-6 overflow-y-auto pr-2 hide-scrollbar">
-            <SidebarPanels
-              customers={customers}
-              isEditingZones={isEditingZones}
-              onToggleEditing={() => setIsEditingZones(!isEditingZones)}
-              onSimulatePayment={handlePayment}
-              isProcessing={isProcessingPayment}
-              onVideoUpload={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const url = URL.createObjectURL(file);
-                  setVideoUrl(url);
-                  trackerRef.current.reset();
-                  hasDemoBuzzerFired.current = false;
-                  addLog(`Vision Feed Injected: ${file.name}`, "info", "SYSTEM");
-                }
-              }}
-              onTestAlert={() => {
-                sendAlert();
-                addLog(`[HARDWARE] Manual Test Signal Dispatched`, "success", "HARDWARE");
-              }}
-              isVideoLoaded={!!videoUrl}
-              arduinoStatus={arduinoStatus}
-              onConnectArduino={connectArduino}
-              isBlockedByPolicy={isBlockedByPolicy}
-            />
-          </div>
-        </main>
-      </div>
-    </div>
-  );
+  return <DashboardScreen controller={controller} deploymentMode={deploymentConfig?.mode ?? "single"} />;
 }

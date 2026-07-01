@@ -28,7 +28,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEnter }) => {
             CyberGuard <span className="text-accent glow-text">Vision</span>
           </h1>
           <p className="text-muted-foreground uppercase tracking-[0.6em] text-[10px] font-bold opacity-60">
-            Autonomous Retail Security System / Neural Core v4.0
+            Retail Monitoring Console / Operator Review
           </p>
         </div>
 
@@ -45,7 +45,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onEnter }) => {
           
           <div className="flex items-center gap-3 opacity-30">
             <Zap className="w-3 h-3 text-emerald-400" />
-            <span className="text-[8px] font-bold uppercase tracking-widest">Biometric Link Ready</span>
+            <span className="text-[8px] font-bold uppercase tracking-widest">Local Session Ready</span>
           </div>
         </div>
       </div>
