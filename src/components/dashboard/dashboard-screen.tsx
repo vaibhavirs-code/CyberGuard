@@ -290,6 +290,7 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
       <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
         Digital Trust Layer
       </p>
+
       <p className="mt-1 font-code text-lg font-bold text-white">
         DPI Event Bridge
       </p>
@@ -298,11 +299,13 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
     <ShieldCheck className="h-6 w-6 text-emerald-400" />
   </div>
 
+  {/* LIVE EVENT COUNT + PRIVACY */}
   <div className="grid grid-cols-2 gap-3">
     <div className="rounded-xl border border-white/10 bg-black/20 p-3">
       <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-        Events
+        Live Events
       </p>
+
       <p className="mt-1 font-code text-xl font-bold text-white">
         {controller.dpiEvents.length}
       </p>
@@ -312,20 +315,74 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
       <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
         Privacy
       </p>
+
       <p className="mt-1 font-code text-sm font-bold text-emerald-300">
         Protected
       </p>
     </div>
   </div>
 
-  <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
-    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
-      Interoperability
-    </p>
-    <p className="mt-1 text-xs text-white/80">
-      Anonymous events ready for authorized systems
-    </p>
-  </div>
+  {/* SHOW LIVE DPI EVENTS */}
+  {controller.dpiEvents.length > 0 ? (
+    <div className="mt-3 space-y-2">
+      {controller.dpiEvents.slice(0, 2).map((event) => (
+        <div
+          key={event.eventId}
+          className="rounded-xl border border-white/10 bg-black/20 p-3"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-code text-[10px] font-bold text-cyan-200">
+              {event.eventType}
+            </p>
+
+            <span
+              className={`rounded-full px-2 py-1 font-code text-[9px] font-bold ${
+                event.riskLevel === "HIGH"
+                  ? "bg-red-500/15 text-red-300"
+                  : event.riskLevel === "MEDIUM"
+                    ? "bg-amber-500/15 text-amber-300"
+                    : "bg-emerald-500/15 text-emerald-300"
+              }`}
+            >
+              {event.riskLevel}
+            </span>
+          </div>
+
+          <div className="mt-2 grid grid-cols-2 gap-2 text-[9px]">
+            <div>
+              <p className="uppercase tracking-widest text-muted-foreground">
+                Subject
+              </p>
+
+              <p className="mt-1 font-code text-white">
+                {event.subjectToken}
+              </p>
+            </div>
+
+            <div>
+              <p className="uppercase tracking-widest text-muted-foreground">
+                Transaction
+              </p>
+
+              <p className="mt-1 font-code text-white">
+                {event.transactionStatus}
+              </p>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+        Interoperability
+      </p>
+
+      <p className="mt-1 text-xs text-white/80">
+        Waiting for a store activity event
+      </p>
+    </div>
+  )}
 </div>
             <SidebarPanels
               activeCamera={activeCamera}
