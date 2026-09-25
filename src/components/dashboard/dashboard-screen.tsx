@@ -284,6 +284,49 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
           </div>
 
           <div className="hide-scrollbar flex w-full flex-col gap-6 overflow-y-auto pr-2 lg:w-[420px]">
+            <div className="aura-border rounded-2xl border border-accent/20 bg-background/60 p-5 glass shadow-xl">
+  <div className="mb-4 flex items-center justify-between">
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+        Digital Trust Layer
+      </p>
+      <p className="mt-1 font-code text-lg font-bold text-white">
+        DPI Event Bridge
+      </p>
+    </div>
+
+    <ShieldCheck className="h-6 w-6 text-emerald-400" />
+  </div>
+
+  <div className="grid grid-cols-2 gap-3">
+    <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+        Events
+      </p>
+      <p className="mt-1 font-code text-xl font-bold text-white">
+        {controller.dpiEvents.length}
+      </p>
+    </div>
+
+    <div className="rounded-xl border border-white/10 bg-black/20 p-3">
+      <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+        Privacy
+      </p>
+      <p className="mt-1 font-code text-sm font-bold text-emerald-300">
+        Protected
+      </p>
+    </div>
+  </div>
+
+  <div className="mt-3 rounded-xl border border-white/10 bg-black/20 p-3">
+    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+      Interoperability
+    </p>
+    <p className="mt-1 text-xs text-white/80">
+      Anonymous events ready for authorized systems
+    </p>
+  </div>
+</div>
             <SidebarPanels
               activeCamera={activeCamera}
               activeCameraId={controller.activeCameraId}
