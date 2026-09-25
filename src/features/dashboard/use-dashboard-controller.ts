@@ -19,6 +19,10 @@ import type {
   ZoneDefinition,
 } from "@/lib/types";
 import { automatedPaymentMatcherFlow } from "@/services/payment-matcher";
+import {
+  createDpiEvents,
+  type DpiEvent,
+} from "@/services/dpi-event-service";
 import { ObjectTracker } from "@/tracking/object-tracker";
 import {
   DEFAULT_CAMERA_ID,
@@ -29,6 +33,7 @@ import {
 import { MAX_LOG_ENTRIES } from "./dashboard-config";
 
 export interface DashboardController {
+  dpiEvents: DpiEvent[];
   activeCamera: CameraFeedState;
   activeCameraId: string;
   addCamera: () => void;
@@ -917,12 +922,18 @@ export function useDashboardController(): DashboardController {
   const resolvedActiveCamera = useMemo(() => {
     return camerasWithResolvedStatus.find((camera) => camera.id === activeCameraId) ?? camerasWithResolvedStatus[0] ?? activeCamera;
   }, [activeCamera, activeCameraId, camerasWithResolvedStatus]);
+  
+    const dpiEvents = useMemo(
+    () => createDpiEvents(resolvedActiveCamera.customers),
+    [resolvedActiveCamera.customers],
+    );
 
   return useMemo(
     () => ({
       activeCamera: resolvedActiveCamera,
       activeCameraId: resolvedActiveCamera.id,
       addCamera,
+      dpiEvents,
       arduinoStatus,
       buzzerTestMessage: resolvedActiveCamera.buzzerTestMessage,
       buzzerTestStatus: resolvedActiveCamera.buzzerTestStatus,
@@ -984,6 +995,7 @@ export function useDashboardController(): DashboardController {
       removeCamera,
       renameCamera,
       resolvedActiveCamera,
+      dpiEvents,
       sendTestAlert,
       sendTestAlertForCamera,
       session,
