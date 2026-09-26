@@ -9,6 +9,7 @@ import { INITIAL_ZONES } from "@/features/dashboard/dashboard-config";
 
 interface ZoneConfigurationScreenProps {
   zones: ZoneDefinition[];
+  onBack: () => void;
   onContinueWithRecommendedLayout: () => void;
   onSaveLayout: (zones: ZoneDefinition[]) => void;
 }
@@ -58,6 +59,7 @@ function resetRecommendedZones() {
 
 export const ZoneConfigurationScreen: React.FC<ZoneConfigurationScreenProps> = ({
   zones,
+  onBack,
   onContinueWithRecommendedLayout,
   onSaveLayout,
 }) => {
@@ -264,7 +266,7 @@ export const ZoneConfigurationScreen: React.FC<ZoneConfigurationScreenProps> = (
             ))}
           </div>
 
-          <div className="grid gap-2">
+          <div className="grid gap-2"><Button variant="ghost" onClick={onBack} className="h-11 rounded-xl border border-white/10">Back</Button>
             <Button
               onClick={() => onSaveLayout(draftZones)}
               className="h-11 rounded-xl border border-accent/40 bg-accent/10 text-[10px] font-bold uppercase tracking-[0.18em] text-accent hover:bg-accent/20"
