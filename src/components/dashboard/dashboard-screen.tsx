@@ -178,6 +178,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   );
 
   return (
+    <>
       {theftPopup && (
         <div className="pointer-events-none fixed right-6 top-6 z-[100] w-[360px] rounded-2xl border border-red-400/50 bg-black/90 p-4 shadow-2xl backdrop-blur-xl">
           <div className="flex items-start gap-3">
@@ -609,5 +610,6 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
       })()}
 
     </div>
+    </>
   );
 }
