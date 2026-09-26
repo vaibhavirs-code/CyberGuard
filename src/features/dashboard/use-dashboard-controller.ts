@@ -595,7 +595,7 @@ export function useDashboardController(): DashboardController {
         evidenceSnapshots: [],
       }));
     },
-    [ensureTracker, updateCamera],
+    [ensureCashDetector, ensureTracker, updateCamera],
   );
 
   const stopCameraSource = useCallback(
@@ -735,7 +735,7 @@ export function useDashboardController(): DashboardController {
         processingCameraIdsRef.current.delete(cameraId);
       }
     },
-    [addLog, applyTrackerState, ensureTracker, getCamera, isModelLoading, processFrame, updateCamera],
+    [addLog, applyTrackerState, ensureCashDetector, ensureTracker, getCamera, isModelLoading, processFrame, updateCamera],
   );
 
   const simulatePaymentForCamera = useCallback(
