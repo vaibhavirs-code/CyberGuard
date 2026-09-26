@@ -128,7 +128,7 @@ function getGridSize(cameraCount: number) {
   return Math.ceil(Math.sqrt(Math.max(1, cameraCount)));
 }
 
-export function DashboardScreen({ controller, deploymentMode = "single", operatorLevel = "OPERATOR" }: DashboardScreenProps) {
+export function DashboardScreen({ controller, deploymentMode = "single", operatorLevel = "OPERATOR", onOpenIndiaPage }: DashboardScreenProps) {
   const canManageEvidence = operatorLevel === "ADMIN" || operatorLevel === "SUPERVISOR";
   const [theftPopup, setTheftPopup] = useState<{ customerId: string; cameraLabel: string; riskScore: number } | null>(null);
   const [fullscreenCameraId, setFullscreenCameraId] = useState<string | null>(null);
@@ -190,7 +190,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
       )}
 
     <div className="relative flex h-screen w-full overflow-hidden font-body">
-      <Sidebar />
+      <Sidebar onOpenIndiaPage={onOpenIndiaPage} />
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
         <Header session={controller.session} />
         <main className="flex flex-1 flex-col gap-6 overflow-hidden p-6 lg:flex-row">
