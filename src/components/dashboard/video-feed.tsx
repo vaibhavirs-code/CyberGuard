@@ -223,35 +223,81 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   }, [liveStream, videoUrl]);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !onTheftEvidence) return;
+    if (!onTheftEvidence) return;
 
-    for (const customer of customers) {
-      if (!customer.alerted || !customer.alertAt) continue;
-      const evidenceKey = `${customer.id}:${customer.alertAt}`;
-      if (capturedEvidenceRef.current.has(evidenceKey)) continue;
+    let cancelled = false;
+    const captureHighRiskEvidence = () => {
+      if (cancelled) return;
 
-      try {
-        if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.videoWidth === 0 || video.videoHeight === 0) continue;
-        const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const context = canvas.getContext("2d");
-        if (!context) continue;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
-        capturedEvidenceRef.current.add(evidenceKey);
-        onTheftEvidence({
-          customerId: customer.id,
-          timestamp: new Date().toISOString(),
-          riskScore: Number(customer.riskScore.toFixed(2)),
-          reasons: customer.riskReasons,
-          dataUrl,
-        });
-      } catch {
-        // Cross-origin camera streams may block canvas extraction; detection continues normally.
+      const video = videoRef.current;
+      if (!video) return;
+
+      for (const customer of customers) {
+        if (customer.riskState !== "high_risk_suspicious_activity") continue;
+
+        const evidenceKey = `${customer.id}:${customer.alertAt ?? "high-risk"}`;
+        if (capturedEvidenceRef.current.has(evidenceKey)) continue;
+
+        if (
+          video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+          video.videoWidth === 0 ||
+          video.videoHeight === 0
+        ) {
+          continue;
+        }
+
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const context = canvas.getContext("2d");
+          if (!context) continue;
+
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          // Annotate the evidence frame so the judge/operator can see why this
+          // frame was captured without turning the snapshot into a face-ID system.
+          const boxX = (customer.bbox.x / 100) * canvas.width;
+          const boxY = (customer.bbox.y / 100) * canvas.height;
+          const boxW = (customer.bbox.width / 100) * canvas.width;
+          const boxH = (customer.bbox.height / 100) * canvas.height;
+
+          context.save();
+          context.strokeStyle = "#ef4444";
+          context.lineWidth = Math.max(3, canvas.width / 320);
+          context.strokeRect(boxX, boxY, boxW, boxH);
+          context.fillStyle = "rgba(239, 68, 68, 0.9)";
+          const label = `HIGH RISK · ${customer.id} · ${Math.round(customer.riskScore * 100)}%`;
+          context.font = `bold ${Math.max(14, canvas.width / 90)}px sans-serif`;
+          const labelHeight = Math.max(28, canvas.height / 24);
+          context.fillRect(boxX, Math.max(0, boxY - labelHeight), Math.min(canvas.width - boxX, context.measureText(label).width + 20), labelHeight);
+          context.fillStyle = "#ffffff";
+          context.fillText(label, boxX + 10, Math.max(20, boxY - labelHeight / 2 + 6));
+          context.restore();
+
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
+          capturedEvidenceRef.current.add(evidenceKey);
+
+          onTheftEvidence({
+            customerId: customer.id,
+            timestamp: new Date().toISOString(),
+            riskScore: Number(customer.riskScore.toFixed(2)),
+            reasons: customer.riskReasons,
+            dataUrl,
+          });
+        } catch {
+          // Canvas extraction can fail for cross-origin streams; detection continues.
+        }
       }
-    }
+    };
+
+    captureHighRiskEvidence();
+    const retryTimer = window.setInterval(captureHighRiskEvidence, 300);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(retryTimer);
+    };
   }, [customers, onTheftEvidence]);
 
   useEffect(() => {
