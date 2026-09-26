@@ -83,11 +83,11 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onBack, onRegister }) =>
           </div>
           <div>
             <h2 className="text-xl font-black uppercase tracking-widest text-foreground font-headline">Secure Operator Login</h2>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">Privacy-first retail monitoring</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">India-first · privacy-aware · operator console</span>
           </div>
         </div>
 
-        <div className="mb-7 grid grid-cols-3 gap-2">
+        <div className="mb-5 rounded-2xl border border-accent/15 bg-accent/5 p-4"><div className="flex items-center justify-between"><div><p className="text-[8px] font-black uppercase tracking-[.25em] text-accent">Indian Retail Node</p><p className="mt-1 font-code text-xs font-bold text-white/80">Mangaluru · Karnataka</p></div><span className="rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1 text-[8px] font-bold uppercase tracking-widest text-emerald-300">ONLINE</span></div><div className="mt-3 flex flex-wrap gap-2 text-[7px] font-bold uppercase tracking-widest text-white/40"><span>₹ INR</span><span>UPI</span><span>QR</span><span>POS</span><span>EN / HI / KN</span></div></div>\n\n        <div className="mb-7 grid grid-cols-3 gap-2">
           <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-3 text-center">
             <EyeOff className="mx-auto mb-1 h-4 w-4 text-emerald-300" />
             <p className="text-[8px] font-bold uppercase tracking-widest text-emerald-200">Faces masked</p>
