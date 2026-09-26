@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { Activity, AlertTriangle, Banknote, Camera, Cpu, Grid3X3, ShieldCheck, Target, Maximize2, X, Info, EyeOff, ArrowRight, CreditCard, QrCode, ScanLine, WalletCards, Radio, Languages } from "lucide-react";
+import { Activity, AlertTriangle, Banknote, Camera, Cpu, Grid3X3, ShieldCheck, Target, Maximize2, X, Info, ArrowRight, CreditCard, QrCode, ScanLine, WalletCards, Radio, Languages } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -135,8 +135,6 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   const canManageEvidence = operatorLevel === "ADMIN" || operatorLevel === "SUPERVISOR";
   const [theftPopup, setTheftPopup] = useState<{ customerId: string; cameraLabel: string; riskScore: number } | null>(null);
   const [fullscreenCameraId, setFullscreenCameraId] = useState<string | null>(null);
-  const [showClearPeople, setShowClearPeople] = useState(false);
-  const [enhancedPrivacyView, setEnhancedPrivacyView] = useState(false);
   const [transactionTwinCustomerId, setTransactionTwinCustomerId] = useState<string | null>(null);
   const [showJudgeDemo, setShowJudgeDemo] = useState(false);
   const lastAlertRef = useRef<string | null>(null);
