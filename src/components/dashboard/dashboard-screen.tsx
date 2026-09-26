@@ -200,7 +200,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
         <Header session={controller.session} />
         <main className="flex flex-1 flex-col gap-6 overflow-hidden p-6 lg:flex-row">
           <div className="flex min-h-0 flex-[3] flex-col gap-6 overflow-y-auto pr-2">
-            <section className="grid gap-3 md:grid-cols-[1fr_auto]">
+            <section className="order-10 grid shrink-0 gap-3 md:grid-cols-[1fr_auto]">
               <div className="rounded-2xl border border-accent/20 bg-accent/5 px-5 py-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="rounded-xl border border-accent/20 bg-black/20 p-2"><Info className="h-4 w-4 text-accent" /></div>
@@ -219,7 +219,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               </button>
             </section>
 
-            <section className="mb-1 grid gap-4 md:grid-cols-4">
+            <section className="order-20 mb-1 grid shrink-0 gap-4 md:grid-cols-4">
               <div className="aura-border rounded-2xl border border-white/5 px-5 py-4 glass">
                 <div className="flex items-center gap-3">
                   <Grid3X3 className="h-5 w-5 text-accent" />
@@ -258,7 +258,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               </div>
             </section>
 
-            <section className="grid gap-3 md:grid-cols-4">
+            <section className="order-50 grid shrink-0 gap-3 md:grid-cols-4">
               <div className="md:col-span-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 px-5 py-4">
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-2">
@@ -288,7 +288,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               </div>
             </section>
 
-            <section className="grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 md:grid-cols-4">
+            <section className="order-60 grid shrink-0 gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 md:grid-cols-4">
               {[
                 ["01", "Observe", "Person-only AI detection"],
                 ["02", "Understand", "Zones + payment signals"],
@@ -306,7 +306,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               ))}
             </section>
 
-            <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <section className="order-70 grid shrink-0 gap-3 md:grid-cols-2 xl:grid-cols-4">
               {[
                 ["UPI", QrCode, "Digital rail", "READY"],
                 ["QR", ScanLine, "Scan checkout", "READY"],
@@ -329,7 +329,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               })}
             </section>
 
-            <section className="grid gap-3 lg:grid-cols-[1.35fr_.65fr]">
+            <section className="order-80 grid shrink-0 gap-3 lg:grid-cols-[1.35fr_.65fr]">
               <div className="rounded-2xl border border-accent/20 bg-gradient-to-r from-accent/10 to-transparent p-5">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -377,7 +377,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               </div>
             </section>
 
-            <section className="rounded-2xl border border-white/10 bg-black/20 p-4">
+            <section className="order-90 shrink-0 rounded-2xl border border-white/10 bg-black/20 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2"><Radio className="h-4 w-4 text-emerald-300" /><p className="text-[9px] font-black uppercase tracking-[0.22em] text-white">Live trust activity</p></div>
                 <span className="text-[8px] font-bold uppercase tracking-widest text-white/35">Human review remains in the loop</span>
@@ -427,8 +427,8 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                 </div>
               </div>
             ) : (
-              <div className="flex min-h-0 flex-[2] flex-col gap-4 overflow-hidden">
-                <div className="aura-border relative min-h-[360px] flex-[2] overflow-hidden rounded-[2.5rem] border border-accent/20 glass shadow-2xl">
+              <div className="order-30 flex shrink-0 flex-col gap-4 overflow-visible">
+                <div className="aura-border relative h-[520px] min-h-[520px] w-full shrink-0 overflow-hidden rounded-[2.5rem] border border-accent/20 glass shadow-2xl lg:h-[560px] lg:min-h-[560px]">
                   <CameraTile
                     camera={activeCamera}
                     isActive
@@ -466,7 +466,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               </div>
             )}
 
-            <div className="flex gap-4">
+            <div className="order-40 flex shrink-0 gap-4">
               <div className="aura-border flex flex-1 items-center justify-between rounded-2xl px-8 py-5 glass shadow-xl">
                 <div className="flex items-center gap-5">
                   <div className="rounded-xl border border-accent/20 bg-accent/10 p-3">
@@ -513,7 +513,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
             </div>
 
             {isMultiCameraMode ? (
-              <div className="min-h-0 flex-1">
+              <div className="order-100 min-h-0 flex-1">
                 <EventTimeline logs={controller.globalLogs} title="Global Event Feed" />
               </div>
             ) : (
