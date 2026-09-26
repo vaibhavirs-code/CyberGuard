@@ -29,6 +29,22 @@ function requireConfig() {
   }
 }
 
+async function appRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetch(path, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers ?? {}),
+    },
+    cache: "no-store",
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body?.msg ?? body?.message ?? body?.error_description ?? body?.error ?? "Authentication request failed.");
+  }
+  return body as T;
+}
+
 async function supabaseRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   requireConfig();
   const response = await fetch(`${SUPABASE_URL}${path}`, {
@@ -53,7 +69,7 @@ export async function registerOperator(
   operatorId: string,
   store: string,
 ): Promise<string> {
-  const auth = await supabaseRequest<AuthResponse>("/auth/v1/signup", {
+  const auth = await appRequest<AuthResponse>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({
       email,
@@ -96,7 +112,7 @@ export async function registerOperator(
 }
 
 export async function signInOperator(email: string, password: string): Promise<OperatorSession> {
-  const auth = await supabaseRequest<AuthResponse>("/auth/v1/token?grant_type=password", {
+  const auth = await appRequest<AuthResponse>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
