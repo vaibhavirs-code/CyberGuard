@@ -664,7 +664,7 @@ export class ObjectTracker {
     return this.getState(events);
   }
 
-  markPaid(id: string, method: PaymentMethod) {
+  markPaid(id: string, method: PaymentMethod, payment?: { amount?: number; referenceId?: string; confirmed?: boolean }) {
     const track = this.tracks.get(id);
     if (!track) {
       return;
@@ -674,6 +674,9 @@ export class ObjectTracker {
     track.paymentState = "paid";
     track.paymentMethod = method;
     track.paymentAt = Date.now();
+    track.paymentAmount = payment?.amount;
+    track.paymentReferenceId = payment?.referenceId;
+    track.paymentConfirmed = payment?.confirmed ?? true;
     track.alerted = false;
     track.alertAt = undefined;
     track.riskState = "benign";
