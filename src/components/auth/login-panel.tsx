@@ -45,8 +45,8 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-xl">
-      <div className="w-full max-w-[500px] glass rounded-[2.5rem] p-10 border-white/5 aura-border shadow-2xl relative overflow-hidden animate-in slide-in-from-bottom-8 duration-700">
+    <div className="fixed inset-0 z-[100] flex min-h-full items-start justify-center overflow-y-auto bg-black/80 px-4 py-6 backdrop-blur-xl sm:items-center sm:py-8">
+      <div className="relative w-full max-w-[500px] shrink-0 glass rounded-[2.5rem] p-10 border-white/5 aura-border shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-700">
         <div className="absolute inset-0 shimmer opacity-5 pointer-events-none" />
         
         <div className="flex items-center gap-4 mb-10">
