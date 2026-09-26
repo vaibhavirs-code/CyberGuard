@@ -193,7 +193,8 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
         </div>
       )}
 
-    {showJudgeDemo && <JudgeDemoPanel onClose={() => setShowJudgeDemo(false)} />}\n    <div className="relative flex h-screen w-full overflow-hidden font-body">
+    {showJudgeDemo && <JudgeDemoPanel onClose={() => setShowJudgeDemo(false)} />}
+    <div className="relative flex h-screen w-full overflow-hidden font-body">
       <Sidebar onOpenIndiaPage={onOpenIndiaPage} onBackToLogin={onBackToLogin} />
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
         <Header session={controller.session} />
