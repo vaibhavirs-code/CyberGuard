@@ -73,6 +73,7 @@ function CameraTile({
         onFrame={onFrame}
         onTheftEvidence={onTheftEvidence}
         rawDetections={camera.rawDetections}
+        detectedProducts={camera.detectedProducts}
         videoUrl={camera.videoUrl}
         zones={camera.zones}
       />
@@ -610,6 +611,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                   onFrame={(video) => controller.trackFrameForCamera(fullscreenCamera.id, video)}
                   onTheftEvidence={(evidence) => controller.captureTheftEvidence(fullscreenCamera.id, evidence)}
                   rawDetections={fullscreenCamera.rawDetections}
+                  detectedProducts={fullscreenCamera.detectedProducts}
                   videoUrl={fullscreenCamera.videoUrl}
                   zones={fullscreenCamera.zones}
                 />
