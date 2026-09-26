@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { SidebarPanels } from "@/components/dashboard/sidebar-panels";
 import { VideoFeed } from "@/components/dashboard/video-feed";
 import { EventTimeline } from "@/components/dashboard/event-timeline";
+import { TransactionTwinPanel } from "@/components/dashboard/transaction-twin-panel";
 import { cameraStatusClass } from "@/features/dashboard/camera-registry";
 import type { DashboardController } from "@/features/dashboard/use-dashboard-controller";
 import type { CameraFeedState, DeploymentMode, OperatorLevel } from "@/lib/types";
@@ -37,6 +38,7 @@ function CameraTile({
   onFrame,
   onTheftEvidence,
   onSelect,
+  onCustomerClick,
   showTelemetry = false,
   showClearPeople = false,
   enhancedPrivacyView = false,
@@ -47,6 +49,7 @@ function CameraTile({
   onFrame: (video: HTMLVideoElement) => Promise<void>;
   onTheftEvidence: (evidence: { customerId: string; timestamp: string; riskScore: number; reasons: string[]; dataUrl: string }) => void;
   onSelect: () => void;
+  onCustomerClick: (customerId: string) => void;
   showTelemetry?: boolean;
   showClearPeople?: boolean;
   enhancedPrivacyView?: boolean;
@@ -76,6 +79,7 @@ function CameraTile({
         liveStream={camera.liveStream}
         onFrame={onFrame}
         onTheftEvidence={onTheftEvidence}
+        onCustomerClick={onCustomerClick}
         rawDetections={camera.rawDetections}
         detectedProducts={camera.detectedProducts}
         videoUrl={camera.videoUrl}
@@ -130,6 +134,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   const [fullscreenCameraId, setFullscreenCameraId] = useState<string | null>(null);
   const [showClearPeople, setShowClearPeople] = useState(false);
   const [enhancedPrivacyView, setEnhancedPrivacyView] = useState(false);
+  const [transactionTwinCustomerId, setTransactionTwinCustomerId] = useState<string | null>(null);
   const lastAlertRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -356,6 +361,10 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                         controller.setActiveCamera(camera.id);
                         setFullscreenCameraId(camera.id);
                       }}
+                      onCustomerClick={(customerId) => {
+                        controller.setActiveCamera(camera.id);
+                        setTransactionTwinCustomerId(customerId);
+                      }}
                       showTelemetry
                        showClearPeople={showClearPeople}
                       enhancedPrivacyView={enhancedPrivacyView}
@@ -373,6 +382,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                     onFrame={(video) => controller.trackFrameForCamera(activeCamera.id, video)}
                     onTheftEvidence={(evidence) => controller.captureTheftEvidence(activeCamera.id, evidence)}
                     onSelect={() => controller.setActiveCamera(activeCamera.id)}
+                    onCustomerClick={(customerId) => setTransactionTwinCustomerId(customerId)}
                      showClearPeople={showClearPeople}
                      enhancedPrivacyView={enhancedPrivacyView}
                   />
@@ -389,6 +399,10 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                         onFrame={(video) => controller.trackFrameForCamera(camera.id, video)}
                         onTheftEvidence={(evidence) => controller.captureTheftEvidence(camera.id, evidence)}
                         onSelect={() => controller.setActiveCamera(camera.id)}
+                        onCustomerClick={(customerId) => {
+                          controller.setActiveCamera(camera.id);
+                          setTransactionTwinCustomerId(customerId);
+                        }}
                          showClearPeople={showClearPeople}
                          enhancedPrivacyView={enhancedPrivacyView}
                       />
@@ -661,6 +675,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                   liveStream={fullscreenCamera.liveStream}
                   onFrame={(video) => controller.trackFrameForCamera(fullscreenCamera.id, video)}
                   onTheftEvidence={(evidence) => controller.captureTheftEvidence(fullscreenCamera.id, evidence)}
+                  onCustomerClick={(customerId) => setTransactionTwinCustomerId(customerId)}
                   rawDetections={fullscreenCamera.rawDetections}
                   detectedProducts={fullscreenCamera.detectedProducts}
                   videoUrl={fullscreenCamera.videoUrl}
@@ -678,6 +693,13 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
         );
       })()}
 
+      {transactionTwinCustomerId && (
+        <TransactionTwinPanel
+          camera={controller.activeCamera}
+          customerId={transactionTwinCustomerId}
+          onClose={() => setTransactionTwinCustomerId(null)}
+        />
+      )}
     </div>
     </>
   );
