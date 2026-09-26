@@ -482,6 +482,9 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
                     <span className="text-[8px] uppercase text-white/80">{customer.state.replaceAll("_", " ")}</span>
                     <span className="text-[8px] uppercase text-white/80">{customer.trackingConfidence} track</span>
                   </div>
+                  <p className="mt-1 border-t border-white/10 pt-1 text-[7px] leading-3 text-white/75">
+                    Why: {customer.riskReasons[0] ?? "No elevated risk signal detected"} · AI signal, not proof
+                  </p>
                 </div>
               </div>
 
