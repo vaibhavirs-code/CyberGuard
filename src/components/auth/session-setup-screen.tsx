@@ -10,6 +10,7 @@ import { CreditCard, QrCode, Smartphone, Wifi } from "lucide-react";
 
 interface SessionSetupScreenProps {
   session: OperatorSession;
+  onBack: () => void;
   onComplete: () => void;
   onSkip: () => void;
 }
@@ -33,6 +34,7 @@ function defaultFieldsFor(session: OperatorSession): SetupFields {
 
 export const SessionSetupScreen: React.FC<SessionSetupScreenProps> = ({
   session,
+  onBack,
   onComplete,
   onSkip,
 }) => {
@@ -116,7 +118,7 @@ export const SessionSetupScreen: React.FC<SessionSetupScreenProps> = ({
           </div>
         </div>
 
-        <div className="mt-7 flex flex-col gap-3 md:flex-row">
+        <div className="mt-7 flex flex-col gap-3 md:flex-row"><Button variant="ghost" onClick={onBack} className="h-12 rounded-xl border border-white/10">Back</Button>
           <Button
             onClick={onComplete}
             className="h-12 flex-1 rounded-xl border border-accent/40 bg-accent/10 text-[10px] font-bold uppercase tracking-[0.25em] text-accent hover:bg-accent/20"
