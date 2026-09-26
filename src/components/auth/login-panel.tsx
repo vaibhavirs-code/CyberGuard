@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronRight, Activity } from "lucide-react";
+import { ChevronRight, Activity, LockKeyhole, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,11 +21,14 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
     id: "",
     store: "FLAGSHIP_01",
     level: "OPERATOR" as OperatorLevel,
+    password: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onRegister(formData);
+    if (!formData.password.trim()) return;
+    const { password: _password, ...sessionData } = formData;
+    onRegister(sessionData);
   };
 
   return (
@@ -56,6 +59,21 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold ml-1">Password</Label>
+                <div className="relative">
+                  <LockKeyhole className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    required
+                    type="password"
+                    placeholder="ENTER SESSION PASSWORD"
+                    className="bg-white/5 border-white/10 h-12 rounded-xl pl-10 text-xs font-code tracking-widest focus:border-accent transition-colors"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
