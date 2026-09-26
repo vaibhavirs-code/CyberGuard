@@ -17,6 +17,7 @@ interface DashboardScreenProps {
   controller: DashboardController;
   deploymentMode?: DeploymentMode;
   operatorLevel?: OperatorLevel;
+  onOpenIndiaPage?: () => void;
 }
 
 function CameraStatusChip({ camera }: { camera: CameraFeedState }) {
