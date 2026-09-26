@@ -693,12 +693,12 @@ export function useDashboardController(): DashboardController {
             }));
 
             if (customer) {
-              ensureTracker(cameraId).markPaid(customer.id, "cash");
-              applyTrackerState(cameraId, ensureTracker(cameraId).getState());
+              // Cash presence is evidence of a cash-handling action, not proof of
+              // completed payment. Do not mark the customer paid automatically.
               addLog(
                 cameraId,
-                `Cash detected and associated with ${customer.id}`,
-                "success",
+                `Cash detected near checkout customer ${customer.id}`,
+                "info",
                 "PAYMENT",
                 cashDetection.reason,
                 cashDetection.confidence,
