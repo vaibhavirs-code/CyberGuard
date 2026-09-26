@@ -94,5 +94,5 @@ export default function DashboardPage() {
     );
   }
 
-  return <DashboardScreen controller={controller} deploymentMode={deploymentConfig?.mode ?? "single"} />;
+  return <DashboardScreen controller={controller} deploymentMode={deploymentConfig?.mode ?? "single"} operatorLevel={pendingSession?.level ?? "OPERATOR"} />;
 }
