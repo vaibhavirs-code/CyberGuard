@@ -117,6 +117,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
               </Button>
             </form>
           ) : (
+          <>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
@@ -161,6 +162,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
           <Button type="button" variant="outline" className="w-full h-12 rounded-2xl text-[10px] uppercase tracking-widest" onClick={() => setIsCreating(true)}>
             Create Operator Account
           </Button>
+          </>
           )}
         </div>
       </div>
