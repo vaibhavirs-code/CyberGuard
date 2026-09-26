@@ -9,6 +9,7 @@ import { SidebarPanels } from "@/components/dashboard/sidebar-panels";
 import { VideoFeed } from "@/components/dashboard/video-feed";
 import { EventTimeline } from "@/components/dashboard/event-timeline";
 import { TransactionTwinPanel } from "@/components/dashboard/transaction-twin-panel";
+import { JudgeDemoPanel } from "@/components/dashboard/judge-demo-panel";
 import { cameraStatusClass } from "@/features/dashboard/camera-registry";
 import type { DashboardController } from "@/features/dashboard/use-dashboard-controller";
 import type { CameraFeedState, DeploymentMode, OperatorLevel } from "@/lib/types";
@@ -137,6 +138,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   const [showClearPeople, setShowClearPeople] = useState(false);
   const [enhancedPrivacyView, setEnhancedPrivacyView] = useState(false);
   const [transactionTwinCustomerId, setTransactionTwinCustomerId] = useState<string | null>(null);
+  const [showJudgeDemo, setShowJudgeDemo] = useState(false);
   const lastAlertRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -191,68 +193,29 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
         </div>
       )}
 
-    <div className="relative flex h-screen w-full overflow-hidden font-body">
+    {showJudgeDemo && <JudgeDemoPanel onClose={() => setShowJudgeDemo(false)} />}\n    <div className="relative flex h-screen w-full overflow-hidden font-body">
       <Sidebar onOpenIndiaPage={onOpenIndiaPage} onBackToLogin={onBackToLogin} />
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
         <Header session={controller.session} />
         <main className="flex flex-1 flex-col gap-6 overflow-hidden p-6 lg:flex-row">
           <div className="flex min-h-0 flex-[3] flex-col gap-6 overflow-hidden">
-            <section className="grid gap-3 md:grid-cols-4">
-              <div className="md:col-span-4 rounded-2xl border border-accent/20 bg-accent/5 px-5 py-4">
+            <section className="grid gap-3 md:grid-cols-[1fr_auto]">
+              <div className="rounded-2xl border border-accent/20 bg-accent/5 px-5 py-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="rounded-xl border border-accent/20 bg-black/20 p-2">
-                    <Info className="h-4 w-4 text-accent" />
-                  </div>
+                  <div className="rounded-xl border border-accent/20 bg-black/20 p-2"><Info className="h-4 w-4 text-accent" /></div>
                   <div className="min-w-[220px] flex-1">
                     <p className="text-[10px] font-black uppercase tracking-[0.22em] text-accent">Privacy-first digital trust</p>
-                    <p className="mt-1 text-[11px] leading-5 text-white/75">
-                      AI tracks anonymous person IDs and movement signals. It does not identify faces or decide guilt.
-                      Payment signals are matched with uncertainty, and high-risk events are routed for human review.
-                    </p>
+                    <p className="mt-1 text-[11px] leading-5 text-white/75">AI tracks anonymous person IDs and movement signals. It does not identify faces or decide guilt. Payment signals are matched with uncertainty, and high-risk events are routed for human review.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setEnhancedPrivacyView((enabled) => !enabled)}
-                    disabled={showClearPeople}
-                    className={enhancedPrivacyView && !showClearPeople
-                      ? "flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-cyan-200"
-                      : "flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/70"}
-                    aria-pressed={enhancedPrivacyView}
-                    title={showClearPeople ? "Turn off Demo View to enable the privacy mask" : "Show people clearly while masking the estimated head and face region"}
-                  >
-                    <EyeOff className="h-4 w-4" />
-                    <span className="text-[8px] font-bold uppercase tracking-widest">
-                      {enhancedPrivacyView && !showClearPeople ? "Enhanced privacy · face masked" : "Enhanced privacy view"}
-                    </span>
-                  </button>
-
-                  <button
-
-                    type="button"
-
-                    onClick={() => setShowClearPeople((enabled) => !enabled)}
-
-                    className={showClearPeople
-
-                      ? "flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-amber-200"
-
-                      : "flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-emerald-200"}
-
-                    aria-pressed={showClearPeople}
-
-                  >
-
-                    <EyeOff className="h-4 w-4" />
-
-                    <span className="text-[8px] font-bold uppercase tracking-widest">
-
-                      {showClearPeople ? "Demo view · clear people" : "Identity shield ON"}
-
-                    </span>
-
-                  </button>
+                  <button type="button" onClick={() => setEnhancedPrivacyView((enabled) => !enabled)} disabled={showClearPeople} className={enhancedPrivacyView && !showClearPeople ? "flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-cyan-200" : "flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/70"} aria-pressed={enhancedPrivacyView} title={showClearPeople ? "Turn off Demo View to enable the privacy mask" : "Show people clearly while masking the estimated head and face region"}><EyeOff className="h-4 w-4" /><span className="text-[8px] font-bold uppercase tracking-widest">{enhancedPrivacyView && !showClearPeople ? "Enhanced privacy · face masked" : "Enhanced privacy view"}</span></button>
+                  <button type="button" onClick={() => setShowClearPeople((enabled) => !enabled)} className={showClearPeople ? "flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-amber-200" : "flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-emerald-200"} aria-pressed={showClearPeople}><EyeOff className="h-4 w-4" /><span className="text-[8px] font-bold uppercase tracking-widest">{showClearPeople ? "Demo view · clear people" : "Identity shield ON"}</span></button>
                 </div>
               </div>
+              <button type="button" onClick={() => setShowJudgeDemo(true)} className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-6 py-4 text-left transition hover:border-amber-300/50 hover:bg-amber-400/15">
+                <p className="text-[8px] font-black uppercase tracking-[0.25em] text-amber-200">Presentation mode</p>
+                <p className="mt-2 text-sm font-black uppercase tracking-widest text-white">Run Judge Demo</p>
+                <p className="mt-1 text-[8px] text-white/40">C07 · UPI · transaction mismatch</p>
+              </button>
             </section>
 
             <section className="mb-1 grid gap-4 md:grid-cols-4">
