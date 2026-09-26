@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { Activity, AlertTriangle, Banknote, Camera, Cpu, Grid3X3, ShieldCheck, Target, Maximize2, X, Info, EyeOff, ArrowRight } from "lucide-react";
+import { Activity, AlertTriangle, Banknote, Camera, Cpu, Grid3X3, ShieldCheck, Target, Maximize2, X, Info, EyeOff, ArrowRight, CreditCard, QrCode, ScanLine, WalletCards, Radio, Languages } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -340,6 +340,94 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                   {index < 3 && <ArrowRight className="ml-auto hidden h-3 w-3 text-white/20 md:block" />}
                 </div>
               ))}
+            </section>
+
+            <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {[
+                ["UPI", QrCode, "Digital rail", "READY"],
+                ["QR", ScanLine, "Scan checkout", "READY"],
+                ["POS", CreditCard, "Card terminal", "MONITORING"],
+                ["CASH", WalletCards, "Visual presence", activeCamera.cashDetection.detected ? "DETECTED" : "MONITORING"],
+              ].map(([label, Icon, detail, status]) => {
+                const RailIcon = Icon as typeof QrCode;
+                return (
+                  <div key={label as string} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <RailIcon className="h-4 w-4 text-accent" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white">{label as string}</span>
+                      </div>
+                      <span className={`rounded-full border px-2 py-1 text-[7px] font-bold tracking-widest ${status === "DETECTED" ? "border-amber-400/30 text-amber-200" : "border-emerald-400/20 text-emerald-300"}`}>{status as string}</span>
+                    </div>
+                    <p className="mt-3 text-[9px] text-white/40">{detail as string} · INR aware</p>
+                  </div>
+                );
+              })}
+            </section>
+
+            <section className="grid gap-3 lg:grid-cols-[1.35fr_.65fr]">
+              <div className="rounded-2xl border border-accent/20 bg-gradient-to-r from-accent/10 to-transparent p-5">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-xl border border-accent/30 bg-accent/10 p-3"><ScanLine className="h-5 w-5 text-accent" /></div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-accent">AI Transaction Twin</p>
+                      <p className="mt-1 text-sm font-black text-white">CCTV → Basket → Payment → Review</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[8px] font-bold uppercase tracking-widest text-emerald-300">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" /> Event bridge active
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-2 sm:grid-cols-4">
+                  {[
+                    ["Tracked", String(activeCamera.customers.length), "temporary IDs"],
+                    ["Products", String(activeCamera.detectedProducts.filter((p) => p.state !== "lost_tracking").length), "visible tracks"],
+                    ["DPI events", String(controller.dpiEvents.length), "event records"],
+                    ["Evidence", String(activeCamera.evidenceSnapshots.length), "stored snapshots"],
+                  ].map(([value, label, detail]) => (
+                    <div key={label} className="rounded-xl border border-white/5 bg-black/20 p-3">
+                      <p className="font-code text-lg font-black text-white">{value}</p>
+                      <p className="text-[8px] font-bold uppercase tracking-widest text-white/45">{label}</p>
+                      <p className="mt-1 text-[8px] text-white/30">{detail}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {["SEE", "TWIN", "VERIFY", "ACT"].map((step, index) => (
+                    <div key={step} className="flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2">
+                      <span className="font-code text-[8px] font-black text-accent">0{index + 1}</span>
+                      <span className="text-[8px] font-bold uppercase tracking-widest text-white/55">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-violet-400/20 bg-violet-400/5 p-5">
+                <div className="flex items-center gap-2"><Languages className="h-4 w-4 text-violet-200" /><p className="text-[9px] font-black uppercase tracking-[0.2em] text-violet-100">Bharat operator layer</p></div>
+                <p className="mt-3 text-[10px] leading-5 text-white/55">Core event structure stays consistent while the operator-facing labels can be presented in English or Hindi.</p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[8px] uppercase tracking-widest text-white/35">English</p><p className="mt-1 text-[9px] font-bold text-white/80">Transaction verified</p></div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[8px] uppercase tracking-widest text-white/35">हिंदी</p><p className="mt-1 text-[9px] font-bold text-white/80">लेनदेन सत्यापित</p></div>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2"><Radio className="h-4 w-4 text-emerald-300" /><p className="text-[9px] font-black uppercase tracking-[0.22em] text-white">Live trust activity</p></div>
+                <span className="text-[8px] font-bold uppercase tracking-widest text-white/35">Human review remains in the loop</span>
+              </div>
+              <div className="mt-3 grid gap-2 md:grid-cols-3">
+                {controller.globalLogs.slice(0, 3).map((log, index) => (
+                  <div key={String(log.timestamp) + index} className="rounded-xl border border-white/5 bg-white/[0.025] p-3">
+                    <p className="text-[8px] uppercase tracking-widest text-accent">{log.type}</p>
+                    <p className="mt-1 text-[9px] font-bold text-white/75">{log.message}</p>
+                    <p className="mt-1 text-[8px] text-white/30">{new Date(log.timestamp).toLocaleTimeString()}</p>
+                  </div>
+                ))}
+                {controller.globalLogs.length === 0 && <div className="md:col-span-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 text-[9px] text-white/35">Waiting for the first store activity event…</div>}
+              </div>
             </section>
 
             {isMultiCameraMode ? (
