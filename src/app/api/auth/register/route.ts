@@ -28,7 +28,8 @@ export async function GET(request: Request) {
         supabaseReachable: true,
         authEmailEnabled: data?.external?.email ?? null,
       });
-    } catch {
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Unknown network error";
       return NextResponse.json(
         {
           ok: false,
@@ -36,6 +37,8 @@ export async function GET(request: Request) {
           configured: true,
           supabaseReachable: false,
           message: "Vercel could not reach Supabase.",
+          errorType: error instanceof Error ? error.name : "UnknownError",
+          errorDetail: detail.slice(0, 300),
         },
         { status: 502 },
       );
