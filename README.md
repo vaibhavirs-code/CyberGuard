@@ -78,3 +78,15 @@ When the tracker raises an automated alert, the app immediately:
 An unpaid person with a linked item hypothesis crossing the outside boundary can trigger the alert path. This is intentionally a **review signal**, not an automatic accusation.
 
 For real automatic payment confirmation, the app includes a server-side Razorpay webhook bridge. Captured payment events are verified, stored in Supabase, and automatically matched against anonymous person tracks. The Razorpay secret stays server-side. If the payment gateway is not configured, the demo payment controls remain available.
+
+
+## Hackathon evaluation readiness
+
+The repository maps the final MVP to the four evaluation areas shown by the organizers:
+
+- **Impact & Scalability:** see `docs/IMPACT_AND_SCALABILITY.md`.
+- **Technical Feasibility & Execution:** TypeScript, ESLint, production build, health checks, automated GitHub quality gate, camera/payment/hardware fallbacks.
+- **Innovation & Problem Relevance:** privacy-minimized correlation of camera movement and payment signals through a DPI event layer.
+- **UX & Accessibility:** labelled authentication, keyboard-operable controls, readable status states, human-review workflow and accessible live-region security alerts.
+
+The complete submission checklist is in `docs/HACKATHON_DELIVERABLES.md`, and the technical architecture is in `docs/ARCHITECTURE.md`.
