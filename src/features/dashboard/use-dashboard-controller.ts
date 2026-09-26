@@ -985,6 +985,7 @@ export function useDashboardController(): DashboardController {
       activeCamera: resolvedActiveCamera,
       activeCameraId: resolvedActiveCamera.id,
       captureTheftEvidence,
+      clearTheftEvidence,
       addCamera,
       dpiEvents,
       arduinoStatus,
@@ -1037,6 +1038,7 @@ export function useDashboardController(): DashboardController {
     [
       addCamera,
       captureTheftEvidence,
+      clearTheftEvidence,
       arduinoStatus,
       camerasWithResolvedStatus,
       connectArduino,
