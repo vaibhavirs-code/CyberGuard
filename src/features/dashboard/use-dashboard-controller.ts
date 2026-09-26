@@ -682,14 +682,15 @@ export function useDashboardController(): DashboardController {
           status: resolveCameraStatus(currentCamera, isModelLoading || isProductModelLoading),
         }));
 
-        applyTrackerState(cameraId, ensureTracker(cameraId).update(detections, camera.zones));
+        const trackerSnapshot = ensureTracker(cameraId).update(detections, camera.zones);
+        applyTrackerState(cameraId, trackerSnapshot);
 
         const productDetections = await processProductFrame(video);
         if (productDetections) {
           const detectedProducts = ensureProductTracker(cameraId).update(
             productDetections,
             camera.zones,
-            getCamera(cameraId)?.customers ?? [],
+            trackerSnapshot.customers,
           );
           updateCamera(cameraId, (current) => ({ ...current, detectedProducts }));
         }
