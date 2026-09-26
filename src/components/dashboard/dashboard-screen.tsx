@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, AlertTriangle, Camera, Cpu, Grid3X3, ShieldCheck, Target } from "lucide-react";
+import { Activity, AlertTriangle, Camera, Cpu, Grid3X3, ShieldCheck, Target, Maximize2, X, Info, EyeOff, ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -119,6 +119,7 @@ function getGridSize(cameraCount: number) {
 export function DashboardScreen({ controller, deploymentMode = "single", operatorLevel = "OPERATOR" }: DashboardScreenProps) {
   const canManageEvidence = operatorLevel === "ADMIN" || operatorLevel === "SUPERVISOR";
   const [theftPopup, setTheftPopup] = useState<{ customerId: string; cameraLabel: string; riskScore: number } | null>(null);
+  const [fullscreenCameraId, setFullscreenCameraId] = useState<string | null>(null);
   const lastAlertRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -183,9 +184,9 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
             <div className="mt-1 h-3 w-3 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.9)] animate-pulse" />
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-red-300">Security Alert</p>
-              <p className="mt-1 font-code text-sm font-bold text-white">High-risk exit event detected</p>
+              <p className="mt-1 font-code text-sm font-bold text-white">High-risk incident requires review</p>
               <p className="mt-1 text-[10px] text-white/60">{theftPopup.cameraLabel} · {theftPopup.customerId} · {Math.round(theftPopup.riskScore * 100)}% risk</p>
-              <p className="mt-2 text-[9px] uppercase tracking-widest text-emerald-300">Privacy-safe evidence captured</p>
+              <p className="mt-2 text-[9px] uppercase tracking-widest text-emerald-300">Face-masked evidence captured · human review required</p>
             </div>
           </div>
         </div>
@@ -197,7 +198,28 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
         <Header session={controller.session} />
         <main className="flex flex-1 flex-col gap-6 overflow-hidden p-6 lg:flex-row">
           <div className="flex min-h-0 flex-[3] flex-col gap-6 overflow-hidden">
-            <section className="grid gap-4 md:grid-cols-4">
+            <section className="grid gap-3 md:grid-cols-4">
+              <div className="md:col-span-4 rounded-2xl border border-accent/20 bg-accent/5 px-5 py-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="rounded-xl border border-accent/20 bg-black/20 p-2">
+                    <Info className="h-4 w-4 text-accent" />
+                  </div>
+                  <div className="min-w-[220px] flex-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-accent">Privacy-first digital trust</p>
+                    <p className="mt-1 text-[11px] leading-5 text-white/75">
+                      AI tracks anonymous person IDs and movement signals. It does not identify faces or decide guilt.
+                      Payment signals are matched with uncertainty, and high-risk events are routed for human review.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2">
+                    <EyeOff className="h-4 w-4 text-emerald-300" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-200">Identity shield ON</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-1 grid gap-4 md:grid-cols-4">
               <div className="aura-border rounded-2xl border border-white/5 px-5 py-4 glass">
                 <div className="flex items-center gap-3">
                   <Grid3X3 className="h-5 w-5 text-accent" />
@@ -236,6 +258,24 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               </div>
             </section>
 
+            <section className="grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 md:grid-cols-4">
+              {[
+                ["01", "Observe", "Person-only AI detection"],
+                ["02", "Understand", "Zones + payment signals"],
+                ["03", "Protect", "Mask identities + minimize data"],
+                ["04", "Act", "Structured event + human review"],
+              ].map(([step, title, detail], index) => (
+                <div key={step} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                  <span className="font-code text-[10px] font-black text-accent">{step}</span>
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-white">{title}</p>
+                    <p className="mt-1 text-[8px] leading-4 text-muted-foreground">{detail}</p>
+                  </div>
+                  {index < 3 && <ArrowRight className="ml-auto hidden h-3 w-3 text-white/20 md:block" />}
+                </div>
+              ))}
+            </section>
+
             {isMultiCameraMode ? (
               <div className="aura-border min-h-0 flex-[2] overflow-hidden rounded-[2.5rem] border border-accent/20 glass p-4 shadow-2xl">
                 <div
@@ -253,7 +293,10 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                       isModelLoading={controller.isModelLoading}
                       onFrame={(video) => controller.trackFrameForCamera(camera.id, video)}
                       onTheftEvidence={(evidence) => controller.captureTheftEvidence(camera.id, evidence)}
-                      onSelect={() => controller.setActiveCamera(camera.id)}
+                      onSelect={() => {
+                        controller.setActiveCamera(camera.id);
+                        setFullscreenCameraId(camera.id);
+                      }}
                       showTelemetry
                     />
                   ))}
@@ -525,6 +568,46 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
           </div>
         </main>
       </div>
+      {fullscreenCameraId && (() => {
+        const fullscreenCamera = controller.cameras.find((camera) => camera.id === fullscreenCameraId);
+        if (!fullscreenCamera) return null;
+        return (
+          <div className="fixed inset-0 z-[200] bg-black/95 p-4 backdrop-blur-2xl md:p-6">
+            <div className="flex h-full flex-col gap-3">
+              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/70 px-4 py-3">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.24em] text-accent">Full-screen camera view</p>
+                  <p className="mt-1 font-code text-sm font-bold text-white">{fullscreenCamera.label} · {fullscreenCamera.id}</p>
+                </div>
+                <button type="button" onClick={() => setFullscreenCameraId(null)} className="rounded-xl border border-white/10 bg-white/5 p-3 text-white hover:bg-white/10" aria-label="Close full-screen camera">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="relative min-h-0 flex-1 overflow-hidden rounded-[2rem] border border-accent/30 bg-black shadow-2xl">
+                <VideoFeed
+                  cameraId={fullscreenCamera.id}
+                  cameraLabel={fullscreenCamera.label}
+                  cameraStatus={fullscreenCamera.status}
+                  customers={fullscreenCamera.customers}
+                  isActiveCamera
+                  isModelLoading={controller.isModelLoading}
+                  liveStream={fullscreenCamera.liveStream}
+                  onFrame={(video) => controller.trackFrameForCamera(fullscreenCamera.id, video)}
+                  onTheftEvidence={(evidence) => controller.captureTheftEvidence(fullscreenCamera.id, evidence)}
+                  rawDetections={fullscreenCamera.rawDetections}
+                  videoUrl={fullscreenCamera.videoUrl}
+                  zones={fullscreenCamera.zones}
+                />
+                <div className="pointer-events-none absolute left-4 top-4 z-40 flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-black/70 px-3 py-2 backdrop-blur-xl">
+                  <Maximize2 className="h-3.5 w-3.5 text-emerald-300" />
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-200">IDs visible · faces masked</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
     </div>
   );
 }
