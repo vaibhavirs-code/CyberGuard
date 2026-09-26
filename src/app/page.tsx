@@ -15,6 +15,21 @@ export default function DashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [view, setView] = useState<AppView>("intro");
   const [pendingSession, setPendingSession] = useState<OperatorSession | null>(null);
+  const [navigationHistory, setNavigationHistory] = useState<AppView[]>(["intro"]);
+
+  const navigateTo = (nextView: AppView) => {
+    setNavigationHistory((history) => [...history, nextView]);
+    setView(nextView);
+  };
+
+  const goBack = (fallback: AppView) => {
+    setNavigationHistory((history) => {
+      if (history.length <= 1) return [fallback];
+      const next = history.slice(0, -1);
+      setView(next[next.length - 1] ?? fallback);
+      return next;
+    });
+  };
 
   useEffect(() => setIsMounted(true), []);
 
@@ -23,21 +38,21 @@ export default function DashboardPage() {
     setPendingSession(session);
     controller.setSession(session);
     controller.initializeCameraWall(1);
-    setView("dashboard");
+    navigateTo("dashboard");
   };
 
   if (!isMounted) return null;
 
   if (view === "intro") {
-    return <ProjectIntroductionScreen onContinue={() => setView("login")} />;
+    return <ProjectIntroductionScreen onContinue={() => navigateTo("login")} />;
   }
 
   if (view === "login") {
-    return <LoginPanel onBack={() => setView("intro")} onRegister={goToDashboard} />;
+    return <LoginPanel onBack={() => goBack("intro")} onRegister={goToDashboard} />;
   }
 
   if (view === "india") {
-    return <IndiaDpiPage onBack={() => setView("dashboard")} onOpenDashboard={() => setView("dashboard")} />;
+    return <IndiaDpiPage onBack={() => goBack("dashboard")} onOpenDashboard={() => navigateTo("dashboard")} />;
   }
 
   return (
@@ -45,7 +60,7 @@ export default function DashboardPage() {
       controller={controller}
       deploymentMode="single"
       operatorLevel={pendingSession?.level ?? "OPERATOR"}
-      onOpenIndiaPage={() => setView("india")}
+      onOpenIndiaPage={() => navigateTo("india")}
     />
   );
 }
