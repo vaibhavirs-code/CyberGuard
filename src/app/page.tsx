@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { ProjectIntroductionScreen } from "@/components/auth/project-introduction-screen";
 import { LoginPanel } from "@/components/auth/login-panel";
 import { DashboardScreen } from "@/components/dashboard/dashboard-screen";
+import { IndiaDpiPage } from "@/components/india/india-dpi-page";
 import { useDashboardController } from "@/features/dashboard/use-dashboard-controller";
 import type { OperatorSession } from "@/lib/types";
 
-type AppView = "intro" | "login" | "dashboard";
+type AppView = "intro" | "login" | "dashboard" | "india";
 
 export default function DashboardPage() {
   const controller = useDashboardController();
