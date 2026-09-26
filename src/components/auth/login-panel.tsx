@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { OperatorSession } from "@/lib/types";
-import { signInOperator } from "@/services/auth-service";
+import { registerOperator, signInOperator } from "@/services/auth-service";
 
 interface LoginPanelProps {
   onRegister: (data: Omit<OperatorSession, "mode">) => void;
@@ -26,6 +26,35 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
 
   const [error, setError] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registration, setRegistration] = useState({
+    name: "",
+    operatorId: "",
+    store: "",
+  });
+
+  const handleCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsRegistering(true);
+    try {
+      const email = formData.email.trim().toLowerCase();
+      const message = await registerOperator(
+        email,
+        formData.password,
+        registration.name.trim(),
+        registration.operatorId.trim(),
+        registration.store.trim(),
+      );
+      setError(message);
+      setIsCreating(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to create account.");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +102,21 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
         </div>
 
         <div className="space-y-10">
-          {/* Option 1: Register */}
+          {isCreating ? (
+            <form onSubmit={handleCreateAccount} className="space-y-6">
+              <div className="space-y-4">
+                <Input required placeholder="Operator Name" value={registration.name} onChange={(e) => setRegistration({ ...registration, name: e.target.value })} />
+                <Input required placeholder="Operator ID" value={registration.operatorId} onChange={(e) => setRegistration({ ...registration, operatorId: e.target.value })} />
+                <Input required placeholder="Store / Branch" value={registration.store} onChange={(e) => setRegistration({ ...registration, store: e.target.value })} />
+              </div>
+              <Button type="submit" className="w-full h-14 rounded-2xl bg-accent/10 border border-accent/30 text-accent font-bold uppercase tracking-[0.2em] text-[10px]">
+                {isRegistering ? "Creating Account..." : "Create Operator Account"}
+              </Button>
+              <Button type="button" variant="ghost" className="w-full text-[10px] uppercase tracking-widest" onClick={() => setIsCreating(false)}>
+                Back to Sign In
+              </Button>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
@@ -115,7 +158,10 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
             <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-[9px] font-bold uppercase tracking-widest text-red-300">{error}</p>
           )}
           </form>
-
+          <Button type="button" variant="outline" className="w-full h-12 rounded-2xl text-[10px] uppercase tracking-widest" onClick={() => setIsCreating(true)}>
+            Create Operator Account
+          </Button>
+          )}
         </div>
       </div>
     </div>
