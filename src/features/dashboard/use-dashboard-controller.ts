@@ -20,6 +20,7 @@ import type {
   ZoneDefinition,
 } from "@/lib/types";
 import { automatedPaymentMatcherFlow } from "@/services/payment-matcher";
+import { clearEvidenceSnapshots, loadEvidenceSnapshots, saveEvidenceSnapshot } from "@/services/evidence-storage";
 import {
   createDpiEvents,
   type DpiEvent,
@@ -43,6 +44,7 @@ export interface DashboardController {
   buzzerTestStatus: BuzzerTestStatus;
   cameras: CameraFeedState[];
   captureTheftEvidence: (cameraId: string, evidence: Omit<EvidenceSnapshot, "id" | "cameraId" | "cameraLabel">) => void;
+  clearTheftEvidence: (cameraId: string) => Promise<void>;
   connectArduino: () => Promise<void>;
   connectError: string | null;
   currentTime: number;
@@ -248,10 +250,38 @@ export function useDashboardController(): DashboardController {
         ...currentCamera,
         evidenceSnapshots: [snapshot, ...currentCamera.evidenceSnapshots].slice(0, 5),
       }));
+      void saveEvidenceSnapshot(snapshot).catch(() => undefined);
       addLog(cameraId, `Evidence snapshot captured for ${evidence.customerId}`, "alert", "EXIT", evidence.reasons.join(", "), evidence.riskScore, evidence.customerId);
     },
     [addLog, getCamera, updateCamera],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      cameras.map(async (camera) => {
+        const snapshots = await loadEvidenceSnapshots(camera.id).catch(() => []);
+        if (cancelled || snapshots.length === 0) return;
+        updateCamera(camera.id, (currentCamera) => ({
+          ...currentCamera,
+          evidenceSnapshots: currentCamera.evidenceSnapshots.length > 0
+            ? currentCamera.evidenceSnapshots
+            : snapshots,
+        }));
+      }),
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [cameras.length, updateCamera]);
+
+  const clearTheftEvidence = useCallback(async (cameraId: string) => {
+    await clearEvidenceSnapshots(cameraId).catch(() => undefined);
+    updateCamera(cameraId, (currentCamera) => ({
+      ...currentCamera,
+      evidenceSnapshots: [],
+    }));
+  }, [updateCamera]);
 
   useEffect(() => {
     if (modelError) {
