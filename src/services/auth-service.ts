@@ -82,7 +82,7 @@ export async function registerOperator(
     return "Account created. Check your email to confirm the account, then sign in. Your operator profile must also be created by an administrator before first login.";
   }
 
-  await supabaseRequest<OperatorProfile[]>("/rest/v1/operators", {
+  await appRequest<OperatorProfile[]>("/api/auth/profile", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${auth.access_token}`,
@@ -118,7 +118,7 @@ export async function signInOperator(email: string, password: string): Promise<O
   });
 
   const profiles = await supabaseRequest<OperatorProfile[]>(
-    `/rest/v1/operators?select=name,id,level,store&user_id=eq.${encodeURIComponent(auth.user.id)}&limit=1`,
+    `/api/auth/profile?select=name,id,level,store&user_id=eq.${encodeURIComponent(auth.user.id)}&limit=1`,
     { headers: { Authorization: `Bearer ${auth.access_token}` } },
   );
 
