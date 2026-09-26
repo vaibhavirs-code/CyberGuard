@@ -1224,6 +1224,7 @@ export function useDashboardController(): DashboardController {
       connectError,
       currentTime: resolvedActiveCamera.currentTime,
       customers: resolvedActiveCamera.customers,
+      detectedProducts: resolvedActiveCamera.detectedProducts,
       fps: resolvedActiveCamera.fps,
       globalLogs,
       isBlockedByPolicy,
