@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronRight, Activity, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ChevronRight, Activity, LockKeyhole, ShieldCheck, EyeOff, Database, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,9 +49,45 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
             <Activity className="w-6 h-6 text-accent" />
           </div>
           <div>
-            <h2 className="text-xl font-black uppercase tracking-widest text-foreground font-headline">Operator Initialization</h2>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">Session Access Control</span>
+            <h2 className="text-xl font-black uppercase tracking-widest text-foreground font-headline">Secure Operator Login</h2>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold opacity-60">Privacy-first retail monitoring</span>
           </div>
+        </div>
+
+        <div className="mb-7 grid grid-cols-3 gap-2">
+          <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-3 text-center">
+            <EyeOff className="mx-auto mb-1 h-4 w-4 text-emerald-300" />
+            <p className="text-[8px] font-bold uppercase tracking-widest text-emerald-200">Faces masked</p>
+          </div>
+          <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center">
+            <Database className="mx-auto mb-1 h-4 w-4 text-accent" />
+            <p className="text-[8px] font-bold uppercase tracking-widest text-cyan-100">DPI events</p>
+          </div>
+          <div className="rounded-xl border border-violet-400/20 bg-violet-400/5 p-3 text-center">
+            <ShieldCheck className="mx-auto mb-1 h-4 w-4 text-violet-200" />
+            <p className="text-[8px] font-bold uppercase tracking-widest text-violet-100">Human review</p>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+          <p className="text-[9px] font-black uppercase tracking-[0.24em] text-accent">Judge / Demo Access</p>
+          <p className="mt-2 text-[11px] leading-5 text-white/70">
+            Demo operator: <span className="font-code text-white">demo@cyberguard.local</span>
+            <br />
+            Demo password: <span className="font-code text-white">demo123</span>
+          </p>
+          <p className="mt-2 text-[8px] uppercase tracking-widest text-muted-foreground">
+            Demo access uses a local sandbox session; cloud authentication remains optional.
+          </p>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onSkip()}
+            className="mt-3 h-9 w-full rounded-xl border border-accent/20 bg-accent/5 text-[9px] font-bold uppercase tracking-[0.2em] text-accent hover:bg-accent/10"
+          >
+            <PlayCircle className="mr-2 h-4 w-4" />
+            Enter Demo Dashboard
+          </Button>
         </div>
 
         <div className="space-y-10">
@@ -114,7 +150,7 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
               onClick={onSkip}
               className="w-full h-12 rounded-xl border border-white/5 hover:bg-white/5 text-[9px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-all"
             >
-              Continue In Local Mode
+              Continue In Demo Mode
             </Button>
             
             <div className="flex justify-center gap-4">
