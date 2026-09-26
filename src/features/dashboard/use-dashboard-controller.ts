@@ -302,7 +302,7 @@ export function useDashboardController(): DashboardController {
   useEffect(() => {
     let cancelled = false;
     void Promise.all(
-      cameras.map(async (camera) => {
+      camerasRef.current.map(async (camera) => {
         const snapshots = await loadEvidenceSnapshots(camera.id).catch(() => []);
         if (cancelled || snapshots.length === 0) return;
         updateCamera(camera.id, (currentCamera) => ({
