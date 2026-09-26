@@ -17,7 +17,7 @@ export function buildTransactionTwin(camera: CameraFeedState, customer: TrackedC
   ));
   const evidence = camera.evidenceSnapshots.filter((snapshot) => snapshot.customerId === customer.id);
   const timeline: TransactionTwinResult["timeline"] = [
-    { at: customer.firstSeenAt, label: "Customer detected", detail: customer.framesSeen + " frames observed", kind: "detection" },
+    { at: customer.firstSeenAt, label: "Customer detected", detail: customer.framesSeen + " frames observed", kind: "detection" as const },
     ...customer.history.slice(-8).map((point) => ({
       at: point.at, label: "Zone: " + point.zone, detail: "Tracked movement event", kind: "movement" as const,
     })),
