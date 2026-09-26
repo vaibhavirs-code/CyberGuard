@@ -17,6 +17,7 @@ interface VideoFeedProps {
   videoUrl: string | null;
   liveStream: MediaStream | null;
   onFrame: (video: HTMLVideoElement) => Promise<void>;
+  onTheftEvidence?: (evidence: { customerId: string; timestamp: string; riskScore: number; reasons: string[]; dataUrl: string }) => void;
   isModelLoading: boolean;
 }
 
@@ -193,9 +194,11 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   videoUrl,
   liveStream,
   onFrame,
+  onTheftEvidence,
   isModelLoading,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const capturedEvidenceRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const video = videoRef.current;
@@ -213,6 +216,38 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
       video.srcObject = null;
     }
   }, [liveStream, videoUrl]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !onTheftEvidence) return;
+
+    for (const customer of customers) {
+      if (customer.riskState !== "high_risk_suspicious_activity" || !customer.alertAt) continue;
+      const evidenceKey = `${customer.id}:${customer.alertAt}`;
+      if (capturedEvidenceRef.current.has(evidenceKey)) continue;
+
+      try {
+        if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || video.videoWidth === 0 || video.videoHeight === 0) continue;
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+        if (!context) continue;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
+        capturedEvidenceRef.current.add(evidenceKey);
+        onTheftEvidence({
+          customerId: customer.id,
+          timestamp: new Date().toISOString(),
+          riskScore: Number(customer.riskScore.toFixed(2)),
+          reasons: customer.riskReasons,
+          dataUrl,
+        });
+      } catch {
+        // Cross-origin camera streams may block canvas extraction; detection continues normally.
+      }
+    }
+  }, [customers, onTheftEvidence]);
 
   useEffect(() => {
     let frameId = 0;
