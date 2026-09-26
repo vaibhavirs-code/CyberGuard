@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import { LayoutDashboard, ShieldCheck, AlertCircle, Globe2 } from 'lucide-react';
+import { LayoutDashboard, ShieldCheck, AlertCircle, Globe2, LogIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', active: true },
 ];
 
-export const Sidebar: React.FC<{ onOpenIndiaPage?: () => void }> = ({ onOpenIndiaPage }) => {
+export const Sidebar: React.FC<{ onOpenIndiaPage?: () => void; onBackToLogin?: () => void }> = ({ onOpenIndiaPage, onBackToLogin }) => {
   return (
     <aside className="w-20 lg:w-56 glass border-r border-white/10 flex flex-col items-center py-8 z-30 transition-all duration-700 hover:w-56 group/sidebar overflow-hidden">
       <div className="flex flex-col items-center gap-4 mb-14 px-4 w-full">
@@ -46,6 +46,13 @@ export const Sidebar: React.FC<{ onOpenIndiaPage?: () => void }> = ({ onOpenIndi
         <button type="button" onClick={onOpenIndiaPage} className="mt-3 w-full flex items-center gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-4 py-3.5 text-accent transition hover:bg-accent/10">
           <div className="shrink-0 rounded-xl bg-accent/10 p-1.5"><Globe2 className="h-5 w-5" /></div>
           <span className="hidden text-[10px] font-bold uppercase tracking-widest lg:block">India DPI</span>
+        </button>
+      </div>
+
+      <div className="w-full px-4 mt-3">
+        <button type="button" onClick={onBackToLogin} className="w-full flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white/65 transition hover:bg-white/10 hover:text-white">
+          <div className="shrink-0 rounded-xl bg-white/5 p-1.5"><LogIn className="h-5 w-5" /></div>
+          <span className="hidden text-[10px] font-bold uppercase tracking-widest lg:block">Back to Login</span>
         </button>
       </div>
 
