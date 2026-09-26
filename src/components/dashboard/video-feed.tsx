@@ -200,6 +200,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   isModelLoading,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
   const capturedEvidenceRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
