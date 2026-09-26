@@ -6,7 +6,7 @@ export function IndiaDpiPage({ onBack, onOpenDashboard }: { onBack: () => void; 
   const pillars = [
     { icon: QrCode, title: "UPI-first payments", text: "Connect transaction verification to UPI, QR, POS, card and cash states without exposing a real customer identity." },
     { icon: BrainCircuit, title: "AI Transaction Twin", text: "Reconstruct a temporary customer journey from multi-frame CCTV, products, zones and payment events." },
-    { icon: Network, title: "Open ecosystem layer", text: "CyberGuard is designed as an application layer that can interoperate with India's digital payment ecosystem — not as a government database." },
+    { icon: Network, title: "Open ecosystem layer", text: "CyberGuard is designed as an application layer that can interoperate with India&apos;s digital payment ecosystem — not as a government database." },
   ];
   const signals = [["SEE","Anonymous vision"],["TWIN","Basket reconstruction"],["VERIFY","Payment consistency"],["ACT","Human review"]];
   return (
@@ -27,7 +27,7 @@ export function IndiaDpiPage({ onBack, onOpenDashboard }: { onBack: () => void; 
               <div className="mt-7 flex flex-wrap gap-3">
                 <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-[9px] font-bold uppercase tracking-widest">₹ INR native</span>
                 <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-[9px] font-bold uppercase tracking-widest">UPI · QR · POS · Cash</span>
-                <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-[9px] font-bold uppercase tracking-widest">English · हिंदी · ಕನ್ನಡ</span>
+                <span className="rounded-full border border-white/10 bg-black/20 px-4 py-2 text-[9px] font-bold uppercase tracking-widest">English · हिंदी</span>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -44,17 +44,17 @@ export function IndiaDpiPage({ onBack, onOpenDashboard }: { onBack: () => void; 
           <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-6 lg:col-span-2">
             <div className="flex items-center gap-2"><Store className="h-4 w-4 text-amber-300"/><h2 className="text-[10px] font-black uppercase tracking-[0.2em]">Indian retail demo profile</h2></div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {[["Store","Mangaluru Smart Retail Demo"],["Region","Karnataka · India"],["Checkout","UPI / QR / POS / Cash"],["Currency","Indian Rupee · ₹"],["Language","English / हिंदी / ಕನ್ನಡ"],["Identity","Temporary IDs only"]].map(([k,v])=><div key={k} className="rounded-xl border border-white/5 bg-black/20 p-4"><p className="text-[8px] uppercase tracking-widest text-white/35">{k}</p><p className="mt-2 text-xs font-bold text-white/80">{v}</p></div>)}
+              {[["Store","Mangaluru Smart Retail Demo"],["Region","Karnataka · India"],["Checkout","UPI / QR / POS / Cash"],["Currency","Indian Rupee · ₹"],["Language","English / हिंदी"],["Identity","Temporary IDs only"]].map(([k,v])=><div key={k} className="rounded-xl border border-white/5 bg-black/20 p-4"><p className="text-[8px] uppercase tracking-widest text-white/35">{k}</p><p className="mt-2 text-xs font-bold text-white/80">{v}</p></div>)}
             </div>
           </div>
           <div className="rounded-2xl border border-accent/20 bg-accent/5 p-6">
             <div className="flex items-center gap-2"><Languages className="h-4 w-4 text-accent"/><h2 className="text-[10px] font-black uppercase tracking-[0.2em]">Designed for Bharat</h2></div>
-            <p className="mt-4 text-xs leading-6 text-white/60">The same trust workflow can be surfaced in English, Hindi or Kannada, while the operator view keeps the underlying event structure consistent.</p>
-            <div className="mt-6 space-y-2 text-[10px] font-bold"><div className="rounded-xl bg-black/20 p-3">English · Transaction verified</div><div className="rounded-xl bg-black/20 p-3">हिंदी · लेनदेन सत्यापित</div><div className="rounded-xl bg-black/20 p-3">ಕನ್ನಡ · ವಹಿವಾಟು ಪರಿಶೀಲಿಸಲಾಗಿದೆ</div></div>
+            <p className="mt-4 text-xs leading-6 text-white/60">The same trust workflow can be surfaced in English or Hindi, while the operator view keeps the underlying event structure consistent.</p>
+            <div className="mt-6 space-y-2 text-[10px] font-bold"><div className="rounded-xl bg-black/20 p-3">English · Transaction verified</div><div className="rounded-xl bg-black/20 p-3">हिंदी · लेनदेन सत्यापित</div><div className="rounded-xl bg-black/20 p-3"></div></div>
           </div>
         </section>
 
-        <footer className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5 text-[9px] leading-5 text-white/40"><span className="font-bold text-white/60">Judge note:</span> CyberGuard demonstrates interoperability concepts around India's digital-first payment environment. It does not claim direct access to Aadhaar, government databases, or live government infrastructure.</footer>
+        <footer className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5 text-[9px] leading-5 text-white/40"><span className="font-bold text-white/60">Judge note:</span> CyberGuard demonstrates interoperability concepts around India&apos;s digital-first payment environment. It does not claim direct access to Aadhaar, government databases, or live government infrastructure.</footer>
       </div>
     </main>
   );
