@@ -387,14 +387,24 @@ export function assessStoreRisk(
     state = "high_risk_suspicious_activity";
   }
 
-  const shouldTriggerBuzzer =
-    state === "high_risk_suspicious_activity" &&
+  const unpaidExitAlert =
     outsideSeen &&
+    linked.length > 0 &&
+    !customer.paid &&
     !recentTransfer &&
     !recentReturn &&
-    adjustedScore >= 0.82 &&
-    uncertainty < 0.3 &&
-    !customer.paid;
+    adjustedScore >= 0.62 &&
+    uncertainty < 0.42;
+
+  const shouldTriggerBuzzer =
+    unpaidExitAlert ||
+    (state === "high_risk_suspicious_activity" &&
+      outsideSeen &&
+      !recentTransfer &&
+      !recentReturn &&
+      adjustedScore >= 0.82 &&
+      uncertainty < 0.3 &&
+      !customer.paid);
 
   return {
     score: adjustedScore,
