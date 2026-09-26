@@ -17,6 +17,7 @@ export function createCameraFeedState(index: number, label = `Camera ${index}`):
     sourceKind: "empty",
     customers: [],
     items: [],
+    detectedProducts: [],
     rawDetections: [],
     zones: cloneCameraZones(),
     logs: [],
