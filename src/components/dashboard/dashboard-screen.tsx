@@ -9,11 +9,12 @@ import { VideoFeed } from "@/components/dashboard/video-feed";
 import { EventTimeline } from "@/components/dashboard/event-timeline";
 import { cameraStatusClass } from "@/features/dashboard/camera-registry";
 import type { DashboardController } from "@/features/dashboard/use-dashboard-controller";
-import type { CameraFeedState, DeploymentMode } from "@/lib/types";
+import type { CameraFeedState, DeploymentMode, OperatorLevel } from "@/lib/types";
 
 interface DashboardScreenProps {
   controller: DashboardController;
   deploymentMode?: DeploymentMode;
+  operatorLevel?: OperatorLevel;
 }
 
 function CameraStatusChip({ camera }: { camera: CameraFeedState }) {
@@ -115,7 +116,8 @@ function getGridSize(cameraCount: number) {
   return Math.ceil(Math.sqrt(Math.max(1, cameraCount)));
 }
 
-export function DashboardScreen({ controller, deploymentMode = "single" }: DashboardScreenProps) {
+export function DashboardScreen({ controller, deploymentMode = "single", operatorLevel = "OPERATOR" }: DashboardScreenProps) {
+  const canManageEvidence = operatorLevel === "ADMIN" || operatorLevel === "SUPERVISOR";
   const [theftPopup, setTheftPopup] = useState<{ customerId: string; cameraLabel: string; riskScore: number } | null>(null);
   const lastAlertRef = useRef<string | null>(null);
 
@@ -472,16 +474,18 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3">
                   <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-300">Local-only storage</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-300">Local-only storage · {operatorLevel}</p>
                     <p className="mt-1 text-[9px] text-white/50">Evidence stays on this browser device.</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => void controller.clearTheftEvidence(activeCamera.id)}
-                    className="rounded-lg border border-red-400/30 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-red-300 transition hover:bg-red-400/10"
-                  >
-                    Clear
-                  </button>
+                  {canManageEvidence && (
+                    <button
+                      type="button"
+                      onClick={() => void controller.clearTheftEvidence(activeCamera.id)}
+                      className="rounded-lg border border-red-400/30 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-red-300 transition hover:bg-red-400/10"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
