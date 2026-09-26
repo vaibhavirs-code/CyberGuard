@@ -8,6 +8,8 @@ const appEnvSchema = z.object({
     .regex(/^[A-Z0-9_-]+$/)
     .default("LOCAL_STORE"),
   NEXT_PUBLIC_ENABLE_SERIAL_ALERTS: z.enum(["true", "false"]).default("true"),
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
 });
 
 export function getAppConfig() {
