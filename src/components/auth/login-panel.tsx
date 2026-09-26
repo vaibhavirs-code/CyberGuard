@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import type { OperatorLevel, OperatorSession } from "@/lib/types";
+import type { OperatorSession } from "@/lib/types";
 import { signInOperator } from "@/services/auth-service";
 
 interface LoginPanelProps {
