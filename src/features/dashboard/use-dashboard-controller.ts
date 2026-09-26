@@ -221,7 +221,7 @@ export function useDashboardController(): DashboardController {
   const lastFrameAtRefs = useRef<Map<string, number>>(new Map());
   const { connect, sendAlert, status: arduinoStatus, isBlockedByPolicy } = useArduino();
   const { error: modelError, isModelLoading, processFrame } = usePersonDetection();
-  const { error: productModelError, isModelLoading: isProductModelLoading, processFrame: processProductFrame } = useProductDetection();
+  const { isModelLoading: isProductModelLoading, processFrame: processProductFrame } = useProductDetection();
 
   useEffect(() => {
     camerasRef.current = cameras;
@@ -495,7 +495,7 @@ export function useDashboardController(): DashboardController {
           ...camera,
           customers: snapshot.customers,
           items: snapshot.items,
-          status: resolveCameraStatus({ ...camera, customers: snapshot.customers }, isModelLoading),
+          status: resolveCameraStatus({ ...camera, customers: snapshot.customers }, isModelLoading || isProductModelLoading),
         }));
       });
     },
@@ -679,7 +679,7 @@ export function useDashboardController(): DashboardController {
               : currentCamera.rawDetections.filter((detection) => seenAt - detection.seenAt < RAW_DETECTION_HOLD_MS),
           currentTime: video.currentTime,
           fps: nextFrameFps(previousFrameAt, seenAt),
-          status: resolveCameraStatus(currentCamera, isModelLoading),
+          status: resolveCameraStatus(currentCamera, isModelLoading || isProductModelLoading),
         }));
 
         applyTrackerState(cameraId, ensureTracker(cameraId).update(detections, camera.zones));
@@ -762,7 +762,7 @@ export function useDashboardController(): DashboardController {
         processingCameraIdsRef.current.delete(cameraId);
       }
     },
-    [addLog, applyTrackerState, ensureCashDetector, ensureProductTracker, ensureTracker, getCamera, isModelLoading, processFrame, processProductFrame, updateCamera],
+    [addLog, applyTrackerState, ensureCashDetector, ensureProductTracker, ensureTracker, getCamera, isModelLoading, isProductModelLoading, processFrame, processProductFrame, updateCamera],
   );
 
   const simulatePaymentForCamera = useCallback(
