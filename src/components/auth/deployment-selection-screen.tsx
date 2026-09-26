@@ -135,7 +135,7 @@ export const DeploymentSelectionScreen: React.FC<DeploymentSelectionScreenProps>
             className="h-16 flex-1 w-full rounded-2xl border border-accent/40 bg-accent/10 text-xs font-bold uppercase tracking-[0.36em] text-accent transition-all hover:scale-[1.01] hover:bg-accent/20 aura-border"
           >
             Launch System
-          </Button>
+          </Button></div>
         </div>
       </div>
     </div>
