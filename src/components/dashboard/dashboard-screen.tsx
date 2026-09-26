@@ -722,7 +722,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                 />
                 <div className="pointer-events-none absolute left-4 top-4 z-40 flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-black/70 px-3 py-2 backdrop-blur-xl">
                   <Maximize2 className="h-3.5 w-3.5 text-emerald-300" />
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-200">{showClearPeople ? "Demo view · people visible" : enhancedPrivacyView ? "Enhanced privacy · face masked" : "Identity shield · faces masked"}</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-200">{"Clear CCTV view · AI tracking active"}</span>
                 </div>
               </div>
             </div>
