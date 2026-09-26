@@ -190,6 +190,17 @@ export type CameraStatus = "LIVE" | "LOADING" | "PAUSED" | "ALERT" | "OFFLINE";
 
 export type CameraSourceKind = "empty" | "upload" | "screen" | "local" | "stream";
 
+export interface EvidenceSnapshot {
+  id: string;
+  cameraId: string;
+  cameraLabel: string;
+  customerId: string;
+  timestamp: string;
+  riskScore: number;
+  reasons: string[];
+  dataUrl: string;
+}
+
 export interface CameraFeedState {
   id: string;
   label: string;
@@ -209,6 +220,7 @@ export interface CameraFeedState {
   isTestingBuzzer: boolean;
   buzzerTestStatus: BuzzerTestStatus;
   buzzerTestMessage: string | null;
+  evidenceSnapshots: EvidenceSnapshot[];
 }
 
 export interface SiteOverview {
