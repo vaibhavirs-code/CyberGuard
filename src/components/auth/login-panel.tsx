@@ -33,11 +33,6 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
     setIsSigningIn(true);
     try {
       const email = formData.email.trim().toLowerCase();
-      if (email === "demo@cyberguard.local" && formData.password === "demo123") {
-        onSkip();
-        return;
-      }
-
       const session = await signInOperator(email, formData.password);
       onRegister(session);
     } catch (err) {
