@@ -15,22 +15,22 @@ export default function DashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [view, setView] = useState<AppView>("intro");
   const [pendingSession, setPendingSession] = useState<OperatorSession | null>(null);
-  const navigationHistory = useRef<AppView[]>(["intro"]);
+  const navigationHistoryRef = useRef<AppView[]>(["intro"]);
 
   const navigateTo = (nextView: AppView) => {
-    navigationHistory.current = [...navigationHistory.current, nextView];
+    navigationHistoryRef.current = [...navigationHistoryRef.current, nextView];
     setView(nextView);
   };
 
   const goBack = (fallback: AppView) => {
-    if (navigationHistory.current.length <= 1) {
-      navigationHistory.current = [fallback];
+    if (navigationHistoryRef.current.length <= 1) {
+      navigationHistoryRef.current = [fallback];
       setView(fallback);
       return;
     }
 
-    const next = navigationHistory.current.slice(0, -1);
-    navigationHistory.current = next;
+    const next = navigationHistoryRef.current.slice(0, -1);
+    navigationHistoryRef.current = next;
     setView(next[next.length - 1] ?? fallback);
   };
 
