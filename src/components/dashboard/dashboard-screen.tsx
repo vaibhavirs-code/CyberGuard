@@ -39,6 +39,7 @@ function CameraTile({
   onSelect,
   showTelemetry = false,
   showClearPeople = false,
+  enhancedPrivacyView = false,
 }: {
   camera: CameraFeedState;
   isActive: boolean;
@@ -79,6 +80,7 @@ function CameraTile({
         videoUrl={camera.videoUrl}
         zones={camera.zones}
          showClearPeople={showClearPeople}
+         enhancedPrivacyView={enhancedPrivacyView}
       />
       <div className="pointer-events-none absolute left-4 top-4 z-30 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-xl">
         <Camera className="h-3.5 w-3.5 text-accent" />
@@ -126,6 +128,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   const [theftPopup, setTheftPopup] = useState<{ customerId: string; cameraLabel: string; riskScore: number } | null>(null);
   const [fullscreenCameraId, setFullscreenCameraId] = useState<string | null>(null);
   const [showClearPeople, setShowClearPeople] = useState(false);
+  const [enhancedPrivacyView, setEnhancedPrivacyView] = useState(false);
   const lastAlertRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -199,6 +202,22 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                       Payment signals are matched with uncertainty, and high-risk events are routed for human review.
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setEnhancedPrivacyView((enabled) => !enabled)}
+                    disabled={showClearPeople}
+                    className={enhancedPrivacyView && !showClearPeople
+                      ? "flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-cyan-200"
+                      : "flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/70"}
+                    aria-pressed={enhancedPrivacyView}
+                    title={showClearPeople ? "Turn off Demo View to enable the privacy mask" : "Show people clearly while masking the estimated head and face region"}
+                  >
+                    <EyeOff className="h-4 w-4" />
+                    <span className="text-[8px] font-bold uppercase tracking-widest">
+                      {enhancedPrivacyView && !showClearPeople ? "Enhanced privacy · face masked" : "Enhanced privacy view"}
+                    </span>
+                  </button>
+
                   <button
 
                     type="button"
@@ -338,6 +357,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                       }}
                       showTelemetry
                        showClearPeople={showClearPeople}
+                      enhancedPrivacyView={enhancedPrivacyView}
                     />
                   ))}
                 </div>
@@ -353,6 +373,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                     onTheftEvidence={(evidence) => controller.captureTheftEvidence(activeCamera.id, evidence)}
                     onSelect={() => controller.setActiveCamera(activeCamera.id)}
                      showClearPeople={showClearPeople}
+                     enhancedPrivacyView={enhancedPrivacyView}
                   />
                 </div>
 
@@ -368,6 +389,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                         onTheftEvidence={(evidence) => controller.captureTheftEvidence(camera.id, evidence)}
                         onSelect={() => controller.setActiveCamera(camera.id)}
                          showClearPeople={showClearPeople}
+                         enhancedPrivacyView={enhancedPrivacyView}
                       />
                     ))}
                   </div>
@@ -642,10 +664,12 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                   detectedProducts={fullscreenCamera.detectedProducts}
                   videoUrl={fullscreenCamera.videoUrl}
                   zones={fullscreenCamera.zones}
+                  showClearPeople={showClearPeople}
+                  enhancedPrivacyView={enhancedPrivacyView}
                 />
                 <div className="pointer-events-none absolute left-4 top-4 z-40 flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-black/70 px-3 py-2 backdrop-blur-xl">
                   <Maximize2 className="h-3.5 w-3.5 text-emerald-300" />
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-200">IDs visible · faces masked</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-200">{showClearPeople ? "Demo view · people visible" : enhancedPrivacyView ? "Enhanced privacy · face masked" : "Identity shield · faces masked"}</span>
                 </div>
               </div>
             </div>
