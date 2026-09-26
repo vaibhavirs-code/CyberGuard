@@ -105,10 +105,28 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
           {isCreating ? (
             <form onSubmit={handleCreateAccount} className="space-y-6">
               <div className="space-y-4">
+                <Input
+                  required
+                  type="email"
+                  placeholder="Work Email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+                <Input
+                  required
+                  type="password"
+                  minLength={6}
+                  placeholder="Password (minimum 6 characters)"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
                 <Input required placeholder="Operator Name" value={registration.name} onChange={(e) => setRegistration({ ...registration, name: e.target.value })} />
                 <Input required placeholder="Operator ID" value={registration.operatorId} onChange={(e) => setRegistration({ ...registration, operatorId: e.target.value })} />
                 <Input required placeholder="Store / Branch" value={registration.store} onChange={(e) => setRegistration({ ...registration, store: e.target.value })} />
               </div>
+              {error && (
+                <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-[9px] font-bold uppercase tracking-widest text-red-300">{error}</p>
+              )}
               <Button type="submit" className="w-full h-14 rounded-2xl bg-accent/10 border border-accent/30 text-accent font-bold uppercase tracking-[0.2em] text-[10px]">
                 {isRegistering ? "Creating Account..." : "Create Operator Account"}
               </Button>
