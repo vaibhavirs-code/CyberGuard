@@ -1,6 +1,6 @@
 import * as tf from "@tensorflow/tfjs";
 
-import type { BoundingBox, CashDetectionLevel, CashDetectionState, TrackedCustomer, ZoneDefinition } from "@/lib/types";
+import type { BoundingBox, CashDetectionLevel, TrackedCustomer, ZoneDefinition } from "@/lib/types";
 import { clamp } from "@/tracking/tracker-utils";
 
 export interface CashDetection {
@@ -212,7 +212,8 @@ function parseLevel2Output(output: tf.Tensor | tf.Tensor[]): Level2ModelOutput |
 export class CashDetectionEngine {
   private level1State: Level1State = { streak: 0 };
   private level2Model: tf.LayersModel | null = null;
-  private level2LoadPromise: Promise<tf.LayersModel | null> | null = null;\n  private level2LoadAttempted = false;
+  private level2LoadPromise: Promise<tf.LayersModel | null> | null = null;
+  private level2LoadAttempted = false;
   private level2Streak = 0;
   private lastLevel2EmissionAt = 0;
 
