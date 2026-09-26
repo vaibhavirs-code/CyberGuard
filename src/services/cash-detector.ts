@@ -213,6 +213,7 @@ export class CashDetectionEngine {
   private level1State: Level1State = { streak: 0 };
   private level2Model: tf.LayersModel | null = null;
   private level2LoadPromise: Promise<tf.LayersModel | null> | null = null;
+  private level2LoadAttempted = false;
   private level2Streak = 0;
   private lastLevel2EmissionAt = 0;
 
