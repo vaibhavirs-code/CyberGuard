@@ -78,6 +78,7 @@ function CameraTile({
         detectedProducts={camera.detectedProducts}
         videoUrl={camera.videoUrl}
         zones={camera.zones}
+         showClearPeople={showClearPeople}
       />
       <div className="pointer-events-none absolute left-4 top-4 z-30 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-xl">
         <Camera className="h-3.5 w-3.5 text-accent" />
@@ -336,6 +337,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                         setFullscreenCameraId(camera.id);
                       }}
                       showTelemetry
+                       showClearPeople={showClearPeople}
                     />
                   ))}
                 </div>
@@ -350,6 +352,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                     onFrame={(video) => controller.trackFrameForCamera(activeCamera.id, video)}
                     onTheftEvidence={(evidence) => controller.captureTheftEvidence(activeCamera.id, evidence)}
                     onSelect={() => controller.setActiveCamera(activeCamera.id)}
+                     showClearPeople={showClearPeople}
                   />
                 </div>
 
@@ -364,6 +367,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                         onFrame={(video) => controller.trackFrameForCamera(camera.id, video)}
                         onTheftEvidence={(evidence) => controller.captureTheftEvidence(camera.id, evidence)}
                         onSelect={() => controller.setActiveCamera(camera.id)}
+                         showClearPeople={showClearPeople}
                       />
                     ))}
                   </div>
