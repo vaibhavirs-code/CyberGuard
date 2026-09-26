@@ -36,11 +36,16 @@ export default function DashboardPage() {
     return <LoginPanel onBack={() => setView("intro")} onRegister={goToDashboard} />;
   }
 
+  if (view === "india") {
+    return <IndiaDpiPage onBack={() => setView("dashboard")} onOpenDashboard={() => setView("dashboard")} />;
+  }
+
   return (
     <DashboardScreen
       controller={controller}
       deploymentMode="single"
       operatorLevel={pendingSession?.level ?? "OPERATOR"}
+      onOpenIndiaPage={() => setView("india")}
     />
   );
 }
