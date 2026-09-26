@@ -9,6 +9,7 @@ export type RiskState =
   | "suspicious_activity"
   | "high_risk_suspicious_activity";
 export type PaymentState = "unpaid" | "matched" | "paid";
+export type CashDetectionLevel = "LEVEL_1" | "LEVEL_2" | "ENSEMBLE";
 export type SessionMode = "LOCAL" | "ACTIVE";
 export type DeploymentMode = "single" | "multi";
 export type OperatorLevel = "OPERATOR" | "SUPERVISOR" | "ADMIN";
@@ -220,7 +221,7 @@ export interface CameraFeedState {
   isTestingBuzzer: boolean;
   buzzerTestStatus: BuzzerTestStatus;
   buzzerTestMessage: string | null;
-  evidenceSnapshots: EvidenceSnapshot[];
+  evidenceSnapshots: EvidenceSnapshot[];\n  cashDetection: CashDetectionState;
 }
 
 export interface SiteOverview {
@@ -236,7 +237,7 @@ export interface DeploymentConfig {
   cameraCount: number;
 }
 
-export interface PaymentEvent {
+export interface CashDetectionResult {\n  detected: boolean;\n  confidence: number;\n  level: CashDetectionLevel;\n  bbox?: BoundingBox;\n  timestamp: number;\n  method: "visual";\n  reason: string;\n}\n\nexport interface CashDetectionState {\n  detected: boolean;\n  confidence: number;\n  level: CashDetectionLevel;\n  lastDetectedAt?: number;\n  consecutiveFrames: number;\n  cooldownUntil: number;\n  customerId?: string;\n  bbox?: BoundingBox;\n}\n\nexport interface PaymentEvent {
   method: PaymentMethod;
   timestamp?: number;
   referenceId?: string;
