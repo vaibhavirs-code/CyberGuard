@@ -499,7 +499,7 @@ export function useDashboardController(): DashboardController {
         }));
       });
     },
-    [appendTrackerEvents, isModelLoading, updateCamera],
+    [appendTrackerEvents, isModelLoading, isProductModelLoading, updateCamera],
   );
 
   // Automatic payment bridge: authenticated operators can receive captured Razorpay
@@ -612,7 +612,7 @@ export function useDashboardController(): DashboardController {
         evidenceSnapshots: [],
       }));
     },
-    [ensureCashDetector, ensureTracker, updateCamera],
+    [ensureCashDetector, ensureProductTracker, ensureTracker, updateCamera],
   );
 
   const stopCameraSource = useCallback(
@@ -1026,6 +1026,7 @@ export function useDashboardController(): DashboardController {
     const camera = createCameraFeedState(nextIndex);
 
     trackerRefs.current.set(camera.id, new ObjectTracker());
+    productTrackerRefs.current.set(camera.id, new ProductTracker());
     setCameras((previousCameras) => [...previousCameras, camera]);
     setActiveCameraId(camera.id);
 
@@ -1055,8 +1056,10 @@ export function useDashboardController(): DashboardController {
 
       const nextCameras = Array.from({ length: normalizedCount }, (_, index) => createCameraFeedState(index + 1));
       const nextTrackers = new Map<string, ObjectTracker>();
+      const nextProductTrackers = new Map<string, ProductTracker>();
       for (const camera of nextCameras) {
         nextTrackers.set(camera.id, new ObjectTracker());
+        nextProductTrackers.set(camera.id, new ProductTracker());
       }
 
       videoObjectUrlRefs.current.clear();
@@ -1066,6 +1069,7 @@ export function useDashboardController(): DashboardController {
       processingCameraIdsRef.current.clear();
       lastFrameAtRefs.current.clear();
       trackerRefs.current = nextTrackers;
+      productTrackerRefs.current = nextProductTrackers;
       camerasRef.current = nextCameras;
       cameraSequenceRef.current = normalizedCount + 1;
 
@@ -1095,6 +1099,7 @@ export function useDashboardController(): DashboardController {
 
       stopCameraSource(cameraId);
       trackerRefs.current.delete(cameraId);
+      productTrackerRefs.current.delete(cameraId);
       eventCacheRefs.current.delete(cameraId);
       processingCameraIdsRef.current.delete(cameraId);
       lastFrameAtRefs.current.delete(cameraId);
