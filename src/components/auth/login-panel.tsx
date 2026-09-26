@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import type { OperatorLevel, OperatorSession } from "@/lib/types";
+import { signInOperator } from "@/services/auth-service";
 
 interface LoginPanelProps {
   onRegister: (data: Omit<OperatorSession, "mode">) => void;
@@ -17,18 +18,25 @@ interface LoginPanelProps {
 
 export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) => {
   const [formData, setFormData] = useState({
-    name: "",
-    id: "",
-    store: "FLAGSHIP_01",
-    level: "OPERATOR" as OperatorLevel,
+    email: "",
     password: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState("");
+  const [isSigningIn, setIsSigningIn] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.password.trim()) return;
-    const { password: _password, ...sessionData } = formData;
-    onRegister(sessionData);
+    setError("");
+    setIsSigningIn(true);
+    try {
+      const session = await signInOperator(formData.email.trim(), formData.password);
+      onRegister(session);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to sign in.");
+    } finally {
+      setIsSigningIn(false);
+    }
   };
 
   return (
@@ -51,13 +59,14 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold ml-1">Operator Name</Label>
-                <Input 
+                <Label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold ml-1">Work Email</Label>
+                <Input
                   required
-                  placeholder="E.G. JANE DOE"
-                  className="bg-white/5 border-white/10 h-12 rounded-xl text-xs font-code tracking-widest uppercase focus:border-accent transition-colors"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value.toUpperCase() })}
+                  type="email"
+                  placeholder="operator@store.com"
+                  className="bg-white/5 border-white/10 h-12 rounded-xl text-xs font-code tracking-widest focus:border-accent transition-colors"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
 
@@ -76,42 +85,17 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold ml-1">Operator ID</Label>
-                  <Input 
-                    required
-                    placeholder="CGV-882"
-                    className="bg-white/5 border-white/10 h-12 rounded-xl text-xs font-code tracking-widest uppercase focus:border-accent"
-                    value={formData.id}
-                    onChange={(e) => setFormData({ ...formData, id: e.target.value.toUpperCase() })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold ml-1">Security Level</Label>
-                  <Select 
-                    value={formData.level}
-                    onValueChange={(value) => setFormData({ ...formData, level: value as OperatorLevel })}
-                  >
-                    <SelectTrigger className="bg-white/5 border-white/10 h-12 rounded-xl text-xs font-bold tracking-widest uppercase">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border-white/10">
-                      <SelectItem value="OPERATOR" className="text-xs font-bold tracking-widest">OPERATOR</SelectItem>
-                      <SelectItem value="SUPERVISOR" className="text-xs font-bold tracking-widest">SUPERVISOR</SelectItem>
-                      <SelectItem value="ADMIN" className="text-xs font-bold tracking-widest text-accent">ADMIN</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
             </div>
 
             <Button 
               type="submit"
               className="w-full h-14 rounded-2xl bg-accent/10 border border-accent/30 text-accent hover:bg-accent/20 transition-all font-bold uppercase tracking-[0.2em] text-[10px] group"
             >
-              Start Active Session <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              {isSigningIn ? "Authenticating..." : "Sign In"} <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
+          {error && (
+            <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-[9px] font-bold uppercase tracking-widest text-red-300">{error}</p>
+          )}
           </form>
 
           <div className="relative">
