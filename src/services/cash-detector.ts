@@ -1,9 +1,7 @@
 import * as tf from "@tensorflow/tfjs";
 
-import type { BoundingBox, TrackedCustomer, ZoneDefinition } from "@/lib/types";
+import type { BoundingBox, CashDetectionLevel, CashDetectionState, TrackedCustomer, ZoneDefinition } from "@/lib/types";
 import { clamp } from "@/tracking/tracker-utils";
-
-export type CashDetectionLevel = "level1" | "level2" | "hybrid";
 
 export interface CashDetection {
   detected: boolean;
@@ -13,16 +11,6 @@ export interface CashDetection {
   at: number;
   streak: number;
   reason: string;
-}
-
-export interface CashDetectionState {
-  detected: boolean;
-  confidence: number;
-  level: CashDetectionLevel;
-  streak: number;
-  lastDetectedAt?: number;
-  lastCustomerId?: string;
-  bbox?: BoundingBox;
 }
 
 interface Level1State {
@@ -224,7 +212,7 @@ function parseLevel2Output(output: tf.Tensor | tf.Tensor[]): Level2ModelOutput |
 export class CashDetectionEngine {
   private level1State: Level1State = { streak: 0 };
   private level2Model: tf.LayersModel | null = null;
-  private level2LoadPromise: Promise<tf.LayersModel | null> | null = null;
+  private level2LoadPromise: Promise<tf.LayersModel | null> | null = null;\n  private level2LoadAttempted = false;
   private level2Streak = 0;
   private lastLevel2EmissionAt = 0;
 
