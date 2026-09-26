@@ -353,13 +353,19 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         />
       ) : (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_center,rgba(15,252,235,0.08),transparent_65%)] px-8 text-center">
-          <div className="mb-4 h-24 w-24 rounded-[2rem] border border-accent/20 bg-accent/10" />
-          <h3 className="font-headline text-xl font-bold uppercase tracking-[0.3em] text-foreground">
-            No Video Source
-          </h3>
-          <p className="mt-3 max-w-md text-sm text-muted-foreground">
-            Upload a local video file or start live screen capture to begin detection.
-          </p>
+          <div className="relative mb-5 flex h-24 w-24 items-center justify-center rounded-[2rem] border border-accent/25 bg-accent/10">
+            <div className="absolute inset-3 rounded-2xl border border-accent/20 animate-pulse" />
+            <span className="font-code text-[9px] font-black uppercase tracking-widest text-accent">CCTV</span>
+          </div>
+          <div className="mb-3 flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/5 px-3 py-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-300 animate-pulse" />
+            <span className="font-code text-[8px] font-bold uppercase tracking-[0.2em] text-amber-200">Camera source required</span>
+          </div>
+          <h3 className="font-headline text-xl font-bold uppercase tracking-[0.3em] text-foreground">Ready for analysis</h3>
+          <p className="mt-3 max-w-md text-[11px] leading-5 text-muted-foreground">Upload CCTV footage, start a local camera, or use screen capture from the controls on the right. CyberGuard will then analyse multi-frame person and product signals.</p>
+          <div className="mt-5 grid grid-cols-3 gap-2 text-left">
+            {[["01","PERSON","Anonymous IDs"],["02","PRODUCT","Basket signals"],["03","PAYMENT","Consistency"]].map(([n,t,d])=><div key={n} className="rounded-xl border border-white/10 bg-black/30 p-3"><p className="font-code text-[8px] font-black text-accent">{n}</p><p className="mt-1 text-[7px] font-black uppercase tracking-widest text-white/75">{t}</p><p className="mt-1 text-[7px] text-white/30">{d}</p></div>)}
+          </div>
         </div>
       )}
 
