@@ -9,6 +9,7 @@ export type RiskState =
   | "suspicious_activity"
   | "high_risk_suspicious_activity";
 export type PaymentState = "unpaid" | "matched" | "paid";
+export type TransactionVerificationState = "VERIFIED" | "AMOUNT MISMATCH" | "PAYMENT FAILED" | "PAYMENT PENDING" | "NO PAYMENT" | "AMBIGUOUS/REVIEW REQUIRED";
 export type SessionMode = "LOCAL" | "ACTIVE";
 export type DeploymentMode = "single" | "multi";
 export type OperatorLevel = "OPERATOR" | "SUPERVISOR" | "ADMIN";
@@ -191,6 +192,9 @@ export interface TrackedCustomer {
   paymentState: PaymentState;
   paymentMethod?: PaymentMethod;
   paymentAt?: number;
+  paymentAmount?: number;
+  paymentReferenceId?: string;
+  paymentConfirmed?: boolean;
 
   enteredStore: boolean;
   insideStore: boolean;
@@ -293,6 +297,24 @@ export interface PaymentEvent {
   timestamp?: number;
   referenceId?: string;
   confirmed?: boolean;
+  amount?: number;
+  currency?: string;
+}
+
+export interface TransactionTwinResult {
+  state: TransactionVerificationState;
+  transactionConsistencyScore: number;
+  expectedAmount: number;
+  paymentAmount?: number;
+  detectionConfidence: number;
+  trackingStability: number;
+  customerId: string;
+  paymentReferenceId?: string;
+  paymentMethod?: PaymentMethod;
+  paymentState: PaymentState;
+  reasons: string[];
+  evidenceIds: string[];
+  timeline: Array<{ at: number; label: string; detail: string; kind: "detection" | "movement" | "product" | "payment" | "review" }>;
 }
 
 export interface MatchResult {
