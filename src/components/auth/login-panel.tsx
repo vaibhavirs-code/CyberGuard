@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ChevronRight, Activity, LockKeyhole, ShieldCheck, EyeOff, Database, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,11 @@ interface LoginPanelProps {
 }
 
 export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollContainerRef.current?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, []);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
