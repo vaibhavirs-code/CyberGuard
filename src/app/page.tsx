@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ProjectIntroductionScreen } from "@/components/auth/project-introduction-screen";
 import { LoginPanel } from "@/components/auth/login-panel";
 import { DashboardScreen } from "@/components/dashboard/dashboard-screen";
@@ -15,20 +15,23 @@ export default function DashboardPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [view, setView] = useState<AppView>("intro");
   const [pendingSession, setPendingSession] = useState<OperatorSession | null>(null);
-  const [navigationHistory, setNavigationHistory] = useState<AppView[]>(["intro"]);
+  const navigationHistory = useRef<AppView[]>(["intro"]);
 
   const navigateTo = (nextView: AppView) => {
-    setNavigationHistory((history) => [...history, nextView]);
+    navigationHistory.current = [...navigationHistory.current, nextView];
     setView(nextView);
   };
 
   const goBack = (fallback: AppView) => {
-    setNavigationHistory((history) => {
-      if (history.length <= 1) return [fallback];
-      const next = history.slice(0, -1);
-      setView(next[next.length - 1] ?? fallback);
-      return next;
-    });
+    if (navigationHistory.current.length <= 1) {
+      navigationHistory.current = [fallback];
+      setView(fallback);
+      return;
+    }
+
+    const next = navigationHistory.current.slice(0, -1);
+    navigationHistory.current = next;
+    setView(next[next.length - 1] ?? fallback);
   };
 
   useEffect(() => setIsMounted(true), []);
