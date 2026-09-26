@@ -20,6 +20,7 @@ interface VideoFeedProps {
   onFrame: (video: HTMLVideoElement) => Promise<void>;
   onTheftEvidence?: (evidence: { customerId: string; timestamp: string; riskScore: number; reasons: string[]; dataUrl: string }) => void;
   isModelLoading: boolean;
+  showClearPeople?: boolean;
 }
 
 interface ZoneShape {
@@ -198,6 +199,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   onFrame,
   onTheftEvidence,
   isModelLoading,
+  showClearPeople = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
@@ -489,10 +491,14 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
               )}
               style={{ left: `${customer.bbox.x}%`, top: `${customer.bbox.y}%`, width: `${customer.bbox.width}%`, height: `${customer.bbox.height}%` }}
             >
-              <div className="absolute inset-0 rounded-[inherit] bg-black/10 backdrop-blur-[10px]" aria-hidden="true" />
-              <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-black/55 px-2 py-1 text-[7px] font-bold uppercase tracking-[0.18em] text-white/80 backdrop-blur-md">
-                ID only · face masked
-              </div>
+              {!showClearPeople && (
+                <>
+                  <div className="absolute inset-0 rounded-[inherit] bg-black/10 backdrop-blur-[10px]" aria-hidden="true" />
+                  <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-black/55 px-2 py-1 text-[7px] font-bold uppercase tracking-[0.18em] text-white/80 backdrop-blur-md">
+                    ID only · face masked
+                  </div>
+                </>
+              )}
               <div className={cn(getStatusCardClass(customer.bbox), getHeaderBgClass(customer))}>
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between gap-4">

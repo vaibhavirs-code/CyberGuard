@@ -38,6 +38,7 @@ function CameraTile({
   onTheftEvidence,
   onSelect,
   showTelemetry = false,
+  showClearPeople = false,
 }: {
   camera: CameraFeedState;
   isActive: boolean;
@@ -46,6 +47,7 @@ function CameraTile({
   onTheftEvidence: (evidence: { customerId: string; timestamp: string; riskScore: number; reasons: string[]; dataUrl: string }) => void;
   onSelect: () => void;
   showTelemetry?: boolean;
+  showClearPeople?: boolean;
 }) {
   const hasAlert = camera.customers.some(
     (customer) => customer.alerted || customer.riskState === "high_risk_suspicious_activity",
@@ -76,6 +78,7 @@ function CameraTile({
         detectedProducts={camera.detectedProducts}
         videoUrl={camera.videoUrl}
         zones={camera.zones}
+         showClearPeople={showClearPeople}
       />
       <div className="pointer-events-none absolute left-4 top-4 z-30 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-xl">
         <Camera className="h-3.5 w-3.5 text-accent" />
@@ -122,6 +125,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   const canManageEvidence = operatorLevel === "ADMIN" || operatorLevel === "SUPERVISOR";
   const [theftPopup, setTheftPopup] = useState<{ customerId: string; cameraLabel: string; riskScore: number } | null>(null);
   const [fullscreenCameraId, setFullscreenCameraId] = useState<string | null>(null);
+  const [showClearPeople, setShowClearPeople] = useState(false);
   const lastAlertRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -195,10 +199,31 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                       Payment signals are matched with uncertainty, and high-risk events are routed for human review.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2">
-                    <EyeOff className="h-4 w-4 text-emerald-300" />
-                    <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-200">Identity shield ON</span>
-                  </div>
+                  <button
+
+                    type="button"
+
+                    onClick={() => setShowClearPeople((enabled) => !enabled)}
+
+                    className={showClearPeople
+
+                      ? "flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-amber-200"
+
+                      : "flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-emerald-200"}
+
+                    aria-pressed={showClearPeople}
+
+                  >
+
+                    <EyeOff className="h-4 w-4" />
+
+                    <span className="text-[8px] font-bold uppercase tracking-widest">
+
+                      {showClearPeople ? "Demo view · clear people" : "Identity shield ON"}
+
+                    </span>
+
+                  </button>
                 </div>
               </div>
             </section>
@@ -312,6 +337,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                         setFullscreenCameraId(camera.id);
                       }}
                       showTelemetry
+                       showClearPeople={showClearPeople}
                     />
                   ))}
                 </div>
@@ -326,6 +352,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                     onFrame={(video) => controller.trackFrameForCamera(activeCamera.id, video)}
                     onTheftEvidence={(evidence) => controller.captureTheftEvidence(activeCamera.id, evidence)}
                     onSelect={() => controller.setActiveCamera(activeCamera.id)}
+                     showClearPeople={showClearPeople}
                   />
                 </div>
 
@@ -340,6 +367,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                         onFrame={(video) => controller.trackFrameForCamera(camera.id, video)}
                         onTheftEvidence={(evidence) => controller.captureTheftEvidence(camera.id, evidence)}
                         onSelect={() => controller.setActiveCamera(camera.id)}
+                         showClearPeople={showClearPeople}
                       />
                     ))}
                   </div>
