@@ -7,12 +7,9 @@ import { SessionSetupScreen } from "@/components/auth/session-setup-screen";
 import { ZoneConfigurationScreen } from "@/components/auth/zone-configuration-screen";
 import { DashboardScreen } from "@/components/dashboard/dashboard-screen";
 import { useDashboardController } from "@/features/dashboard/use-dashboard-controller";
-import { getAppConfig } from "@/lib/env";
 import type { DeploymentConfig, OperatorSession } from "@/lib/types";
 
 type AppView = "auth" | "deployment" | "setup" | "zoneConfig" | "dashboard";
-
-const appConfig = getAppConfig();
 
 export default function DashboardPage() {
   const controller = useDashboardController();
