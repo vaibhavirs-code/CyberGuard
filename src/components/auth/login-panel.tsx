@@ -12,10 +12,9 @@ import { signInOperator } from "@/services/auth-service";
 
 interface LoginPanelProps {
   onRegister: (data: Omit<OperatorSession, "mode">) => void;
-  onSkip: () => void;
 }
 
-export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) => {
+export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -79,27 +78,6 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
           </div>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-[9px] font-black uppercase tracking-[0.24em] text-accent">Judge / Demo Access</p>
-          <p className="mt-2 text-[11px] leading-5 text-white/70">
-            Demo operator: <span className="font-code text-white">demo@cyberguard.local</span>
-            <br />
-            Demo password: <span className="font-code text-white">demo123</span>
-          </p>
-          <p className="mt-2 text-[8px] uppercase tracking-widest text-muted-foreground">
-            Demo access uses a local sandbox session; cloud authentication remains optional.
-          </p>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onSkip()}
-            className="mt-3 h-9 w-full rounded-xl border border-accent/20 bg-accent/5 text-[9px] font-bold uppercase tracking-[0.2em] text-accent hover:bg-accent/10"
-          >
-            <PlayCircle className="mr-2 h-4 w-4" />
-            Enter Demo Dashboard
-          </Button>
-        </div>
-
         <div className="space-y-10">
           {/* Option 1: Register */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -153,21 +131,6 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister, onSkip }) =>
             </div>
           </div>
 
-          {/* Option 2: Local mode */}
-          <div className="space-y-4">
-            <Button 
-              variant="ghost" 
-              onClick={onSkip}
-              className="w-full h-12 rounded-xl border border-white/5 hover:bg-white/5 text-[9px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-all"
-            >
-              Continue In Demo Mode
-            </Button>
-            
-            <div className="flex justify-center gap-4">
-              <Badge variant="outline" className="text-[7px] border-white/5 opacity-40 uppercase tracking-widest px-2">Browser Session</Badge>
-              <Badge variant="outline" className="text-[7px] border-white/5 opacity-40 uppercase tracking-widest px-2">Manual Video Source</Badge>
-            </div>
-          </div>
         </div>
       </div>
     </div>
