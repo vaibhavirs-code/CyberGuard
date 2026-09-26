@@ -483,21 +483,22 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                 <Camera className="h-6 w-6 text-red-300" />
               </div>
               {activeCamera.evidenceSnapshots.length > 0 ? (
-                <div className="space-y-3">
-                  {activeCamera.evidenceSnapshots.slice(0, 2).map((evidence) => (
-                    <div key={evidence.id} className="overflow-hidden rounded-xl border border-white/10 bg-black/30">
-                      <img src={evidence.dataUrl} alt={`Security evidence for ${evidence.customerId}`} className="aspect-video w-full object-cover" />
-                      <div className="p-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-code text-[10px] font-bold text-red-200">{evidence.customerId}</span>
-                          <span className="font-code text-[9px] text-white/60">{Math.round(evidence.riskScore * 100)}% risk</span>
+                <>
+                  <div className="space-y-3">
+                    {activeCamera.evidenceSnapshots.slice(0, 2).map((evidence) => (
+                      <div key={evidence.id} className="overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                        <img src={evidence.dataUrl} alt={`Security evidence for ${evidence.customerId}`} className="aspect-video w-full object-cover" />
+                        <div className="p-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-code text-[10px] font-bold text-red-200">{evidence.customerId}</span>
+                            <span className="font-code text-[9px] text-white/60">{Math.round(evidence.riskScore * 100)}% risk</span>
+                          </div>
+                          <p className="mt-1 text-[9px] text-white/60">{new Date(evidence.timestamp).toLocaleString()}</p>
                         </div>
-                        <p className="mt-1 text-[9px] text-white/60">{new Date(evidence.timestamp).toLocaleString()}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3">
+                    ))}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3">
                   <div>
                     <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-300">Local-only storage · {operatorLevel}</p>
                     <p className="mt-1 text-[9px] text-white/50">Evidence stays on this browser device.</p>
@@ -511,7 +512,8 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                       Clear
                     </button>
                   )}
-                </div>
+                  </div>
+                </>
               ) : (
                 <div className="space-y-3">
                   <p className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-white/60">No review evidence captured yet.</p>
