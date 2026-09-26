@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react';
-import { LayoutDashboard, ShieldCheck, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, ShieldCheck, AlertCircle, Globe2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', active: true },
 ];
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<{ onOpenIndiaPage?: () => void }> = ({ onOpenIndiaPage }) => {
   return (
     <aside className="w-20 lg:w-56 glass border-r border-white/10 flex flex-col items-center py-8 z-30 transition-all duration-700 hover:w-56 group/sidebar overflow-hidden">
       <div className="flex flex-col items-center gap-4 mb-14 px-4 w-full">
@@ -41,6 +41,13 @@ export const Sidebar: React.FC = () => {
           </button>
         ))}
       </nav>
+
+      <div className="w-full px-4">
+        <button type="button" onClick={onOpenIndiaPage} className="mt-3 w-full flex items-center gap-4 rounded-2xl border border-accent/20 bg-accent/5 px-4 py-3.5 text-accent transition hover:bg-accent/10">
+          <div className="shrink-0 rounded-xl bg-accent/10 p-1.5"><Globe2 className="h-5 w-5" /></div>
+          <span className="hidden text-[10px] font-bold uppercase tracking-widest lg:block">India DPI</span>
+        </button>
+      </div>
 
       <div className="w-full px-4 mt-auto">
         <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 glass aura-border hidden lg:block group-hover/sidebar:block overflow-hidden relative group/alert transition-all hover:bg-red-500/10">
