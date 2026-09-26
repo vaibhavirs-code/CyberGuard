@@ -234,6 +234,17 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         const context = canvas.getContext("2d");
         if (!context) continue;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        // Privacy protection: blur the tracked person's bounding box before evidence is stored.
+        const box = customer.bbox;
+        const sx = Math.max(0, Math.round((box.x / 100) * canvas.width));
+        const sy = Math.max(0, Math.round((box.y / 100) * canvas.height));
+        const sw = Math.min(canvas.width - sx, Math.max(1, Math.round((box.width / 100) * canvas.width)));
+        const sh = Math.min(canvas.height - sy, Math.max(1, Math.round((box.height / 100) * canvas.height)));
+        context.save();
+        context.filter = "blur(18px)";
+        context.drawImage(video, sx, sy, sw, sh, sx, sy, sw, sh);
+        context.restore();
+
         const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
         capturedEvidenceRef.current.add(evidenceKey);
         onTheftEvidence({
