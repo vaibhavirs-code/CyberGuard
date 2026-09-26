@@ -37,7 +37,7 @@ export const ProjectIntroductionScreen: React.FC<ProjectIntroductionScreenProps>
             <h1 className="font-headline text-6xl font-black uppercase leading-[.88] tracking-[-.04em] md:text-8xl">Cyber<span className="text-cyan-300">Guard</span><br/><span className="text-white/20">Vision</span></h1>
             <p className="mt-7 max-w-2xl text-base leading-7 text-white/55 md:text-lg">A privacy-aware AI layer that connects <span className="text-white">camera intelligence</span>, <span className="text-white">temporary customer tracking</span>, <span className="text-white">basket reconstruction</span> and <span className="text-white">payment verification</span> into one explainable retail trust workflow.</p>
             <div className="mt-8 flex flex-wrap gap-2">
-              {["UPI · QR · POS · Cash","₹ INR","English · हिंदी · ಕನ್ನಡ","No facial identity"].map((x)=><span key={x} className="rounded-full border border-white/10 bg-white/[.035] px-4 py-2 text-[8px] font-bold uppercase tracking-widest text-white/60">{x}</span>)}
+              {["UPI · QR · POS · Cash","₹ INR","English · हिंदी","No facial identity"].map((x)=><span key={x} className="rounded-full border border-white/10 bg-white/[.035] px-4 py-2 text-[8px] font-bold uppercase tracking-widest text-white/60">{x}</span>)}
             </div>
             <Button onClick={onContinue} className="mt-9 h-14 rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-8 text-[10px] font-black uppercase tracking-[.28em] text-cyan-200 hover:bg-cyan-300/20">Initialize Secure Demo <ArrowRight className="ml-3 h-4 w-4"/></Button>
           </div>
