@@ -78,6 +78,44 @@ export interface RawPersonDetection extends DetectionInput {
   seenAt: number;
 }
 
+export interface ProductDetectionInput extends DetectionInput {
+  label: string;
+}
+
+export type ProductState =
+  | "on_shelf"
+  | "moving"
+  | "carried"
+  | "near_checkout"
+  | "at_checkout"
+  | "near_exit"
+  | "lost_tracking";
+
+export interface ProductCatalogEntry {
+  objectClass: string;
+  name: string;
+  unitPrice: number;
+}
+
+export interface TrackedProduct {
+  id: string;
+  objectClass: string;
+  name: string;
+  unitPrice: number;
+  bbox: BoundingBox;
+  centroid: { x: number; y: number };
+  confidence: number;
+  state: ProductState;
+  currentZone: ZoneType;
+  associatedPersonId?: string;
+  firstSeenAt: number;
+  lastSeenAt: number;
+  framesSeen: number;
+  pickedUpAt?: number;
+  checkoutAt?: number;
+  nearExitAt?: number;
+}
+
 export interface TrackHistoryPoint {
   x: number;
   y: number;
@@ -209,6 +247,7 @@ export interface CameraFeedState {
   customers: TrackedCustomer[];
   items: TrackedItem[];
   rawDetections: RawPersonDetection[];
+  detectedProducts: TrackedProduct[];
   zones: ZoneDefinition[];
   logs: SystemLog[];
   fps: number;
