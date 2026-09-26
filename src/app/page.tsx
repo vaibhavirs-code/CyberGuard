@@ -35,7 +35,7 @@ export default function DashboardPage() {
         onLaunch={(config) => {
           setDeploymentConfig(config);
           controller.initializeCameraWall(config.cameraCount);
-          setView("auth");
+          setView("setup");
         }}
       />
     );
