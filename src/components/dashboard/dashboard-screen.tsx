@@ -411,8 +411,6 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                         setTransactionTwinCustomerId(customerId);
                       }}
                       showTelemetry
-                       showClearPeople={showClearPeople}
-                      enhancedPrivacyView={enhancedPrivacyView}
                     />
                   ))}
                 </div>
@@ -428,8 +426,6 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                     onTheftEvidence={(evidence) => controller.captureTheftEvidence(activeCamera.id, evidence)}
                     onSelect={() => controller.setActiveCamera(activeCamera.id)}
                     onCustomerClick={(customerId) => setTransactionTwinCustomerId(customerId)}
-                     showClearPeople={showClearPeople}
-                     enhancedPrivacyView={enhancedPrivacyView}
                   />
                 </div>
 
@@ -448,8 +444,6 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                           controller.setActiveCamera(camera.id);
                           setTransactionTwinCustomerId(customerId);
                         }}
-                         showClearPeople={showClearPeople}
-                         enhancedPrivacyView={enhancedPrivacyView}
                       />
                     ))}
                   </div>
@@ -725,8 +719,6 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                   detectedProducts={fullscreenCamera.detectedProducts}
                   videoUrl={fullscreenCamera.videoUrl}
                   zones={fullscreenCamera.zones}
-                  showClearPeople={showClearPeople}
-                  enhancedPrivacyView={enhancedPrivacyView}
                 />
                 <div className="pointer-events-none absolute left-4 top-4 z-40 flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-black/70 px-3 py-2 backdrop-blur-xl">
                   <Maximize2 className="h-3.5 w-3.5 text-emerald-300" />
