@@ -222,7 +222,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
     if (!video || !onTheftEvidence) return;
 
     for (const customer of customers) {
-      if (customer.riskState !== "high_risk_suspicious_activity" || !customer.alertAt) continue;
+      if (!customer.alerted || !customer.alertAt) continue;
       const evidenceKey = `${customer.id}:${customer.alertAt}`;
       if (capturedEvidenceRef.current.has(evidenceKey)) continue;
 
