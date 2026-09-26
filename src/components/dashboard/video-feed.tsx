@@ -201,6 +201,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
   const capturedEvidenceRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -325,8 +326,14 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
       );
   }, [zones]);
 
+  const handleFullscreen = () => {
+    if (!feedRef.current) return;
+    if (document.fullscreenElement) { void document.exitFullscreen(); return; }
+    void feedRef.current.requestFullscreen();
+  };
+
   return (
-    <div className="group relative h-full w-full overflow-hidden rounded-[2.5rem] border border-white/5 bg-black shadow-2xl aura-border">
+    <div ref={feedRef} onClick={handleFullscreen} title="Click camera to open full screen" className="group relative h-full w-full overflow-hidden rounded-[2.5rem] border border-white/5 bg-black shadow-2xl aura-border">
       {hasSource ? (
         <video
           ref={videoRef}
