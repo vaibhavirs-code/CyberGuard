@@ -21,8 +21,6 @@ interface VideoFeedProps {
   onTheftEvidence?: (evidence: { customerId: string; timestamp: string; riskScore: number; reasons: string[]; dataUrl: string }) => void;
   onCustomerClick?: (customerId: string) => void;
   isModelLoading: boolean;
-  showClearPeople?: boolean;
-  enhancedPrivacyView?: boolean;
 }
 
 interface ZoneShape {
@@ -202,8 +200,6 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   onTheftEvidence,
   onCustomerClick,
   isModelLoading,
-  showClearPeople = false,
-  enhancedPrivacyView = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
