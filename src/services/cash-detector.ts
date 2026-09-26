@@ -213,7 +213,6 @@ export class CashDetectionEngine {
   private level1State: Level1State = { streak: 0 };
   private level2Model: tf.LayersModel | null = null;
   private level2LoadPromise: Promise<tf.LayersModel | null> | null = null;
-  private level2LoadAttempted = false;
   private level2Streak = 0;
   private lastLevel2EmissionAt = 0;
 
@@ -226,7 +225,9 @@ export class CashDetectionEngine {
   async loadLevel2Model(modelUrl = "/models/cash/model.json") {
     if (this.level2Model) return this.level2Model;
     if (this.level2LoadPromise) return this.level2LoadPromise;
+    if (this.level2LoadAttempted) return null;
 
+    this.level2LoadAttempted = true;
     this.level2LoadPromise = tf
       .loadLayersModel(modelUrl)
       .then((model) => {
