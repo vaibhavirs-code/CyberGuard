@@ -46,6 +46,55 @@ async function supabaseRequest<T>(path: string, options: RequestInit = {}): Prom
   return body as T;
 }
 
+export async function registerOperator(
+  email: string,
+  password: string,
+  name: string,
+  operatorId: string,
+  store: string,
+): Promise<string> {
+  const auth = await supabaseRequest<AuthResponse>("/auth/v1/signup", {
+    method: "POST",
+    body: JSON.stringify({
+      email,
+      password,
+      data: { name, operator_id: operatorId, store },
+    }),
+  });
+
+  if (!auth.access_token) {
+    return "Account created. Check your email to confirm the account, then sign in. Your operator profile must also be created by an administrator before first login.";
+  }
+
+  await supabaseRequest<OperatorProfile[]>("/rest/v1/operators", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${auth.access_token}`,
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      user_id: auth.user.id,
+      name,
+      id: operatorId,
+      level: "OPERATOR",
+      store,
+    }),
+  });
+
+  localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, auth.access_token);
+  localStorage.setItem(
+    SESSION_KEY,
+    JSON.stringify({
+      accessToken: auth.access_token,
+      refreshToken: auth.refresh_token,
+      user: auth.user,
+      profile: { name, id: operatorId, level: "OPERATOR", store },
+    }),
+  );
+
+  return "Account created successfully. You are now signed in.";
+}
+
 export async function signInOperator(email: string, password: string): Promise<OperatorSession> {
   const auth = await supabaseRequest<AuthResponse>("/auth/v1/token?grant_type=password", {
     method: "POST",
