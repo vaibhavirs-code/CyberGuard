@@ -198,10 +198,31 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                       Payment signals are matched with uncertainty, and high-risk events are routed for human review.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2">
-                    <EyeOff className="h-4 w-4 text-emerald-300" />
-                    <span className="text-[8px] font-bold uppercase tracking-widest text-emerald-200">Identity shield ON</span>
-                  </div>
+                  <button
+
+                    type="button"
+
+                    onClick={() => setShowClearPeople((enabled) => !enabled)}
+
+                    className={showClearPeople
+
+                      ? "flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-amber-200"
+
+                      : "flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-emerald-200"}
+
+                    aria-pressed={showClearPeople}
+
+                  >
+
+                    <EyeOff className="h-4 w-4" />
+
+                    <span className="text-[8px] font-bold uppercase tracking-widest">
+
+                      {showClearPeople ? "Demo view · clear people" : "Identity shield ON"}
+
+                    </span>
+
+                  </button>
                 </div>
               </div>
             </section>
