@@ -29,7 +29,13 @@ export function createCameraFeedState(index: number, label = `Camera ${index}`):
     isTestingBuzzer: false,
     buzzerTestStatus: "idle",
     buzzerTestMessage: null,
-    evidenceSnapshots: [],\n    cashDetection: {\n      detected: false,\n      confidence: 0,\n      level: "hybrid",\n      streak: 0,\n    },
+    evidenceSnapshots: [],
+    cashDetection: {
+      detected: false,
+      confidence: 0,
+      level: "hybrid",
+      streak: 0,
+    },
   };
 }
 
