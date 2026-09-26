@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { Activity, AlertTriangle, Camera, Cpu, Grid3X3, ShieldCheck, Target, Maximize2, X, Info, EyeOff, ArrowRight } from "lucide-react";
+import { Activity, AlertTriangle, Banknote, Camera, Cpu, Grid3X3, ShieldCheck, Target, Maximize2, X, Info, EyeOff, ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -236,6 +236,36 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Alerts</p>
                     <p className="font-code text-xl font-bold text-red-200">{controller.siteOverview.totalAlerts}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="grid gap-3 md:grid-cols-4">
+              <div className="md:col-span-4 rounded-2xl border border-amber-400/20 bg-amber-400/5 px-5 py-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 p-2">
+                    <Banknote className="h-5 w-5 text-amber-300" />
+                  </div>
+                  <div className="min-w-[190px] flex-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-200">Cash Detection</p>
+                    <p className="mt-1 text-[11px] text-white/70">
+                      Checkout-only visual detection. It detects cash presence; it does not identify denomination or authenticity.
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-2">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">Status</p>
+                    <p className={`font-code text-sm font-bold ${activeCamera.cashDetection.detected ? "text-amber-200" : "text-emerald-300"}`}>
+                      {activeCamera.cashDetection.detected ? "CASH DETECTED" : "MONITORING"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-2">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">Engine</p>
+                    <p className="font-code text-sm font-bold uppercase text-cyan-200">{activeCamera.cashDetection.level}</p>
+                  </div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-2">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-muted-foreground">Confidence</p>
+                    <p className="font-code text-sm font-bold text-white">{Math.round(activeCamera.cashDetection.confidence * 100)}%</p>
                   </div>
                 </div>
               </div>

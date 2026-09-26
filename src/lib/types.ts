@@ -221,6 +221,7 @@ export interface CameraFeedState {
   buzzerTestStatus: BuzzerTestStatus;
   buzzerTestMessage: string | null;
   evidenceSnapshots: EvidenceSnapshot[];
+  cashDetection: CashDetectionState;
 }
 
 export interface SiteOverview {
@@ -234,6 +235,18 @@ export interface SiteOverview {
 export interface DeploymentConfig {
   mode: DeploymentMode;
   cameraCount: number;
+}
+
+export type CashDetectionLevel = "level1" | "level2" | "hybrid";
+
+export interface CashDetectionState {
+  detected: boolean;
+  confidence: number;
+  level: CashDetectionLevel;
+  streak: number;
+  lastDetectedAt?: number;
+  lastCustomerId?: string;
+  bbox?: BoundingBox;
 }
 
 export interface PaymentEvent {

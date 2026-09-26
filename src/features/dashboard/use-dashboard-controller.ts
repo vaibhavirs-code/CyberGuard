@@ -20,6 +20,7 @@ import type {
   ZoneDefinition,
 } from "@/lib/types";
 import { automatedPaymentMatcherFlow } from "@/services/payment-matcher";
+import { CashDetectionEngine } from "@/services/cash-detector";
 import { downloadEvidenceSnapshot, clearEvidenceSnapshots, loadEvidenceSnapshots, saveEvidenceSnapshot } from "@/services/evidence-storage";
 import { getOperatorAccessToken } from "@/services/auth-service";
 
@@ -205,6 +206,7 @@ export function useDashboardController(): DashboardController {
   const cameraSequenceRef = useRef(2);
   const camerasRef = useRef<CameraFeedState[]>([initialCamera]);
   const trackerRefs = useRef<Map<string, ObjectTracker>>(new Map([[DEFAULT_CAMERA_ID, new ObjectTracker()]]));
+  const cashDetectorRefs = useRef<Map<string, CashDetectionEngine>>(new Map([[DEFAULT_CAMERA_ID, new CashDetectionEngine()]]));
   const videoObjectUrlRefs = useRef<Map<string, string>>(new Map());
   const liveStreamRefs = useRef<Map<string, MediaStream>>(new Map());
   const eventCacheRefs = useRef<Map<string, Map<string, number>>>(new Map());
@@ -221,6 +223,15 @@ export function useDashboardController(): DashboardController {
 
   const getCamera = useCallback((cameraId: string) => {
     return camerasRef.current.find((camera) => camera.id === cameraId);
+  }, []);
+
+  const ensureCashDetector = useCallback((cameraId: string) => {
+    let detector = cashDetectorRefs.current.get(cameraId);
+    if (!detector) {
+      detector = new CashDetectionEngine();
+      cashDetectorRefs.current.set(cameraId, detector);
+    }
+    return detector;
   }, []);
 
   const ensureTracker = useCallback((cameraId: string) => {
@@ -562,6 +573,7 @@ export function useDashboardController(): DashboardController {
   const resetCameraRuntime = useCallback(
     (cameraId: string) => {
       ensureTracker(cameraId).reset();
+      ensureCashDetector(cameraId).reset();
       eventCacheRefs.current.get(cameraId)?.clear();
       for (const key of Array.from(autoAlertedRef.current)) {
         if (key.startsWith(`${cameraId}:`)) {
@@ -654,6 +666,65 @@ export function useDashboardController(): DashboardController {
         }));
 
         applyTrackerState(cameraId, ensureTracker(cameraId).update(detections, camera.zones));
+
+        // Cash detection runs only against the dedicated checkout zone. It does not
+        // attempt denomination or authenticity recognition.
+        const cashDetection = await ensureCashDetector(cameraId).detect(video, camera.zones, "hybrid");
+        if (cashDetection) {
+          const currentCamera = getCamera(cameraId);
+          if (currentCamera) {
+            const customer = CashDetectionEngine.associateWithCustomer(
+              cashDetection,
+              currentCamera.customers,
+              currentCamera.zones,
+            );
+
+            updateCamera(cameraId, (current) => ({
+              ...current,
+              cashDetection: {
+                detected: true,
+                confidence: cashDetection.confidence,
+                level: cashDetection.level,
+                streak: cashDetection.streak,
+                lastDetectedAt: cashDetection.at,
+                lastCustomerId: customer?.id,
+                bbox: cashDetection.bbox,
+              },
+            }));
+
+            if (customer) {
+              // Cash presence is evidence of a cash-handling action, not proof of
+              // completed payment. Do not mark the customer paid automatically.
+              addLog(
+                cameraId,
+                `Cash detected near checkout customer ${customer.id}`,
+                "info",
+                "PAYMENT",
+                cashDetection.reason,
+                cashDetection.confidence,
+                customer.id,
+              );
+            } else {
+              addLog(
+                cameraId,
+                "Cash detected, but checkout customer attribution remained ambiguous",
+                "warning",
+                "PAYMENT",
+                cashDetection.reason,
+                cashDetection.confidence,
+              );
+            }
+          }
+        } else {
+          updateCamera(cameraId, (current) => ({
+            ...current,
+            cashDetection: {
+              ...current.cashDetection,
+              detected: false,
+              confidence: Math.max(0, current.cashDetection.confidence * 0.88),
+            },
+          }));
+        }
       } catch (error) {
         logger.error("Frame processing failed", {
           cameraId,
