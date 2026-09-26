@@ -43,8 +43,6 @@ function CameraTile({
   onSelect,
   onCustomerClick,
   showTelemetry = false,
-  showClearPeople = false,
-  enhancedPrivacyView = false,
 }: {
   camera: CameraFeedState;
   isActive: boolean;
@@ -54,8 +52,6 @@ function CameraTile({
   onSelect: () => void;
   onCustomerClick: (customerId: string) => void;
   showTelemetry?: boolean;
-  showClearPeople?: boolean;
-  enhancedPrivacyView?: boolean;
 }) {
   const hasAlert = camera.customers.some(
     (customer) => customer.alerted || customer.riskState === "high_risk_suspicious_activity",
@@ -87,8 +83,6 @@ function CameraTile({
         detectedProducts={camera.detectedProducts}
         videoUrl={camera.videoUrl}
         zones={camera.zones}
-         showClearPeople={showClearPeople}
-         enhancedPrivacyView={enhancedPrivacyView}
       />
       <div className="pointer-events-none absolute left-4 top-4 z-30 flex items-center gap-2 rounded-full border border-white/10 bg-black/45 px-3 py-2 backdrop-blur-xl">
         <Camera className="h-3.5 w-3.5 text-accent" />
@@ -185,7 +179,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-red-300">Security Alert</p>
               <p className="mt-1 font-code text-sm font-bold text-white">High-risk incident requires human review</p>
               <p className="mt-1 text-[10px] text-white/60">{theftPopup.cameraLabel} · {theftPopup.customerId} · {Math.round(theftPopup.riskScore * 100)}% risk</p>
-              <p className="mt-2 text-[9px] uppercase tracking-widest text-emerald-300">Face-masked evidence captured · human review required</p>
+              <p className="mt-2 text-[9px] uppercase tracking-widest text-emerald-300">CCTV evidence captured · human review required</p>
             </div>
           </div>
         </div>
@@ -206,8 +200,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                     <p className="text-[10px] font-black uppercase tracking-[0.22em] text-accent">Privacy-first digital trust</p>
                     <p className="mt-1 text-[11px] leading-5 text-white/75">AI tracks anonymous person IDs and movement signals. It does not identify faces or decide guilt. Payment signals are matched with uncertainty, and high-risk events are routed for human review.</p>
                   </div>
-                  <button type="button" onClick={() => setEnhancedPrivacyView((enabled) => !enabled)} disabled={showClearPeople} className={enhancedPrivacyView && !showClearPeople ? "flex items-center gap-2 rounded-xl border border-cyan-400/40 bg-cyan-400/10 px-3 py-2 text-cyan-200" : "flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/70"} aria-pressed={enhancedPrivacyView} title={showClearPeople ? "Turn off Demo View to enable the privacy mask" : "Show people clearly while masking the estimated head and face region"}><EyeOff className="h-4 w-4" /><span className="text-[8px] font-bold uppercase tracking-widest">{enhancedPrivacyView && !showClearPeople ? "Enhanced privacy · face masked" : "Enhanced privacy view"}</span></button>
-                  <button type="button" onClick={() => setShowClearPeople((enabled) => !enabled)} className={showClearPeople ? "flex items-center gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-amber-200" : "flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-emerald-200"} aria-pressed={showClearPeople}><EyeOff className="h-4 w-4" /><span className="text-[8px] font-bold uppercase tracking-widest">{showClearPeople ? "Demo view · clear people" : "Identity shield ON"}</span></button>
+                  <span className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[8px] font-bold uppercase tracking-widest text-emerald-200">Clear CCTV view · AI tracking active</span>
                 </div>
               </div>
               <button type="button" onClick={() => setShowJudgeDemo(true)} className="rounded-2xl border border-amber-400/30 bg-amber-400/10 px-6 py-4 text-left transition hover:border-amber-300/50 hover:bg-amber-400/15">
