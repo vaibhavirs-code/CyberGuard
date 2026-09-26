@@ -225,7 +225,16 @@ export function useDashboardController(): DashboardController {
     return camerasRef.current.find((camera) => camera.id === cameraId);
   }, []);
 
-  const ensureCashDetector = useCallback((cameraId: string) => {\n    let detector = cashDetectorRefs.current.get(cameraId);\n    if (!detector) {\n      detector = new CashDetectionEngine();\n      cashDetectorRefs.current.set(cameraId, detector);\n    }\n    return detector;\n  }, []);\n\n  const ensureTracker = useCallback((cameraId: string) => {
+  const ensureCashDetector = useCallback((cameraId: string) => {
+    let detector = cashDetectorRefs.current.get(cameraId);
+    if (!detector) {
+      detector = new CashDetectionEngine();
+      cashDetectorRefs.current.set(cameraId, detector);
+    }
+    return detector;
+  }, []);
+
+  const ensureTracker = useCallback((cameraId: string) => {
     let tracker = trackerRefs.current.get(cameraId);
     if (!tracker) {
       tracker = new ObjectTracker();
@@ -563,7 +572,8 @@ export function useDashboardController(): DashboardController {
 
   const resetCameraRuntime = useCallback(
     (cameraId: string) => {
-      ensureTracker(cameraId).reset();\n      ensureCashDetector(cameraId).reset();
+      ensureTracker(cameraId).reset();
+      ensureCashDetector(cameraId).reset();
       eventCacheRefs.current.get(cameraId)?.clear();
       for (const key of Array.from(autoAlertedRef.current)) {
         if (key.startsWith(`${cameraId}:`)) {
