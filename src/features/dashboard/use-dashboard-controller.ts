@@ -2,6 +2,7 @@
 
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { usePersonDetection } from "@/ai/use-person-detection";
+import { useProductDetection } from "@/ai/use-product-detection";
 import { useArduino } from "@/hooks/use-arduino";
 import { createId } from "@/lib/id";
 import { logger } from "@/lib/logger";
@@ -16,6 +17,7 @@ import type {
   SystemLog,
   TrackedCustomer,
   TrackedItem,
+  TrackedProduct,
   TrackerEvent,
   ZoneDefinition,
 } from "@/lib/types";
@@ -29,6 +31,7 @@ import {
   type DpiEvent,
 } from "@/services/dpi-event-service";
 import { ObjectTracker } from "@/tracking/object-tracker";
+import { ProductTracker } from "@/tracking/product-tracker";
 import {
   DEFAULT_CAMERA_ID,
   cloneCameraZones,
@@ -62,6 +65,7 @@ export interface DashboardController {
   isVideoLoaded: boolean;
   initializeCameraWall: (cameraCount: number) => void;
   items: TrackedItem[];
+  detectedProducts: TrackedProduct[];
   logs: SystemLog[];
   modelError: string | null;
   rawDetections: RawPersonDetection[];
@@ -207,6 +211,7 @@ export function useDashboardController(): DashboardController {
   const camerasRef = useRef<CameraFeedState[]>([initialCamera]);
   const trackerRefs = useRef<Map<string, ObjectTracker>>(new Map([[DEFAULT_CAMERA_ID, new ObjectTracker()]]));
   const cashDetectorRefs = useRef<Map<string, CashDetectionEngine>>(new Map([[DEFAULT_CAMERA_ID, new CashDetectionEngine()]]));
+  const productTrackerRefs = useRef<Map<string, ProductTracker>>(new Map([[DEFAULT_CAMERA_ID, new ProductTracker()]]));
   const videoObjectUrlRefs = useRef<Map<string, string>>(new Map());
   const liveStreamRefs = useRef<Map<string, MediaStream>>(new Map());
   const eventCacheRefs = useRef<Map<string, Map<string, number>>>(new Map());
@@ -216,6 +221,7 @@ export function useDashboardController(): DashboardController {
   const lastFrameAtRefs = useRef<Map<string, number>>(new Map());
   const { connect, sendAlert, status: arduinoStatus, isBlockedByPolicy } = useArduino();
   const { error: modelError, isModelLoading, processFrame } = usePersonDetection();
+  const { error: productModelError, isModelLoading: isProductModelLoading, processFrame: processProductFrame } = useProductDetection();
 
   useEffect(() => {
     camerasRef.current = cameras;
@@ -232,6 +238,15 @@ export function useDashboardController(): DashboardController {
       cashDetectorRefs.current.set(cameraId, detector);
     }
     return detector;
+  }, []);
+
+  const ensureProductTracker = useCallback((cameraId: string) => {
+    let tracker = productTrackerRefs.current.get(cameraId);
+    if (!tracker) {
+      tracker = new ProductTracker();
+      productTrackerRefs.current.set(cameraId, tracker);
+    }
+    return tracker;
   }, []);
 
   const ensureTracker = useCallback((cameraId: string) => {
@@ -574,6 +589,7 @@ export function useDashboardController(): DashboardController {
     (cameraId: string) => {
       ensureTracker(cameraId).reset();
       ensureCashDetector(cameraId).reset();
+      ensureProductTracker(cameraId).reset();
       eventCacheRefs.current.get(cameraId)?.clear();
       for (const key of Array.from(autoAlertedRef.current)) {
         if (key.startsWith(`${cameraId}:`)) {
@@ -587,6 +603,7 @@ export function useDashboardController(): DashboardController {
         ...camera,
         customers: [],
         items: [],
+        detectedProducts: [],
         rawDetections: [],
         fps: 0,
         currentTime: 0,
@@ -667,6 +684,16 @@ export function useDashboardController(): DashboardController {
 
         applyTrackerState(cameraId, ensureTracker(cameraId).update(detections, camera.zones));
 
+        const productDetections = await processProductFrame(video);
+        if (productDetections) {
+          const detectedProducts = ensureProductTracker(cameraId).update(
+            productDetections,
+            camera.zones,
+            getCamera(cameraId)?.customers ?? [],
+          );
+          updateCamera(cameraId, (current) => ({ ...current, detectedProducts }));
+        }
+
         // Cash detection runs only against the dedicated checkout zone. It does not
         // attempt denomination or authenticity recognition.
         const cashDetection = await ensureCashDetector(cameraId).detect(video, camera.zones, "hybrid");
@@ -735,7 +762,7 @@ export function useDashboardController(): DashboardController {
         processingCameraIdsRef.current.delete(cameraId);
       }
     },
-    [addLog, applyTrackerState, ensureCashDetector, ensureTracker, getCamera, isModelLoading, processFrame, updateCamera],
+    [addLog, applyTrackerState, ensureCashDetector, ensureProductTracker, ensureTracker, getCamera, isModelLoading, processFrame, processProductFrame, updateCamera],
   );
 
   const simulatePaymentForCamera = useCallback(
