@@ -29,6 +29,7 @@ export function createCameraFeedState(index: number, label = `Camera ${index}`):
     isTestingBuzzer: false,
     buzzerTestStatus: "idle",
     buzzerTestMessage: null,
+    evidenceSnapshots: [],
   };
 }
 
