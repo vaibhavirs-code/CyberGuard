@@ -32,6 +32,7 @@ function CameraTile({
   isActive,
   isModelLoading,
   onFrame,
+  onTheftEvidence,
   onSelect,
   showTelemetry = false,
 }: {
@@ -39,6 +40,7 @@ function CameraTile({
   isActive: boolean;
   isModelLoading: boolean;
   onFrame: (video: HTMLVideoElement) => Promise<void>;
+  onTheftEvidence: (evidence: { customerId: string; timestamp: string; riskScore: number; reasons: string[]; dataUrl: string }) => void;
   onSelect: () => void;
   showTelemetry?: boolean;
 }) {
@@ -66,6 +68,7 @@ function CameraTile({
         isModelLoading={isModelLoading}
         liveStream={camera.liveStream}
         onFrame={onFrame}
+        onTheftEvidence={onTheftEvidence}
         rawDetections={camera.rawDetections}
         videoUrl={camera.videoUrl}
         zones={camera.zones}
@@ -190,6 +193,7 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
                       isActive={camera.id === activeCamera.id}
                       isModelLoading={controller.isModelLoading}
                       onFrame={(video) => controller.trackFrameForCamera(camera.id, video)}
+                      onTheftEvidence={(evidence) => controller.captureTheftEvidence(camera.id, evidence)}
                       onSelect={() => controller.setActiveCamera(camera.id)}
                       showTelemetry
                     />
@@ -204,6 +208,7 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
                     isActive
                     isModelLoading={controller.isModelLoading}
                     onFrame={(video) => controller.trackFrameForCamera(activeCamera.id, video)}
+                    onTheftEvidence={(evidence) => controller.captureTheftEvidence(activeCamera.id, evidence)}
                     onSelect={() => controller.setActiveCamera(activeCamera.id)}
                   />
                 </div>
@@ -217,6 +222,7 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
                         isActive={false}
                         isModelLoading={controller.isModelLoading}
                         onFrame={(video) => controller.trackFrameForCamera(camera.id, video)}
+                        onTheftEvidence={(evidence) => controller.captureTheftEvidence(camera.id, evidence)}
                         onSelect={() => controller.setActiveCamera(camera.id)}
                       />
                     ))}
@@ -384,6 +390,33 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
     </div>
   )}
 </div>
+            <div className="aura-border rounded-2xl border border-red-400/20 bg-background/60 p-5 glass shadow-xl">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Security Evidence</p>
+                  <p className="mt-1 font-code text-lg font-bold text-white">Theft Snapshots</p>
+                </div>
+                <Camera className="h-6 w-6 text-red-300" />
+              </div>
+              {activeCamera.evidenceSnapshots.length > 0 ? (
+                <div className="space-y-3">
+                  {activeCamera.evidenceSnapshots.slice(0, 2).map((evidence) => (
+                    <div key={evidence.id} className="overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                      <img src={evidence.dataUrl} alt={`Security evidence for ${evidence.customerId}`} className="aspect-video w-full object-cover" />
+                      <div className="p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-code text-[10px] font-bold text-red-200">{evidence.customerId}</span>
+                          <span className="font-code text-[9px] text-white/60">{Math.round(evidence.riskScore * 100)}% risk</span>
+                        </div>
+                        <p className="mt-1 text-[9px] text-white/60">{new Date(evidence.timestamp).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-white/60">No theft evidence captured yet.</p>
+              )}
+            </div>
             <SidebarPanels
               activeCamera={activeCamera}
               activeCameraId={controller.activeCameraId}
