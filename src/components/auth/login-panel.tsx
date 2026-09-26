@@ -10,10 +10,11 @@ import type { OperatorSession } from "@/lib/types";
 import { registerOperator, signInOperator } from "@/services/auth-service";
 
 interface LoginPanelProps {
+  onBack?: () => void;
   onRegister: (data: Omit<OperatorSession, "mode">) => void;
 }
 
-export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
+export const LoginPanel: React.FC<LoginPanelProps> = ({ onBack, onRegister }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -180,6 +181,14 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
           <Button type="button" variant="outline" className="w-full h-12 rounded-2xl text-[10px] uppercase tracking-widest" onClick={() => setIsCreating(true)}>
             Create Operator Account
           </Button>
+          <Button type="button" variant="ghost" className="w-full h-10 text-[9px] uppercase tracking-widest text-muted-foreground" onClick={() => onRegister({ name: "Demo Operator", id: "DEMO-001", level: "OPERATOR", store: "Hackathon Demo Store" })}>
+            Enter Demo Session
+          </Button>
+          {onBack && (
+            <Button type="button" variant="ghost" className="w-full h-10 text-[9px] uppercase tracking-widest" onClick={onBack}>
+              Back to Project Introduction
+            </Button>
+          )}
           </>
           )}
         </div>
