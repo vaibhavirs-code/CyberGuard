@@ -161,7 +161,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   return (
     <>
       {theftPopup && (
-        <div className="pointer-events-none fixed right-6 top-6 z-[100] w-[360px] rounded-2xl border border-red-400/50 bg-black/90 p-4 shadow-2xl backdrop-blur-xl">
+        <div role="alert" aria-live="assertive" aria-atomic="true" className="pointer-events-none fixed right-6 top-6 z-[100] w-[360px] rounded-2xl border border-red-400/50 bg-black/90 p-4 shadow-2xl backdrop-blur-xl">
           <div className="flex items-start gap-3">
             <div className="mt-1 h-3 w-3 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.9)] animate-pulse" />
             <div>
