@@ -201,6 +201,17 @@ export interface EvidenceSnapshot {
   dataUrl: string;
 }
 
+export interface EvidenceSnapshot {
+  id: string;
+  cameraId: string;
+  cameraLabel: string;
+  customerId: string;
+  timestamp: string;
+  riskScore: number;
+  reasons: string[];
+  dataUrl: string;
+}
+
 export interface CameraFeedState {
   id: string;
   label: string;
