@@ -199,6 +199,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   onFrame,
   onTheftEvidence,
   isModelLoading,
+  showClearPeople = false,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
