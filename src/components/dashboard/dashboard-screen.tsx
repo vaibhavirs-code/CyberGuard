@@ -185,7 +185,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
             <div className="mt-1 h-3 w-3 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.9)] animate-pulse" />
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.25em] text-red-300">Security Alert</p>
-              <p className="mt-1 font-code text-sm font-bold text-white">High-risk incident requires review</p>
+              <p className="mt-1 font-code text-sm font-bold text-white">High-risk incident requires human review</p>
               <p className="mt-1 text-[10px] text-white/60">{theftPopup.cameraLabel} · {theftPopup.customerId} · {Math.round(theftPopup.riskScore * 100)}% risk</p>
               <p className="mt-2 text-[9px] uppercase tracking-widest text-emerald-300">Face-masked evidence captured · human review required</p>
             </div>
@@ -533,8 +533,8 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <p className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-white/60">No theft evidence captured yet.</p>
-                  <p className="rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3 text-[9px] text-emerald-200/70">Privacy: evidence is stored only in this browser's local IndexedDB.</p>
+                  <p className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-white/60">No review evidence captured yet.</p>
+                  <p className="rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3 text-[9px] text-emerald-200/70">Privacy: evidence is face-masked and stored only in this browser's local IndexedDB.</p>
                 </div>
               )}
             </div>
