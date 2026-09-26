@@ -8,6 +8,7 @@ import { logger } from "@/lib/logger";
 import type {
   BuzzerTestStatus,
   CameraFeedState,
+  EvidenceSnapshot,
   OperatorSession,
   PaymentMethod,
   RawPersonDetection,
@@ -41,6 +42,7 @@ export interface DashboardController {
   buzzerTestMessage: string | null;
   buzzerTestStatus: BuzzerTestStatus;
   cameras: CameraFeedState[];
+  captureTheftEvidence: (cameraId: string, evidence: Omit<EvidenceSnapshot, "id" | "cameraId" | "cameraLabel">) => void;
   connectArduino: () => Promise<void>;
   connectError: string | null;
   currentTime: number;
@@ -188,6 +190,25 @@ export function useDashboardController(): DashboardController {
 
     return tracker;
   }, []);
+
+  const captureTheftEvidence = useCallback(
+    (cameraId: string, evidence: Omit<EvidenceSnapshot, "id" | "cameraId" | "cameraLabel">) => {
+      const camera = getCamera(cameraId);
+      if (!camera) return;
+      const snapshot: EvidenceSnapshot = {
+        ...evidence,
+        id: createId("EVIDENCE"),
+        cameraId,
+        cameraLabel: camera.label,
+      };
+      updateCamera(cameraId, (currentCamera) => ({
+        ...currentCamera,
+        evidenceSnapshots: [snapshot, ...currentCamera.evidenceSnapshots].slice(0, 5),
+      }));
+      addLog(cameraId, `Evidence snapshot captured for ${evidence.customerId}`, "alert", "EXIT", evidence.reasons.join(", "), evidence.riskScore, evidence.customerId);
+    },
+    [addLog, getCamera, updateCamera],
+  );
 
   const updateCamera = useCallback((cameraId: string, updater: (camera: CameraFeedState) => CameraFeedState) => {
     setCameras((previousCameras) =>
@@ -932,6 +953,7 @@ export function useDashboardController(): DashboardController {
     () => ({
       activeCamera: resolvedActiveCamera,
       activeCameraId: resolvedActiveCamera.id,
+      captureTheftEvidence,
       addCamera,
       dpiEvents,
       arduinoStatus,
@@ -983,6 +1005,7 @@ export function useDashboardController(): DashboardController {
     }),
     [
       addCamera,
+      captureTheftEvidence,
       arduinoStatus,
       camerasWithResolvedStatus,
       connectArduino,
