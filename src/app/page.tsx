@@ -48,17 +48,7 @@ export default function DashboardPage() {
           setPendingSession({ ...session, mode: "ACTIVE" });
           setView("deployment");
         }}
-        onSkip={() => {
-          const localSession: OperatorSession = {
-            name: "LOCAL_OPERATOR",
-            id: "LOCAL-01",
-            level: "OPERATOR",
-            mode: "LOCAL",
-            store: appConfig.NEXT_PUBLIC_DEFAULT_STORE_ID,
-          };
-          setPendingSession(localSession);
-          setView("deployment");
-        }}
+
       />
     );
   }
