@@ -220,7 +220,8 @@ export interface CameraFeedState {
   isTestingBuzzer: boolean;
   buzzerTestStatus: BuzzerTestStatus;
   buzzerTestMessage: string | null;
-  evidenceSnapshots: EvidenceSnapshot[];\n  cashDetection: CashDetectionState;
+  evidenceSnapshots: EvidenceSnapshot[];
+  cashDetection: CashDetectionState;
 }
 
 export interface SiteOverview {
