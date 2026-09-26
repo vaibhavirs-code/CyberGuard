@@ -19,6 +19,7 @@ interface VideoFeedProps {
   liveStream: MediaStream | null;
   onFrame: (video: HTMLVideoElement) => Promise<void>;
   onTheftEvidence?: (evidence: { customerId: string; timestamp: string; riskScore: number; reasons: string[]; dataUrl: string }) => void;
+  onCustomerClick?: (customerId: string) => void;
   isModelLoading: boolean;
   showClearPeople?: boolean;
   enhancedPrivacyView?: boolean;
@@ -199,6 +200,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
   liveStream,
   onFrame,
   onTheftEvidence,
+  onCustomerClick,
   isModelLoading,
   showClearPeople = false,
   enhancedPrivacyView = false,
@@ -474,7 +476,10 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
             return (
               <div
                 key={customer.id}
-                className="absolute border-2 border-blue-300/80 shadow-[0_0_18px_rgba(125,211,252,0.35)]"
+                role={onCustomerClick ? "button" : undefined}
+                tabIndex={onCustomerClick ? 0 : undefined}
+                onClick={(event) => { event.stopPropagation(); onCustomerClick?.(customer.id); }}
+                className="pointer-events-auto absolute border-2 border-blue-300/80 cursor-pointer shadow-[0_0_18px_rgba(125,211,252,0.35)]"
                 style={{ left: `${customer.bbox.x}%`, top: `${customer.bbox.y}%`, width: `${customer.bbox.width}%`, height: `${customer.bbox.height}%` }}
               >
                 <div className={cn(getTopLabelClass(customer.bbox), "border-blue-200/70 text-blue-100")}>
@@ -487,8 +492,21 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
           return (
             <div
               key={customer.id}
+              role={onCustomerClick ? "button" : undefined}
+              tabIndex={onCustomerClick ? 0 : undefined}
+              onClick={(event) => {
+                event.stopPropagation();
+                onCustomerClick?.(customer.id);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onCustomerClick?.(customer.id);
+                }
+              }}
               className={cn(
-                "absolute border-2 transition-all duration-150 ease-linear",
+                "pointer-events-auto absolute border-2 transition-all duration-150 ease-linear cursor-pointer",
                 getRiskColorClass(customer),
               )}
               style={{ left: `${customer.bbox.x}%`, top: `${customer.bbox.y}%`, width: `${customer.bbox.width}%`, height: `${customer.bbox.height}%` }}
