@@ -20,7 +20,9 @@ import type {
   ZoneDefinition,
 } from "@/lib/types";
 import { automatedPaymentMatcherFlow } from "@/services/payment-matcher";
-import { clearEvidenceSnapshots, loadEvidenceSnapshots, saveEvidenceSnapshot } from "@/services/evidence-storage";
+import { downloadEvidenceSnapshot, clearEvidenceSnapshots, loadEvidenceSnapshots, saveEvidenceSnapshot } from "@/services/evidence-storage";
+import { getOperatorAccessToken } from "@/services/auth-service";
+
 import {
   createDpiEvents,
   type DpiEvent,
@@ -156,6 +158,43 @@ function nextFrameFps(previousAt: number | undefined, now: number) {
   return Math.round(1000 / Math.max(1, now - previousAt));
 }
 
+function playLocalAlarm() {
+  try {
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+
+    const audio = new AudioContextClass();
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.value = 880;
+    gain.gain.value = 0.09;
+    oscillator.connect(gain);
+    gain.connect(audio.destination);
+    oscillator.start();
+
+    const firstStop = audio.currentTime + 0.18;
+    oscillator.stop(firstStop);
+    oscillator.addEventListener("ended", () => {
+      const second = audio.createOscillator();
+      const secondGain = audio.createGain();
+      second.type = "sine";
+      second.frequency.value = 660;
+      secondGain.gain.value = 0.08;
+      second.connect(secondGain);
+      secondGain.connect(audio.destination);
+      second.start();
+      second.stop(audio.currentTime + 0.18);
+      second.addEventListener("ended", () => void audio.close());
+    });
+  } catch {
+    // Browser autoplay policies may block sound; Arduino hardware alert remains available.
+  }
+}
+
 export function useDashboardController(): DashboardController {
   const initialCamera = useMemo(() => createCameraFeedState(1), []);
   const [session, setSession] = useState<OperatorSession | null>(null);
@@ -170,6 +209,7 @@ export function useDashboardController(): DashboardController {
   const liveStreamRefs = useRef<Map<string, MediaStream>>(new Map());
   const eventCacheRefs = useRef<Map<string, Map<string, number>>>(new Map());
   const autoAlertedRef = useRef<Set<string>>(new Set());
+  const processedPaymentIdsRef = useRef<Set<string>>(new Set());
   const processingCameraIdsRef = useRef<Set<string>>(new Set());
   const lastFrameAtRefs = useRef<Map<string, number>>(new Map());
   const { connect, sendAlert, status: arduinoStatus, isBlockedByPolicy } = useArduino();
@@ -251,6 +291,9 @@ export function useDashboardController(): DashboardController {
         evidenceSnapshots: [snapshot, ...currentCamera.evidenceSnapshots].slice(0, 5),
       }));
       void saveEvidenceSnapshot(snapshot).catch(() => undefined);
+      // Browser downloads are placed in the user's configured Downloads folder.
+      // IndexedDB remains the local in-app copy used by the dashboard.
+      downloadEvidenceSnapshot(snapshot);
       addLog(cameraId, `Evidence snapshot captured for ${evidence.customerId}`, "alert", "EXIT", evidence.reasons.join(", "), evidence.riskScore, evidence.customerId);
     },
     [addLog, getCamera, updateCamera],
@@ -335,6 +378,7 @@ export function useDashboardController(): DashboardController {
           customer.riskState === "high_risk_suspicious_activity"
         ) {
           autoAlertedRef.current.add(alertKey);
+          playLocalAlarm();
 
           addLog(
             camera.id,
@@ -375,6 +419,90 @@ export function useDashboardController(): DashboardController {
       }
     }
   }, [addLog, arduinoStatus, cameras, sendAlert]);
+
+  // Automatic payment bridge: authenticated operators can receive captured Razorpay
+  // events from the server webhook and match them to the active person track.
+  useEffect(() => {
+    if (!session || session.mode !== "ACTIVE") return;
+
+    let cancelled = false;
+    let since = Date.now() - 15000;
+
+    const poll = async () => {
+      const token = getOperatorAccessToken();
+      if (!token || cancelled) return;
+
+      try {
+        const response = await fetch(`/api/payments/webhook?since=${since}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        if (!response.ok) return;
+
+        const body = (await response.json()) as {
+          events?: Array<{
+            id: string;
+            external_payment_id?: string;
+            method?: string;
+            confirmed?: boolean;
+            timestamp?: number;
+            reference_id?: string;
+          }>;
+        };
+
+        for (const event of body.events ?? []) {
+          since = Math.max(since, event.timestamp ?? Date.now());
+          const paymentId = event.external_payment_id ?? event.id;
+          if (processedPaymentIdsRef.current.has(paymentId)) continue;
+          processedPaymentIdsRef.current.add(paymentId);
+
+          if (event.confirmed !== true) continue;
+
+          const method = event.method === "card" || event.method === "pos" || event.method === "qr" || event.method === "cash" || event.method === "upi"
+            ? event.method
+            : "upi";
+
+          for (const camera of camerasRef.current) {
+            const result = await automatedPaymentMatcherFlow({
+              customers: camera.customers,
+              paymentEvent: {
+                method,
+                referenceId: event.reference_id ?? paymentId,
+                confirmed: true,
+                timestamp: event.timestamp ?? Date.now(),
+              },
+              zones: camera.zones,
+            });
+
+            if (!result.matchedCustomerId) continue;
+
+            ensureTracker(camera.id).markPaid(result.matchedCustomerId, method);
+            applyTrackerState(camera.id, ensureTracker(camera.id).getState());
+            addLog(
+              camera.id,
+              `Automatic payment confirmed for ${result.matchedCustomerId}`,
+              "success",
+              "PAYMENT",
+              result.message,
+              1,
+              result.matchedCustomerId,
+            );
+            break;
+          }
+        }
+      } catch {
+        // Payment bridge is optional; camera monitoring continues if the gateway is unavailable.
+      }
+    };
+
+    void poll();
+    const timer = window.setInterval(() => void poll(), 1500);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [applyTrackerState, addLog, ensureTracker, session]);
+
 
   const appendTrackerEvents = useCallback(
     (cameraId: string, events: TrackerEvent[]) => {
