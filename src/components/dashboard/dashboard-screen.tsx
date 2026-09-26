@@ -49,6 +49,7 @@ function CameraTile({
   onSelect: () => void;
   showTelemetry?: boolean;
   showClearPeople?: boolean;
+  enhancedPrivacyView?: boolean;
 }) {
   const hasAlert = camera.customers.some(
     (customer) => customer.alerted || customer.riskState === "high_risk_suspicious_activity",
