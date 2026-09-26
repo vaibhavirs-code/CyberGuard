@@ -10,14 +10,14 @@ import { useDashboardController } from "@/features/dashboard/use-dashboard-contr
 import { getAppConfig } from "@/lib/env";
 import type { DeploymentConfig, OperatorSession } from "@/lib/types";
 
-type AppView = "deployment" | "auth" | "setup" | "zoneConfig" | "dashboard";
+type AppView = "auth" | "deployment" | "setup" | "zoneConfig" | "dashboard";
 
 const appConfig = getAppConfig();
 
 export default function DashboardPage() {
   const controller = useDashboardController();
   const [isMounted, setIsMounted] = useState(false);
-  const [view, setView] = useState<AppView>("deployment");
+  const [view, setView] = useState<AppView>("auth");
   const [deploymentConfig, setDeploymentConfig] = useState<DeploymentConfig | null>(null);
   const [pendingSession, setPendingSession] = useState<OperatorSession | null>(null);
 
@@ -46,7 +46,7 @@ export default function DashboardPage() {
       <LoginPanel
         onRegister={(session) => {
           setPendingSession({ ...session, mode: "ACTIVE" });
-          setView("setup");
+          setView("deployment");
         }}
         onSkip={() => {
           const localSession: OperatorSession = {
@@ -57,7 +57,7 @@ export default function DashboardPage() {
             store: appConfig.NEXT_PUBLIC_DEFAULT_STORE_ID,
           };
           setPendingSession(localSession);
-          setView("setup");
+          setView("deployment");
         }}
       />
     );
