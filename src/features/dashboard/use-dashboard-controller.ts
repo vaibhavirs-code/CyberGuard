@@ -94,6 +94,7 @@ export interface DashboardController {
   liveStream: MediaStream | null;
   videoUrl: string | null;
   zones: ZoneDefinition[];
+  evidenceSnapshots: EvidenceSnapshot[];
 }
 
 const EVENT_SUPPRESSION_WINDOW_MS = 1800;
@@ -529,6 +530,8 @@ export function useDashboardController(): DashboardController {
             confirmed?: boolean;
             timestamp?: number;
             reference_id?: string;
+            amount?: number;
+            currency?: string;
           }>;
         };
 
@@ -558,7 +561,7 @@ export function useDashboardController(): DashboardController {
 
             if (!result.matchedCustomerId) continue;
 
-            ensureTracker(camera.id).markPaid(result.matchedCustomerId, method);
+            ensureTracker(camera.id).markPaid(result.matchedCustomerId, method, { amount: event.amount, referenceId: event.reference_id ?? paymentId, confirmed: event.confirmed });
             applyTrackerState(camera.id, ensureTracker(camera.id).getState());
             addLog(
               camera.id,
@@ -793,7 +796,7 @@ export function useDashboardController(): DashboardController {
           return false;
         }
 
-        ensureTracker(cameraId).markPaid(result.matchedCustomerId, method);
+        ensureTracker(cameraId).markPaid(result.matchedCustomerId, method, { referenceId: paymentReference, confirmed: true });
         applyTrackerState(cameraId, ensureTracker(cameraId).getState());
 
         addLog(
@@ -1268,6 +1271,7 @@ export function useDashboardController(): DashboardController {
       uploadVideoForCamera,
       videoUrl: resolvedActiveCamera.videoUrl,
       zones: resolvedActiveCamera.zones,
+      evidenceSnapshots: resolvedActiveCamera.evidenceSnapshots,
     }),
     [
       addCamera,
