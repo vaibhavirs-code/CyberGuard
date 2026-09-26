@@ -138,25 +138,6 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
       riskScore: alertCustomer.riskScore,
     });
 
-    try {
-      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (AudioContextClass) {
-        const audio = new AudioContextClass();
-        const oscillator = audio.createOscillator();
-        const gain = audio.createGain();
-        oscillator.frequency.value = 880;
-        oscillator.type = "sine";
-        gain.gain.value = 0.08;
-        oscillator.connect(gain);
-        gain.connect(audio.destination);
-        oscillator.start();
-        oscillator.stop(audio.currentTime + 0.22);
-        oscillator.addEventListener("ended", () => void audio.close());
-      }
-    } catch {
-      // Browser audio policies may block automatic sound.
-    }
-
     const timer = window.setTimeout(() => setTheftPopup(null), 5000);
     return () => window.clearTimeout(timer);
   }, [controller.activeCamera]);
