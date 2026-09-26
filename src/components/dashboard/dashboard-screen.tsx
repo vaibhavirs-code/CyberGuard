@@ -1,6 +1,7 @@
 "use client";
 
 import { Activity, AlertTriangle, Camera, Cpu, Grid3X3, ShieldCheck, Target } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { SidebarPanels } from "@/components/dashboard/sidebar-panels";
@@ -115,6 +116,48 @@ function getGridSize(cameraCount: number) {
 }
 
 export function DashboardScreen({ controller, deploymentMode = "single" }: DashboardScreenProps) {
+  const [theftPopup, setTheftPopup] = useState<{ customerId: string; cameraLabel: string; riskScore: number } | null>(null);
+  const lastAlertRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const alertCustomer = controller.activeCamera.customers.find(
+      (customer) => customer.riskState === "high_risk_suspicious_activity" && customer.alertAt,
+    );
+    if (!alertCustomer?.alertAt) return;
+
+    const alertKey = `${controller.activeCamera.id}:${alertCustomer.id}:${alertCustomer.alertAt}`;
+    if (lastAlertRef.current === alertKey) return;
+    lastAlertRef.current = alertKey;
+
+    setTheftPopup({
+      customerId: alertCustomer.id,
+      cameraLabel: controller.activeCamera.label,
+      riskScore: alertCustomer.riskScore,
+    });
+
+    try {
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AudioContextClass) {
+        const audio = new AudioContextClass();
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+        oscillator.frequency.value = 880;
+        oscillator.type = "sine";
+        gain.gain.value = 0.08;
+        oscillator.connect(gain);
+        gain.connect(audio.destination);
+        oscillator.start();
+        oscillator.stop(audio.currentTime + 0.22);
+        oscillator.addEventListener("ended", () => void audio.close());
+      }
+    } catch {
+      // Browser audio policies may block automatic sound.
+    }
+
+    const timer = window.setTimeout(() => setTheftPopup(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [controller.activeCamera]);
+
   const activeCamera = controller.activeCamera;
   const thumbnailCameras = controller.cameras.filter((camera) => camera.id !== activeCamera.id);
   const isMultiCameraMode = deploymentMode === "multi";
@@ -132,6 +175,20 @@ export function DashboardScreen({ controller, deploymentMode = "single" }: Dashb
   );
 
   return (
+      {theftPopup && (
+        <div className="pointer-events-none fixed right-6 top-6 z-[100] w-[360px] rounded-2xl border border-red-400/50 bg-black/90 p-4 shadow-2xl backdrop-blur-xl">
+          <div className="flex items-start gap-3">
+            <div className="mt-1 h-3 w-3 rounded-full bg-red-400 shadow-[0_0_18px_rgba(248,113,113,0.9)] animate-pulse" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-red-300">Security Alert</p>
+              <p className="mt-1 font-code text-sm font-bold text-white">High-risk exit event detected</p>
+              <p className="mt-1 text-[10px] text-white/60">{theftPopup.cameraLabel} · {theftPopup.customerId} · {Math.round(theftPopup.riskScore * 100)}% risk</p>
+              <p className="mt-2 text-[9px] uppercase tracking-widest text-emerald-300">Privacy-safe evidence captured</p>
+            </div>
+          </div>
+        </div>
+      )}
+
     <div className="relative flex h-screen w-full overflow-hidden font-body">
       <Sidebar />
       <div className="relative z-10 flex flex-1 flex-col overflow-hidden">
