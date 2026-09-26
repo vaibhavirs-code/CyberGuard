@@ -38,6 +38,7 @@ function CameraTile({
   onTheftEvidence,
   onSelect,
   showTelemetry = false,
+  showClearPeople = false,
 }: {
   camera: CameraFeedState;
   isActive: boolean;
@@ -46,6 +47,7 @@ function CameraTile({
   onTheftEvidence: (evidence: { customerId: string; timestamp: string; riskScore: number; reasons: string[]; dataUrl: string }) => void;
   onSelect: () => void;
   showTelemetry?: boolean;
+  showClearPeople?: boolean;
 }) {
   const hasAlert = camera.customers.some(
     (customer) => customer.alerted || customer.riskState === "high_risk_suspicious_activity",
@@ -122,6 +124,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   const canManageEvidence = operatorLevel === "ADMIN" || operatorLevel === "SUPERVISOR";
   const [theftPopup, setTheftPopup] = useState<{ customerId: string; cameraLabel: string; riskScore: number } | null>(null);
   const [fullscreenCameraId, setFullscreenCameraId] = useState<string | null>(null);
+  const [showClearPeople, setShowClearPeople] = useState(false);
   const lastAlertRef = useRef<string | null>(null);
 
   useEffect(() => {
