@@ -64,3 +64,19 @@ export async function clearEvidenceSnapshots(cameraId: string): Promise<void> {
   });
   db.close();
 }
+
+
+export function downloadEvidenceSnapshot(snapshot: EvidenceSnapshot): void {
+  if (typeof window === "undefined") return;
+
+  const link = document.createElement("a");
+  link.href = snapshot.dataUrl;
+  const safeCamera = snapshot.cameraLabel.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-|-$/g, "") || "camera";
+  const safeCustomer = snapshot.customerId.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-|-$/g, "") || "person";
+  const stamp = snapshot.timestamp.replace(/[:.]/g, "-");
+  link.download = `cyberguard-evidence-${safeCamera}-${safeCustomer}-${stamp}.jpg`;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
