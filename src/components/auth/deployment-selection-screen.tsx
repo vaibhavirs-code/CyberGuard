@@ -8,6 +8,7 @@ import type { DeploymentConfig, DeploymentMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface DeploymentSelectionScreenProps {
+  onBack: () => void;
   onLaunch: (config: DeploymentConfig) => void;
 }
 
@@ -18,7 +19,7 @@ function getGridLabel(cameraCount: number) {
   return `${gridSize} x ${gridSize}`;
 }
 
-export const DeploymentSelectionScreen: React.FC<DeploymentSelectionScreenProps> = ({ onLaunch }) => {
+export const DeploymentSelectionScreen: React.FC<DeploymentSelectionScreenProps> = ({ onBack, onLaunch }) => {
   const [mode, setMode] = useState<DeploymentMode>("single");
   const [cameraCount, setCameraCount] = useState(4);
 
@@ -124,14 +125,14 @@ export const DeploymentSelectionScreen: React.FC<DeploymentSelectionScreenProps>
             </div>
           )}
 
-          <Button
+          <div className="mt-8 flex gap-3"><Button variant="ghost" onClick={onBack}>Back</Button><Button
             onClick={() => {
               onLaunch({
                 mode,
                 cameraCount: mode === "multi" ? normalizedCameraCount : 1,
               });
             }}
-            className="mt-8 h-16 w-full rounded-2xl border border-accent/40 bg-accent/10 text-xs font-bold uppercase tracking-[0.36em] text-accent transition-all hover:scale-[1.01] hover:bg-accent/20 aura-border"
+            className="h-16 flex-1 w-full rounded-2xl border border-accent/40 bg-accent/10 text-xs font-bold uppercase tracking-[0.36em] text-accent transition-all hover:scale-[1.01] hover:bg-accent/20 aura-border"
           >
             Launch System
           </Button>
