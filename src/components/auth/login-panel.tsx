@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { ChevronRight, Activity, LockKeyhole, ShieldCheck, EyeOff, Database, PlayCircle } from "lucide-react";
+import { ChevronRight, Activity, LockKeyhole, ShieldCheck, EyeOff, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,15 +121,6 @@ export const LoginPanel: React.FC<LoginPanelProps> = ({ onRegister }) => {
             <p className="rounded-xl border border-red-400/20 bg-red-400/5 p-3 text-[9px] font-bold uppercase tracking-widest text-red-300">{error}</p>
           )}
           </form>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/5"></span>
-            </div>
-            <div className="relative flex justify-center text-[8px] uppercase tracking-[0.5em] font-bold text-muted-foreground bg-transparent px-2">
-              OR
-            </div>
-          </div>
 
         </div>
       </div>
