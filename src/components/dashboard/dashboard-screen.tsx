@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { Activity, AlertTriangle, Camera, Cpu, Grid3X3, ShieldCheck, Target, Maximize2, X, Info, EyeOff, ArrowRight } from "lucide-react";
@@ -517,7 +518,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               ) : (
                 <div className="space-y-3">
                   <p className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-white/60">No review evidence captured yet.</p>
-                  <p className="rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3 text-[9px] text-emerald-200/70">Privacy: evidence is face-masked and stored only in this browser's local IndexedDB.</p>
+                  <p className="rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3 text-[9px] text-emerald-200/70">Privacy: evidence is face-masked and stored only in this browser&apos;s local IndexedDB.</p>
                 </div>
               )}
             </div>
