@@ -6,7 +6,6 @@ import { ChevronRight, Activity, LockKeyhole, ShieldCheck, EyeOff, Database } fr
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import type { OperatorSession } from "@/lib/types";
 import { signInOperator } from "@/services/auth-service";
 
