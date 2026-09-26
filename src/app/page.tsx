@@ -21,7 +21,9 @@ export default function DashboardPage() {
     setIsMounted(true);
     controller.initializeCameraWall(1);
     controller.setSession(pendingSession);
-  }, [controller, pendingSession]);
+    // The dashboard controller exposes the current render's actions; initialize once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!isMounted) {
     return null;
