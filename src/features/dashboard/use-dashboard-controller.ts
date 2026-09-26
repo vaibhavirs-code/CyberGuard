@@ -2,6 +2,7 @@
 
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { usePersonDetection } from "@/ai/use-person-detection";
+import { useProductDetection } from "@/ai/use-product-detection";
 import { useArduino } from "@/hooks/use-arduino";
 import { createId } from "@/lib/id";
 import { logger } from "@/lib/logger";
@@ -16,6 +17,7 @@ import type {
   SystemLog,
   TrackedCustomer,
   TrackedItem,
+  TrackedProduct,
   TrackerEvent,
   ZoneDefinition,
 } from "@/lib/types";
@@ -29,6 +31,7 @@ import {
   type DpiEvent,
 } from "@/services/dpi-event-service";
 import { ObjectTracker } from "@/tracking/object-tracker";
+import { ProductTracker } from "@/tracking/product-tracker";
 import {
   DEFAULT_CAMERA_ID,
   cloneCameraZones,
@@ -62,6 +65,7 @@ export interface DashboardController {
   isVideoLoaded: boolean;
   initializeCameraWall: (cameraCount: number) => void;
   items: TrackedItem[];
+  detectedProducts: TrackedProduct[];
   logs: SystemLog[];
   modelError: string | null;
   rawDetections: RawPersonDetection[];
@@ -207,6 +211,7 @@ export function useDashboardController(): DashboardController {
   const camerasRef = useRef<CameraFeedState[]>([initialCamera]);
   const trackerRefs = useRef<Map<string, ObjectTracker>>(new Map([[DEFAULT_CAMERA_ID, new ObjectTracker()]]));
   const cashDetectorRefs = useRef<Map<string, CashDetectionEngine>>(new Map([[DEFAULT_CAMERA_ID, new CashDetectionEngine()]]));
+  const productTrackerRefs = useRef<Map<string, ProductTracker>>(new Map([[DEFAULT_CAMERA_ID, new ProductTracker()]]));
   const videoObjectUrlRefs = useRef<Map<string, string>>(new Map());
   const liveStreamRefs = useRef<Map<string, MediaStream>>(new Map());
   const eventCacheRefs = useRef<Map<string, Map<string, number>>>(new Map());
@@ -216,6 +221,7 @@ export function useDashboardController(): DashboardController {
   const lastFrameAtRefs = useRef<Map<string, number>>(new Map());
   const { connect, sendAlert, status: arduinoStatus, isBlockedByPolicy } = useArduino();
   const { error: modelError, isModelLoading, processFrame } = usePersonDetection();
+  const { isModelLoading: isProductModelLoading, processFrame: processProductFrame } = useProductDetection();
 
   useEffect(() => {
     camerasRef.current = cameras;
@@ -232,6 +238,15 @@ export function useDashboardController(): DashboardController {
       cashDetectorRefs.current.set(cameraId, detector);
     }
     return detector;
+  }, []);
+
+  const ensureProductTracker = useCallback((cameraId: string) => {
+    let tracker = productTrackerRefs.current.get(cameraId);
+    if (!tracker) {
+      tracker = new ProductTracker();
+      productTrackerRefs.current.set(cameraId, tracker);
+    }
+    return tracker;
   }, []);
 
   const ensureTracker = useCallback((cameraId: string) => {
@@ -480,11 +495,11 @@ export function useDashboardController(): DashboardController {
           ...camera,
           customers: snapshot.customers,
           items: snapshot.items,
-          status: resolveCameraStatus({ ...camera, customers: snapshot.customers }, isModelLoading),
+          status: resolveCameraStatus({ ...camera, customers: snapshot.customers }, isModelLoading || isProductModelLoading),
         }));
       });
     },
-    [appendTrackerEvents, isModelLoading, updateCamera],
+    [appendTrackerEvents, isModelLoading, isProductModelLoading, updateCamera],
   );
 
   // Automatic payment bridge: authenticated operators can receive captured Razorpay
@@ -574,6 +589,7 @@ export function useDashboardController(): DashboardController {
     (cameraId: string) => {
       ensureTracker(cameraId).reset();
       ensureCashDetector(cameraId).reset();
+      ensureProductTracker(cameraId).reset();
       eventCacheRefs.current.get(cameraId)?.clear();
       for (const key of Array.from(autoAlertedRef.current)) {
         if (key.startsWith(`${cameraId}:`)) {
@@ -587,6 +603,7 @@ export function useDashboardController(): DashboardController {
         ...camera,
         customers: [],
         items: [],
+        detectedProducts: [],
         rawDetections: [],
         fps: 0,
         currentTime: 0,
@@ -595,7 +612,7 @@ export function useDashboardController(): DashboardController {
         evidenceSnapshots: [],
       }));
     },
-    [ensureCashDetector, ensureTracker, updateCamera],
+    [ensureCashDetector, ensureProductTracker, ensureTracker, updateCamera],
   );
 
   const stopCameraSource = useCallback(
@@ -662,10 +679,21 @@ export function useDashboardController(): DashboardController {
               : currentCamera.rawDetections.filter((detection) => seenAt - detection.seenAt < RAW_DETECTION_HOLD_MS),
           currentTime: video.currentTime,
           fps: nextFrameFps(previousFrameAt, seenAt),
-          status: resolveCameraStatus(currentCamera, isModelLoading),
+          status: resolveCameraStatus(currentCamera, isModelLoading || isProductModelLoading),
         }));
 
-        applyTrackerState(cameraId, ensureTracker(cameraId).update(detections, camera.zones));
+        const trackerSnapshot = ensureTracker(cameraId).update(detections, camera.zones);
+        applyTrackerState(cameraId, trackerSnapshot);
+
+        const productDetections = await processProductFrame(video);
+        if (productDetections) {
+          const detectedProducts = ensureProductTracker(cameraId).update(
+            productDetections,
+            camera.zones,
+            trackerSnapshot.customers,
+          );
+          updateCamera(cameraId, (current) => ({ ...current, detectedProducts }));
+        }
 
         // Cash detection runs only against the dedicated checkout zone. It does not
         // attempt denomination or authenticity recognition.
@@ -735,7 +763,7 @@ export function useDashboardController(): DashboardController {
         processingCameraIdsRef.current.delete(cameraId);
       }
     },
-    [addLog, applyTrackerState, ensureCashDetector, ensureTracker, getCamera, isModelLoading, processFrame, updateCamera],
+    [addLog, applyTrackerState, ensureCashDetector, ensureProductTracker, ensureTracker, getCamera, isModelLoading, isProductModelLoading, processFrame, processProductFrame, updateCamera],
   );
 
   const simulatePaymentForCamera = useCallback(
@@ -998,6 +1026,7 @@ export function useDashboardController(): DashboardController {
     const camera = createCameraFeedState(nextIndex);
 
     trackerRefs.current.set(camera.id, new ObjectTracker());
+    productTrackerRefs.current.set(camera.id, new ProductTracker());
     setCameras((previousCameras) => [...previousCameras, camera]);
     setActiveCameraId(camera.id);
 
@@ -1027,8 +1056,10 @@ export function useDashboardController(): DashboardController {
 
       const nextCameras = Array.from({ length: normalizedCount }, (_, index) => createCameraFeedState(index + 1));
       const nextTrackers = new Map<string, ObjectTracker>();
+      const nextProductTrackers = new Map<string, ProductTracker>();
       for (const camera of nextCameras) {
         nextTrackers.set(camera.id, new ObjectTracker());
+        nextProductTrackers.set(camera.id, new ProductTracker());
       }
 
       videoObjectUrlRefs.current.clear();
@@ -1038,6 +1069,7 @@ export function useDashboardController(): DashboardController {
       processingCameraIdsRef.current.clear();
       lastFrameAtRefs.current.clear();
       trackerRefs.current = nextTrackers;
+      productTrackerRefs.current = nextProductTrackers;
       camerasRef.current = nextCameras;
       cameraSequenceRef.current = normalizedCount + 1;
 
@@ -1067,6 +1099,7 @@ export function useDashboardController(): DashboardController {
 
       stopCameraSource(cameraId);
       trackerRefs.current.delete(cameraId);
+      productTrackerRefs.current.delete(cameraId);
       eventCacheRefs.current.delete(cameraId);
       processingCameraIdsRef.current.delete(cameraId);
       lastFrameAtRefs.current.delete(cameraId);
@@ -1196,6 +1229,7 @@ export function useDashboardController(): DashboardController {
       connectError,
       currentTime: resolvedActiveCamera.currentTime,
       customers: resolvedActiveCamera.customers,
+      detectedProducts: resolvedActiveCamera.detectedProducts,
       fps: resolvedActiveCamera.fps,
       globalLogs,
       isBlockedByPolicy,

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useRef } from 'react';
-import type { CameraStatus, RawPersonDetection, TrackedCustomer, ZoneDefinition as Zone } from '@/lib/types';
+import type { CameraStatus, RawPersonDetection, TrackedCustomer, TrackedProduct, ZoneDefinition as Zone } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { INITIAL_ZONES } from '@/features/dashboard/dashboard-config';
@@ -11,6 +11,7 @@ interface VideoFeedProps {
   cameraLabel?: string;
   cameraStatus?: CameraStatus;
   customers: TrackedCustomer[];
+  detectedProducts: TrackedProduct[];
   isActiveCamera?: boolean;
   rawDetections: RawPersonDetection[];
   zones: Zone[];
@@ -189,6 +190,7 @@ function getBottomBadgeClass(box: { x: number; width: number }) {
 
 export const VideoFeed: React.FC<VideoFeedProps> = ({
   customers,
+  detectedProducts,
   rawDetections,
   zones,
   videoUrl,
@@ -438,6 +440,22 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         })}
       </div>
 
+      <div className="absolute inset-0 pointer-events-none z-[25]">
+        {detectedProducts.filter((product) => product.confidence >= 0.45).map((product) => (
+          <div
+            key={product.id}
+            className="absolute rounded-md border-2 border-amber-300/90 bg-amber-300/5 shadow-[0_0_18px_rgba(251,191,36,0.35)] transition-all duration-150"
+            style={{ left: `${product.bbox.x}%`, top: `${product.bbox.y}%`, width: `${product.bbox.width}%`, height: `${product.bbox.height}%` }}
+          >
+            <div className={cn(getTopLabelClass(product.bbox), "border-amber-200/70 bg-black/75 text-amber-100")}>
+              {product.id} · {product.name} · {Math.round(product.confidence * 100)}%
+            </div>
+            <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[7px] font-bold uppercase tracking-wider text-amber-100">
+              {product.state.replaceAll("_", " ")} · {product.currentZone}
+            </div>
+          </div>
+        ))}
+      </div>
       <div className="absolute inset-0 pointer-events-none z-30">
         {customers.map((customer) => {
           const stable = isStableTrack(customer);
