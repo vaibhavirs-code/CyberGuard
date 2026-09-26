@@ -420,6 +420,62 @@ export function useDashboardController(): DashboardController {
     }
   }, [addLog, arduinoStatus, cameras, sendAlert]);
 
+
+
+  const appendTrackerEvents = useCallback(
+    (cameraId: string, events: TrackerEvent[]) => {
+      const now = Date.now();
+      let eventCache = eventCacheRefs.current.get(cameraId);
+      if (!eventCache) {
+        eventCache = new Map();
+        eventCacheRefs.current.set(cameraId, eventCache);
+      }
+
+      for (const event of events) {
+        const signature = toEventSignature(event);
+        const previousAt = eventCache.get(signature);
+        if (previousAt && now - previousAt < EVENT_SUPPRESSION_WINDOW_MS) {
+          continue;
+        }
+
+        eventCache.set(signature, now);
+        addLog(
+          cameraId,
+          event.message,
+          classifyEventType(event),
+          classifyEventCategory(event),
+          event.reasoning,
+          event.confidence,
+          event.personId,
+          event.relatedPersonId,
+          event.itemId,
+        );
+      }
+
+      for (const [signature, timestamp] of eventCache.entries()) {
+        if (now - timestamp > EVENT_SUPPRESSION_WINDOW_MS * 3) {
+          eventCache.delete(signature);
+        }
+      }
+    },
+    [addLog],
+  );
+
+  const applyTrackerState = useCallback(
+    (cameraId: string, snapshot: ReturnType<ObjectTracker["getState"]>) => {
+      appendTrackerEvents(cameraId, snapshot.events);
+      startTransition(() => {
+        updateCamera(cameraId, (camera) => ({
+          ...camera,
+          customers: snapshot.customers,
+          items: snapshot.items,
+          status: resolveCameraStatus({ ...camera, customers: snapshot.customers }, isModelLoading),
+        }));
+      });
+    },
+    [appendTrackerEvents, isModelLoading, updateCamera],
+  );
+
   // Automatic payment bridge: authenticated operators can receive captured Razorpay
   // events from the server webhook and match them to the active person track.
   useEffect(() => {
@@ -502,61 +558,6 @@ export function useDashboardController(): DashboardController {
       window.clearInterval(timer);
     };
   }, [applyTrackerState, addLog, ensureTracker, session]);
-
-
-  const appendTrackerEvents = useCallback(
-    (cameraId: string, events: TrackerEvent[]) => {
-      const now = Date.now();
-      let eventCache = eventCacheRefs.current.get(cameraId);
-      if (!eventCache) {
-        eventCache = new Map();
-        eventCacheRefs.current.set(cameraId, eventCache);
-      }
-
-      for (const event of events) {
-        const signature = toEventSignature(event);
-        const previousAt = eventCache.get(signature);
-        if (previousAt && now - previousAt < EVENT_SUPPRESSION_WINDOW_MS) {
-          continue;
-        }
-
-        eventCache.set(signature, now);
-        addLog(
-          cameraId,
-          event.message,
-          classifyEventType(event),
-          classifyEventCategory(event),
-          event.reasoning,
-          event.confidence,
-          event.personId,
-          event.relatedPersonId,
-          event.itemId,
-        );
-      }
-
-      for (const [signature, timestamp] of eventCache.entries()) {
-        if (now - timestamp > EVENT_SUPPRESSION_WINDOW_MS * 3) {
-          eventCache.delete(signature);
-        }
-      }
-    },
-    [addLog],
-  );
-
-  const applyTrackerState = useCallback(
-    (cameraId: string, snapshot: ReturnType<ObjectTracker["getState"]>) => {
-      appendTrackerEvents(cameraId, snapshot.events);
-      startTransition(() => {
-        updateCamera(cameraId, (camera) => ({
-          ...camera,
-          customers: snapshot.customers,
-          items: snapshot.items,
-          status: resolveCameraStatus({ ...camera, customers: snapshot.customers }, isModelLoading),
-        }));
-      });
-    },
-    [appendTrackerEvents, isModelLoading, updateCamera],
-  );
 
   const resetCameraRuntime = useCallback(
     (cameraId: string) => {
