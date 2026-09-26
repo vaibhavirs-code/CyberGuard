@@ -3,6 +3,7 @@ import type { OperatorLevel, OperatorSession } from "@/lib/types";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const SESSION_KEY = "cyberguard-auth-session";
+const ACCESS_TOKEN_STORAGE_KEY = "cyberguard-auth-access-token";
 
 interface SupabaseUser {
   id: string;
@@ -61,6 +62,7 @@ export async function signInOperator(email: string, password: string): Promise<O
     throw new Error("Your account is authenticated, but no operator profile is assigned.");
   }
 
+  localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, auth.access_token);
   localStorage.setItem(
     SESSION_KEY,
     JSON.stringify({
@@ -74,8 +76,14 @@ export async function signInOperator(email: string, password: string): Promise<O
   return { ...profile, mode: "ACTIVE" };
 }
 
+export function getOperatorAccessToken() {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
+}
+
 export function clearOperatorSession() {
   localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
 }
 
 export function hasConfiguredAuth() {
