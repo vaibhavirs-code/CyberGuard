@@ -64,3 +64,17 @@ privacy controls, consent-aware sharing and structured store activity. This maps
 DPI themes around digital identity/authentication, payment systems, data exchange/consent layers,
 and open/interoperable digital ecosystems. The hackathon also asks AI solutions to prioritize privacy,
 safety, transparency and mitigation of harmful bias. See the event brief for the official criteria.
+
+
+### Automatic alert + payment flow
+
+When the tracker raises an automated alert, the app immediately:
+- captures the current camera frame;
+- masks tracked people before storing the evidence;
+- saves an in-app copy to browser-local IndexedDB;
+- downloads a JPG copy to the browser's configured **Downloads** folder;
+- emits a short browser beep and, when the Arduino serial device is connected, sends the hardware buzzer signal.
+
+An unpaid person with a linked item hypothesis crossing the outside boundary can trigger the alert path. This is intentionally a **review signal**, not an automatic accusation.
+
+For real automatic payment confirmation, the app includes a server-side Razorpay webhook bridge. Captured payment events are verified, stored in Supabase, and automatically matched against anonymous person tracks. The Razorpay secret stays server-side. If the payment gateway is not configured, the demo payment controls remain available.
