@@ -243,21 +243,6 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         const context = canvas.getContext("2d");
         if (!context) continue;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        // Privacy protection: blur every tracked person before evidence is stored.
-        // This keeps the incident context while masking identities of everyone the tracker sees.
-        for (const person of customers) {
-          const box = person.bbox;
-          const sx = Math.max(0, Math.round((box.x / 100) * canvas.width));
-          const sy = Math.max(0, Math.round((box.y / 100) * canvas.height));
-          const sw = Math.min(canvas.width - sx, Math.max(1, Math.round((box.width / 100) * canvas.width)));
-          const sh = Math.min(canvas.height - sy, Math.max(1, Math.round((box.height / 100) * canvas.height)));
-          if (sw <= 0 || sh <= 0) continue;
-          context.save();
-          context.filter = "blur(18px)";
-          context.drawImage(video, sx, sy, sw, sh, sx, sy, sw, sh);
-          context.restore();
-        }
-
         const dataUrl = canvas.toDataURL("image/jpeg", 0.86);
         capturedEvidenceRef.current.add(evidenceKey);
         onTheftEvidence({
@@ -517,26 +502,6 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
               )}
               style={{ left: `${customer.bbox.x}%`, top: `${customer.bbox.y}%`, width: `${customer.bbox.width}%`, height: `${customer.bbox.height}%` }}
             >
-              {!showClearPeople && (
-                enhancedPrivacyView ? (
-                  <>
-                    <div
-                      className="absolute left-[8%] right-[8%] top-[2%] h-[36%] rounded-[45%] border border-white/30 bg-black/45 backdrop-blur-[14px] shadow-[0_0_24px_rgba(0,0,0,0.45)]"
-                      aria-label="Privacy mask over the estimated head and face region"
-                    />
-                    <div className="absolute left-1/2 top-[3%] z-10 -translate-x-1/2 rounded-full border border-white/20 bg-black/70 px-2 py-1 text-[7px] font-bold uppercase tracking-[0.18em] text-white/90 backdrop-blur-md">
-                      Face privacy mask
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="absolute inset-0 rounded-[inherit] bg-black/10 backdrop-blur-[10px]" aria-hidden="true" />
-                    <div className="absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 bg-black/55 px-2 py-1 text-[7px] font-bold uppercase tracking-[0.18em] text-white/80 backdrop-blur-md">
-                      ID only · face masked
-                    </div>
-                  </>
-                )
-              )}
               <div className={cn(getStatusCardClass(customer.bbox), getHeaderBgClass(customer))}>
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between gap-4">
