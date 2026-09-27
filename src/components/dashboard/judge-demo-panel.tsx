@@ -27,12 +27,12 @@ export function JudgeDemoPanel({ onClose }: JudgeDemoPanelProps) {
       oscillator.frequency.value = 880;
       gain.gain.setValueAtTime(0.0001, audio.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.16, audio.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.14);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 5);
       oscillator.connect(gain);
       gain.connect(audio.destination);
       oscillator.start();
-      oscillator.stop(audio.currentTime + 0.15);
-      window.setTimeout(() => void audio.close(), 250);
+      oscillator.stop(audio.currentTime + 5);
+      window.setTimeout(() => void audio.close(), 5200);
     } catch {}
   }, []);
 
@@ -70,7 +70,6 @@ export function JudgeDemoPanel({ onClose }: JudgeDemoPanelProps) {
     [900, 1800, 2700, 3600, 4500].forEach((delay, index) => {
       window.setTimeout(() => {
         setStep(index);
-        beep();
         if (index === 4) {
           makeSnapshot();
           setRunning(false);
