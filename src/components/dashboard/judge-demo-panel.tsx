@@ -27,12 +27,12 @@ export function JudgeDemoPanel({ onClose }: JudgeDemoPanelProps) {
       oscillator.frequency.value = 880;
       gain.gain.setValueAtTime(0.0001, audio.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.16, audio.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 5);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 10);
       oscillator.connect(gain);
       gain.connect(audio.destination);
       oscillator.start();
-      oscillator.stop(audio.currentTime + 5);
-      window.setTimeout(() => void audio.close(), 5200);
+      oscillator.stop(audio.currentTime + 10);
+      window.setTimeout(() => void audio.close(), 10200);
     } catch {}
   }, []);
 
