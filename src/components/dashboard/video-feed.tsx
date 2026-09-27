@@ -231,7 +231,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
     const now = Date.now();
     const COOLDOWN_MS = 2500;
     const candidates = customers.filter(
-      (customer) => !customer.paid && customer.riskScore > 0 && customer.riskState !== "normal",
+      (customer) => !customer.paid && customer.riskScore > 0 && customer.riskState !== "benign",
     );
 
     if (candidates.length === 0) return;
