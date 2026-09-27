@@ -229,7 +229,7 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
 
   useEffect(() => {
     const now = Date.now();
-    const COOLDOWN_MS = 2500;
+    const COOLDOWN_MS = 6500;
     const candidates = customers.filter(
       (customer) => !customer.paid && customer.riskScore > 0 && customer.riskState !== "benign",
     );
@@ -255,14 +255,14 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
         oscillator.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.12);
         gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.16, audioContext.currentTime + 0.015);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.14);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 5);
         oscillator.connect(gain);
         gain.connect(audioContext.destination);
         oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.15);
+        oscillator.stop(audioContext.currentTime + 5);
       }
 
-      window.setTimeout(() => void audioContext?.close(), 250);
+      window.setTimeout(() => void audioContext?.close(), 5200);
     } catch {
       // Browsers may block audio until the operator interacts with the page.
     }
