@@ -193,12 +193,70 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
         <Header session={controller.session} />
         <main className="flex flex-1 flex-col gap-6 overflow-hidden p-6 lg:flex-row">
           <div className="flex min-h-0 flex-[3] flex-col gap-6 overflow-y-auto pr-2">
+            <section className="order-0 shrink-0 overflow-hidden rounded-[2rem] border border-accent/20 bg-gradient-to-br from-cyan-500/10 via-black/30 to-red-500/10 p-5 shadow-[0_0_50px_rgba(0,200,255,.08)]">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400 shadow-[0_0_14px_rgba(52,211,153,.8)]" />
+                    <p className="text-[9px] font-black uppercase tracking-[0.28em] text-emerald-300">Operator quick view</p>
+                  </div>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-white">SEE → CHECK → VERIFY → ACT</h2>
+                  <p className="mt-1 max-w-2xl text-[10px] leading-5 text-white/50">Only four things matter during the demo: watch the CCTV, notice the alert, inspect the real snapshot, then verify the transaction.</p>
+                </div>
+                <button type="button" onClick={() => setShowJudgeDemo(true)} className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-[9px] font-black uppercase tracking-widest text-amber-100 hover:bg-amber-400/20">Run demo</button>
+              </div>
+              <div className="mt-5 grid gap-3 md:grid-cols-4">
+                {[
+                  ["01","WATCH","Live CCTV","cyan"],
+                  ["02","ALERT","10-sec beep","red"],
+                  ["03","SNAPSHOT","Real CCTV frame","amber"],
+                  ["04","VERIFY","Payment + basket","emerald"],
+                ].map(([step,title,detail,tone]) => (
+                  <div key={step} className={`rounded-2xl border p-4 ${tone === "red" ? "border-red-400/25 bg-red-400/5" : tone === "amber" ? "border-amber-400/25 bg-amber-400/5" : tone === "emerald" ? "border-emerald-400/25 bg-emerald-400/5" : "border-cyan-400/25 bg-cyan-400/5"}`}>
+                    <p className={`font-code text-[10px] font-black ${tone === "red" ? "text-red-300" : tone === "amber" ? "text-amber-300" : tone === "emerald" ? "text-emerald-300" : "text-cyan-300"}`}>{step}</p>
+                    <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-white">{title}</p>
+                    <p className="mt-1 text-[8px] text-white/45">{detail}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_.9fr]">
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-white/40">What needs attention?</p>
+                      <p className="mt-1 text-lg font-black text-white">{totalReviewQueue > 0 ? `${totalReviewQueue} review item${totalReviewQueue === 1 ? "" : "s"}` : "No active review"}</p>
+                    </div>
+                    <span className={`rounded-full border px-3 py-1.5 text-[8px] font-black uppercase tracking-widest ${totalReviewQueue > 0 ? "border-red-400/30 bg-red-400/10 text-red-200" : "border-emerald-400/20 bg-emerald-400/10 text-emerald-200"}`}>{totalReviewQueue > 0 ? "REVIEW" : "CLEAR"}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3"><p className="text-[7px] uppercase tracking-widest text-white/35">People</p><p className="mt-1 font-code text-sm font-bold text-white">{activeCamera.customers.length}</p></div>
+                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3"><p className="text-[7px] uppercase tracking-widest text-white/35">Alerts</p><p className="mt-1 font-code text-sm font-bold text-red-200">{controller.siteOverview.totalAlerts}</p></div>
+                    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3"><p className="text-[7px] uppercase tracking-widest text-white/35">Evidence</p><p className="mt-1 font-code text-sm font-bold text-amber-200">{activeCamera.evidenceSnapshots.length}</p></div>
+                  </div>
+                </div>
+                <button type="button" disabled={!activeCamera.evidenceSnapshots[0]} onClick={() => activeCamera.evidenceSnapshots[0] && setSelectedEvidence(activeCamera.evidenceSnapshots[0])} className="group overflow-hidden rounded-2xl border border-red-400/20 bg-black/30 text-left disabled:cursor-default">
+                  <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                    <div>
+                      <p className="text-[8px] font-black uppercase tracking-widest text-red-300">Latest actual snapshot</p>
+                      <p className="mt-1 text-[9px] text-white/40">{activeCamera.evidenceSnapshots[0] ? "Captured directly from the CCTV video" : "Waiting for a high-risk event"}</p>
+                    </div>
+                    <Camera className="h-4 w-4 text-red-300" />
+                  </div>
+                  {activeCamera.evidenceSnapshots[0] ? (
+                    <img src={activeCamera.evidenceSnapshots[0].dataUrl} alt="Latest actual CCTV evidence snapshot" className="aspect-video w-full object-cover transition group-hover:scale-[1.01]" />
+                  ) : (
+                    <div className="flex aspect-video items-center justify-center bg-[radial-gradient(circle_at_center,rgba(239,68,68,.12),transparent_65%)]"><p className="text-[9px] font-black uppercase tracking-widest text-white/25">NO SNAPSHOT YET</p></div>
+                  )}
+                </button>
+              </div>
+            </section>
+
             <section className="order-10 grid shrink-0 gap-3 md:grid-cols-[1fr_auto]">
               <div className="rounded-2xl border border-accent/20 bg-accent/5 px-5 py-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="rounded-xl border border-accent/20 bg-black/20 p-2"><Info className="h-4 w-4 text-accent" /></div>
                   <div className="min-w-[220px] flex-1">
-                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-accent">Privacy-first digital trust</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-accent">How CyberGuard works</p>
                     <p className="mt-1 text-[11px] leading-5 text-white/75">AI tracks anonymous person IDs and movement signals. It does not identify faces or decide guilt. Payment signals are matched with uncertainty, and high-risk events are routed for human review.</p>
                   </div>
                   <span className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[8px] font-bold uppercase tracking-widest text-emerald-200">Clear CCTV view · AI tracking active</span>
@@ -327,7 +385,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
                   <div className="flex items-center gap-3">
                     <div className="rounded-xl border border-accent/30 bg-accent/10 p-3"><ScanLine className="h-5 w-5 text-accent" /></div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-accent">AI Transaction Twin</p>
+                      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-accent">Transaction check</p>
                       <p className="mt-1 text-sm font-black text-white">CCTV → Basket → Payment → Review</p>
                     </div>
                   </div>
@@ -511,7 +569,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
           </div>
 
           <div className="hide-scrollbar flex w-full flex-col gap-6 overflow-y-auto pr-2 lg:w-[420px]">
-            <div className="aura-border rounded-2xl border border-accent/20 bg-background/60 p-5 glass shadow-xl">
+            <div className="order-2 aura-border rounded-2xl border border-accent/20 bg-background/60 p-5 glass shadow-xl">
   <div className="mb-4 flex items-center justify-between">
     <div>
       <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
@@ -519,7 +577,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
       </p>
 
       <p className="mt-1 font-code text-lg font-bold text-white">
-        DPI Event Bridge
+        Digital payment bridge
       </p>
     </div>
 
@@ -611,7 +669,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
     </div>
   )}
 </div>
-            <div className="aura-border rounded-2xl border border-red-400/20 bg-background/60 p-5 glass shadow-xl">
+            <div className="order-1 aura-border rounded-2xl border border-red-400/20 bg-background/60 p-5 glass shadow-xl">
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Security Evidence</p>
