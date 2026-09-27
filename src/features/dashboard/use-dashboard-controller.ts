@@ -182,20 +182,11 @@ function playLocalAlarm() {
     gain.connect(audio.destination);
     oscillator.start();
 
-    const firstStop = audio.currentTime + 0.18;
-    oscillator.stop(firstStop);
-    oscillator.addEventListener("ended", () => {
-      const second = audio.createOscillator();
-      const secondGain = audio.createGain();
-      second.type = "sine";
-      second.frequency.value = 660;
-      secondGain.gain.value = 0.08;
-      second.connect(secondGain);
-      secondGain.connect(audio.destination);
-      second.start();
-      second.stop(audio.currentTime + 0.18);
-      second.addEventListener("ended", () => void audio.close());
-    });
+    gain.gain.setValueAtTime(0.0001, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.14, audio.currentTime + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 10);
+    oscillator.stop(audio.currentTime + 10);
+    window.setTimeout(() => void audio.close(), 10200);
   } catch {
     // Browser autoplay policies may block sound; Arduino hardware alert remains available.
   }
