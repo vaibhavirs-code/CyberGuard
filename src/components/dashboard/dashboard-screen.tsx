@@ -131,6 +131,7 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
   const [fullscreenCameraId, setFullscreenCameraId] = useState<string | null>(null);
   const [transactionTwinCustomerId, setTransactionTwinCustomerId] = useState<string | null>(null);
   const [showJudgeDemo, setShowJudgeDemo] = useState(false);
+  const [selectedEvidence, setSelectedEvidence] = useState<{ dataUrl: string; customerId: string; riskScore: number; timestamp: string; reasons: string[] } | null>(null);
   const lastAlertRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -620,40 +621,44 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
               </div>
               {activeCamera.evidenceSnapshots.length > 0 ? (
                 <>
-                  <div className="space-y-3">
-                    {activeCamera.evidenceSnapshots.slice(0, 2).map((evidence) => (
-                      <div key={evidence.id} className="overflow-hidden rounded-xl border border-white/10 bg-black/30">
-                        <img src={evidence.dataUrl} alt={`Security evidence for ${evidence.customerId}`} className="aspect-video w-full object-cover" />
-                        <div className="p-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    {activeCamera.evidenceSnapshots.map((evidence, index) => (
+                      <button
+                        key={evidence.id}
+                        type="button"
+                        onClick={() => setSelectedEvidence(evidence)}
+                        className="group overflow-hidden rounded-xl border border-white/10 bg-black/30 text-left transition hover:border-red-400/50 hover:bg-red-400/5"
+                      >
+                        <div className="relative">
+                          <img src={evidence.dataUrl} alt={`Security evidence for ${evidence.customerId}`} className="aspect-video w-full object-cover transition group-hover:scale-[1.02]" />
+                          <span className="absolute left-2 top-2 rounded-md border border-red-400/40 bg-black/75 px-2 py-1 font-code text-[8px] font-black text-red-200">
+                            SNAPSHOT {index + 1}
+                          </span>
+                        </div>
+                        <div className="p-2.5">
                           <div className="flex items-center justify-between gap-2">
                             <span className="font-code text-[10px] font-bold text-red-200">{evidence.customerId}</span>
-                            <span className="font-code text-[9px] text-white/60">{Math.round(evidence.riskScore * 100)}% risk</span>
+                            <span className="font-code text-[9px] text-white/60">{Math.round(evidence.riskScore * 100)}%</span>
                           </div>
-                          <p className="mt-1 text-[9px] text-white/60">{new Date(evidence.timestamp).toLocaleString()}</p>
+                          <p className="mt-1 text-[8px] text-white/45">{new Date(evidence.timestamp).toLocaleString()}</p>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3">
-                  <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-300">Local-only storage · {operatorLevel}</p>
-                    <p className="mt-1 text-[9px] text-white/50">Evidence stays on this browser device.</p>
-                  </div>
-                  {canManageEvidence && (
-                    <button
-                      type="button"
-                      onClick={() => void controller.clearTheftEvidence(activeCamera.id)}
-                      className="rounded-lg border border-red-400/30 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-red-300 transition hover:bg-red-400/10"
-                    >
-                      Clear
-                    </button>
-                  )}
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-300">{activeCamera.evidenceSnapshots.length} snapshot{activeCamera.evidenceSnapshots.length === 1 ? "" : "s"} · local storage</p>
+                      <p className="mt-1 text-[9px] text-white/50">Click any snapshot to inspect the full evidence frame.</p>
+                    </div>
+                    {canManageEvidence && (
+                      <button type="button" onClick={() => void controller.clearTheftEvidence(activeCamera.id)} className="rounded-lg border border-red-400/30 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-red-300 transition hover:bg-red-400/10">Clear</button>
+                    )}
                   </div>
                 </>
               ) : (
                 <div className="space-y-3">
                   <p className="rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-white/60">No review evidence captured yet.</p>
-                  <p className="rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3 text-[9px] text-emerald-200/70">Privacy: evidence is face-masked and stored only in this browser&apos;s local IndexedDB.</p>
+                  <p className="rounded-xl border border-emerald-400/10 bg-emerald-400/5 p-3 text-[9px] text-emerald-200/70">High-risk events automatically capture a CCTV frame with the customer track and risk label.</p>
                 </div>
               )}
             </div>
@@ -729,6 +734,34 @@ export function DashboardScreen({ controller, deploymentMode = "single", operato
           </div>
         );
       })()}
+
+      {selectedEvidence && (
+        <div className="fixed inset-0 z-[350] flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl">
+          <div className="w-full max-w-5xl overflow-hidden rounded-[2rem] border border-red-400/30 bg-[#050b12] shadow-[0_0_100px_rgba(239,68,68,.15)]">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-red-300">Security Evidence Snapshot</p>
+                <p className="mt-1 font-code text-sm font-bold text-white">{selectedEvidence.customerId} · {Math.round(selectedEvidence.riskScore * 100)}% risk</p>
+              </div>
+              <button type="button" onClick={() => setSelectedEvidence(null)} className="rounded-xl border border-white/10 bg-white/5 p-2 text-white/70 hover:bg-white/10" aria-label="Close evidence viewer"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="grid gap-4 p-5 lg:grid-cols-[1.5fr_.5fr]">
+              <div className="overflow-hidden rounded-2xl border border-red-400/20 bg-black">
+                <img src={selectedEvidence.dataUrl} alt={`Full security evidence for ${selectedEvidence.customerId}`} className="max-h-[70vh] w-full object-contain" />
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                <p className="text-[8px] font-black uppercase tracking-widest text-white/40">Evidence details</p>
+                <div className="mt-3 space-y-2">
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[8px] uppercase tracking-widest text-white/35">Customer</p><p className="mt-1 font-code text-sm text-white">{selectedEvidence.customerId}</p></div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[8px] uppercase tracking-widest text-white/35">Risk signal</p><p className="mt-1 font-code text-sm text-red-200">{Math.round(selectedEvidence.riskScore * 100)}%</p></div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[8px] uppercase tracking-widest text-white/35">Captured</p><p className="mt-1 text-[9px] text-white/70">{new Date(selectedEvidence.timestamp).toLocaleString()}</p></div>
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-3"><p className="text-[8px] uppercase tracking-widest text-white/35">Why captured</p><p className="mt-1 text-[9px] leading-4 text-white/60">{selectedEvidence.reasons.join(" · ") || "High-risk multi-frame signal"}</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {transactionTwinCustomerId && (
         <TransactionTwinPanel
