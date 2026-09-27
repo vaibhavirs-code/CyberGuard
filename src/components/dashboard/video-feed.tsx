@@ -222,6 +222,52 @@ export const VideoFeed: React.FC<VideoFeedProps> = ({
     }
   }, [liveStream, videoUrl]);
 
+  // Audible early-warning: any non-zero theft/risk signal combined with no
+  // completed transaction produces a short operator beep. A per-customer
+  // cooldown prevents the alert from firing on every processed video frame.
+  const beepedCustomersRef = useRef<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    const now = Date.now();
+    const COOLDOWN_MS = 2500;
+    const candidates = customers.filter(
+      (customer) => !customer.paid && customer.riskScore > 0 && customer.riskState !== "normal",
+    );
+
+    if (candidates.length === 0) return;
+
+    let audioContext: AudioContext | null = null;
+    try {
+      audioContext = new AudioContext();
+      if (audioContext.state === "suspended") {
+        void audioContext.resume();
+      }
+
+      for (const customer of candidates) {
+        const lastBeep = beepedCustomersRef.current.get(customer.id) ?? 0;
+        if (now - lastBeep < COOLDOWN_MS) continue;
+        beepedCustomersRef.current.set(customer.id, now);
+
+        const oscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(660, audioContext.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.16, audioContext.currentTime + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.14);
+        oscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.15);
+      }
+
+      window.setTimeout(() => void audioContext?.close(), 250);
+    } catch {
+      // Browsers may block audio until the operator interacts with the page.
+    }
+  }, [customers]);
+
   useEffect(() => {
     if (!onTheftEvidence) return;
 
